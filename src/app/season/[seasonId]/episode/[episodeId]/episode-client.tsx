@@ -71,12 +71,14 @@ export function EpisodeClient({
   jokersRemaining,
   seasonId,
   referralCode,
+  contestantImages = {},
 }: {
   episode: Episode;
   userPredictions: Record<string, UserPrediction>;
   jokersRemaining: number;
   seasonId: string;
   referralCode?: string | null;
+  contestantImages?: Record<string, string>;
 }) {
   const isLocked =
     episode.status === "LOCKED" ||
@@ -141,6 +143,7 @@ export function EpisodeClient({
             referralCode={referralCode}
             episodeNumber={episode.number}
             episodeTitle={episode.title}
+            contestantImages={contestantImages}
           />
         ))}
       </div>
@@ -158,6 +161,7 @@ function QuestionCard({
   referralCode,
   episodeNumber,
   episodeTitle,
+  contestantImages = {},
 }: {
   question: Question;
   prediction?: UserPrediction;
@@ -168,6 +172,7 @@ function QuestionCard({
   referralCode?: string | null;
   episodeNumber: number;
   episodeTitle: string;
+  contestantImages?: Record<string, string>;
 }) {
   const [selected, setSelected] = useState<string>(
     prediction?.chosenOption || ""
@@ -265,12 +270,21 @@ function QuestionCard({
                     : "border-border/50 hover:border-border hover:bg-secondary/30"
                 } ${isLocked ? "cursor-default" : "cursor-pointer"}`}
               >
-                <span className="font-medium">{option}</span>
+                <div className="flex items-center gap-3">
+                  {contestantImages[option] && (
+                    <img
+                      src={contestantImages[option]}
+                      alt={option}
+                      className="h-8 w-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  )}
+                  <span className="font-medium">{option}</span>
+                </div>
                 {isCorrectOption && (
-                  <Check className="absolute right-3 top-3 h-4 w-4 text-emerald-400" />
+                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
                 )}
                 {isUserWrongPick && (
-                  <X className="absolute right-3 top-3 h-4 w-4 text-destructive" />
+                  <X className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
                 )}
               </button>
             );

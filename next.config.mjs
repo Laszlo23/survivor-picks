@@ -1,8 +1,6 @@
-import webpack from "next/dist/compiled/webpack/webpack-lib.js";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
       // Suppress optional dependency warnings from WalletConnect / MetaMask SDK
       config.resolve.fallback = {

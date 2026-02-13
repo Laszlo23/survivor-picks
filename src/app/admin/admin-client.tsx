@@ -1176,15 +1176,24 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
           <Card key={c.id} className="bg-card/50 border-border/50">
             <CardContent className="py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{
-                    backgroundColor: (c.tribe?.color || "#888") + "30",
-                    color: c.tribe?.color || "#888",
-                  }}
-                >
-                  {c.name[0]}
-                </div>
+                {c.imageUrl ? (
+                  <img
+                    src={c.imageUrl}
+                    alt={c.name}
+                    className="h-8 w-8 rounded-full object-cover ring-2"
+                    style={{ ringColor: c.tribe?.color || "#888" }}
+                  />
+                ) : (
+                  <div
+                    className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      backgroundColor: (c.tribe?.color || "#888") + "30",
+                      color: c.tribe?.color || "#888",
+                    }}
+                  >
+                    {c.name[0]}
+                  </div>
+                )}
                 <div>
                   <p className="font-medium text-sm">{c.name}</p>
                   {c.tribe && (
@@ -1243,9 +1252,17 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
               <Card key={c.id} className="bg-card/30 border-border/30 opacity-60">
                 <CardContent className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-secondary/50 flex items-center justify-center text-xs font-bold text-muted-foreground line-through">
-                      {c.name[0]}
-                    </div>
+                    {c.imageUrl ? (
+                      <img
+                        src={c.imageUrl}
+                        alt={c.name}
+                        className="h-8 w-8 rounded-full object-cover grayscale opacity-50"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-secondary/50 flex items-center justify-center text-xs font-bold text-muted-foreground line-through">
+                        {c.name[0]}
+                      </div>
+                    )}
                     <div>
                       <p className="font-medium text-sm line-through">
                         {c.name}

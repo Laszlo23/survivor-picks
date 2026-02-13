@@ -4,6 +4,7 @@ import { getEpisodeWithQuestions } from "@/lib/actions/episodes";
 import { getUserPredictions } from "@/lib/actions/predictions";
 import { getUserRank } from "@/lib/actions/profile";
 import { getOrCreateReferralCode } from "@/lib/actions/referral";
+import { prisma } from "@/lib/prisma";
 import { EpisodeClient } from "./episode-client";
 
 export default async function EpisodePage({
@@ -16,12 +17,22 @@ export default async function EpisodePage({
 
   const { seasonId, episodeId } = params;
 
-  const [episode, predictions, rankData, referralCode] = await Promise.all([
+  const [episode, predictions, rankData, referralCode, contestants] = await Promise.all([
     getEpisodeWithQuestions(episodeId),
     getUserPredictions(episodeId),
     getUserRank(seasonId),
     getOrCreateReferralCode(),
+    prisma.contestant.findMany({
+      where: { seasonId },
+      select: { name: true, imageUrl: true },
+    }),
   ]);
+
+  // Build name → imageUrl map for displaying contestant photos in options
+  const contestantImages: Record<string, string> = {};
+  for (const c of contestants) {
+    if (c.imageUrl) contestantImages[c.name] = c.imageUrl;
+  }
 
   if (!episode) {
     return (
@@ -65,6 +76,7 @@ export default async function EpisodePage({
       jokersRemaining={rankData?.jokersRemaining ?? 3}
       seasonId={seasonId}
       referralCode={referralCode}
+      contestantImages={contestantImages}
     />
   );
 }

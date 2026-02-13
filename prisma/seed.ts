@@ -75,46 +75,46 @@ async function main() {
 
   // 🔴 Team Red (12 players)
   const teamRot = [
-    "Bayhan Gürhan",
-    "Deniz Çatalbaş",
-    "Nagihan Karadere",
-    "Sercan Yıldırım",
-    "Mert Nobre",
-    "Meryem Boz",
-    "Murat Arkın",
-    "Seren Ay Çetin",
-    "Serhan Onat",
-    "Büşra Yalçın",
-    "Can Berkay Ertemiz",
-    "Seda Albayrak",
+    { name: "Bayhan Gürhan", image: "/contestants/bayhan-gurhan.jpeg" },
+    { name: "Deniz Çatalbaş", image: "/contestants/deniz-cataltas.jpeg" },
+    { name: "Nagihan Karadere", image: "/contestants/nagihan-karadere.jpeg" },
+    { name: "Sercan Yıldırım", image: "/contestants/sercan-yildirim.jpeg" },
+    { name: "Mert Nobre", image: "/contestants/mert-nobre.jpeg" },
+    { name: "Meryem Boz", image: "/contestants/meryem-boz.jpeg" },
+    { name: "Murat Arkın", image: "/contestants/murat-arkin.jpeg" },
+    { name: "Seren Ay Çetin", image: "/contestants/seren-ay-cetin.jpeg" },
+    { name: "Serhan Onat", image: "/contestants/serhan-onat.jpeg" },
+    { name: "Büşra Yalçın", image: "/contestants/busra-yalcin.jpeg" },
+    { name: "Can Berkay Ertemiz", image: "/contestants/can-berkay-ertemiz.jpeg" },
+    { name: "Seda Albayrak", image: "/contestants/seda-albayrak.jpeg" },
   ];
 
   // 🔵 Team Blue (9 players)
   const teamBlau = [
-    "Ramazan Sarı",
-    "Engincan Tura",
-    "Eren Semerci",
-    "Gözde Bozkurt",
-    "Lina Hourieh",
-    "Nisanur Güler",
-    "Onur Alp Çam",
-    "Nefise Karatay",
-    "Osman Can Ural",
+    { name: "Ramazan Sarı", image: "/contestants/ramazan-sari.jpeg" },
+    { name: "Engincan Tura", image: "/contestants/engincan-tura.jpeg" },
+    { name: "Eren Semerci", image: "/contestants/eren-semerci.jpeg" },
+    { name: "Gözde Bozkurt", image: "/contestants/gozde-bozkurt.jpeg" },
+    { name: "Lina Hourieh", image: "/contestants/lina-hourieh.jpeg" },
+    { name: "Nisanur Güler", image: "/contestants/nisanur-guler.jpeg" },
+    { name: "Onur Alp Çam", image: "/contestants/onur-alp-cam.jpeg" },
+    { name: "Nefise Karatay", image: "/contestants/nefise-karatay.jpeg" },
+    { name: "Osman Can Ural", image: "/contestants/osman-can-ural.jpeg" },
   ];
 
-  for (const name of teamRot) {
+  for (const c of teamRot) {
     await prisma.contestant.create({
-      data: { name, seasonId: season.id, tribeId: tribeRot.id },
+      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeRot.id },
     });
   }
-  for (const name of teamBlau) {
+  for (const c of teamBlau) {
     await prisma.contestant.create({
-      data: { name, seasonId: season.id, tribeId: tribeBlau.id },
+      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeBlau.id },
     });
   }
-  console.log(`  ✅ ${teamRot.length + teamBlau.length} contestants (${teamRot.length} Red + ${teamBlau.length} Blue)`);
+  console.log(`  ✅ ${teamRot.length + teamBlau.length} contestants with profile images (${teamRot.length} Red + ${teamBlau.length} Blue)`);
 
-  const allNames = [...teamRot, ...teamBlau];
+  const allNames = [...teamRot.map(c => c.name), ...teamBlau.map(c => c.name)];
 
   // ─── Episodes ───────────────────────────────────────────────────────────────
 

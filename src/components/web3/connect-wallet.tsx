@@ -2,6 +2,7 @@
 
 import { Component, type ReactNode } from "react";
 import { Wallet } from "lucide-react";
+import "@rainbow-me/rainbowkit/styles.css";
 
 // Error boundary to prevent RainbowKit/WalletConnect errors from crashing the page
 class WalletErrorBoundary extends Component<
