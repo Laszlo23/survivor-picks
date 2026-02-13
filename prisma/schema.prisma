@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth Models (NextAuth) ───────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core Models ──────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  image          String?
+  emailVerified  DateTime?
+  role           Role      @default(USER)
+  walletAddress  String?   @unique  // Ethereum/Base wallet address
+  referralCode   String?   @unique  // auto-generated 8-char code
+  referredById   String?             // userId of who referred this user
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  predictions    Prediction[]
+  scoreEvents    ScoreEvent[]
+  seasonStats    UserSeasonStats[]
+  badges         UserBadge[]
+  socialClaims   SocialTaskClaim[]
+  referralsMade  Referral[]        @relation("ReferralReferrer")
+  referralUsed   Referral?         @relation("ReferralReferee")
+}
+
+model Season {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  active      Boolean  @default(false)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  episodes    Episode[]
+  seasonStats UserSeasonStats[]
+  contestants Contestant[]
+  tribes      Tribe[]
+}
+
+model Tribe {
+  id       String @id @default(cuid())
+  name     String
+  color    String @default("#10b981")
+  seasonId String
+
+  season      Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  contestants Contestant[]
+
+  @@index([seasonId])
+}
+
+model Contestant {
+  id       String  @id @default(cuid())
+  name     String
+  imageUrl String?
+  status   String  @default("ACTIVE") // ACTIVE, ELIMINATED
+  seasonId String
+  tribeId  String?
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  tribe  Tribe? @relation(fields: [tribeId], references: [id], onDelete: SetNull)
+
+  @@index([seasonId])
+  @@index([tribeId])
+}
+
+enum EpisodeStatus {
+  DRAFT
+  OPEN
+  LOCKED
+  RESOLVED
+}
+
+model Episode {
+  id       String        @id @default(cuid())
+  seasonId String
+  number   Int
+  title    String
+  airAt    DateTime
+  lockAt   DateTime
+  status   EpisodeStatus @default(DRAFT)
+
+  season      Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  scoreEvents ScoreEvent[]
+
+  @@unique([seasonId, number])
+  @@index([seasonId])
+  @@index([status])
+}
+
+enum QuestionType {
+  CHALLENGE_WINNER
+  ELIMINATION
+  TWIST
+  TRIBAL_COUNCIL
+  IMMUNITY
+  REWARD
+  CUSTOM
+}
+
+enum QuestionStatus {
+  DRAFT
+  OPEN
+  LOCKED
+  RESOLVED
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  episodeId     String
+  type          QuestionType
+  prompt        String         @db.Text
+  odds          Int            @default(100) // American odds, e.g. +150, -110
+  options       Json           // string[] of allowed options
+  correctOption String?
+  status        QuestionStatus @default(DRAFT)
+  sortOrder     Int            @default(0)
+
+  episode     Episode      @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  predictions Prediction[]
+
+  @@index([episodeId])
+  @@index([status])
+}
+
+model Prediction {
+  id           String   @id @default(cuid())
+  userId       String
+  questionId   String
+  chosenOption String
+  isRisk       Boolean  @default(false)
+  usedJoker    Boolean  @default(false)
+  pointsAwarded Int?    // null until resolved
+  isCorrect    Boolean? // null until resolved
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+  @@index([questionId])
+}
+
+model ScoreEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  episodeId String
+  points    Int
+  reason    String   // e.g. "correct_pick", "risk_bonus", "joker_save", "streak_bonus"
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([episodeId])
+  @@index([userId, episodeId])
+}
+
+model UserSeasonStats {
+  id                   String @id @default(cuid())
+  userId               String
+  seasonId             String
+  points               Int    @default(0)
+  correctCount         Int    @default(0)
+  totalCount           Int    @default(0)
+  currentStreak        Int    @default(0)
+  longestStreak        Int    @default(0)
+  winRate              Float  @default(0)
+  tribeLoyaltyCorrect  Int    @default(0)
+  riskBetsWon          Int    @default(0)
+  riskBetsTotal        Int    @default(0)
+  jokersUsed           Int    @default(0)
+  jokersRemaining      Int    @default(3) // 3 per season
+  socialPoints         Int    @default(0) // points from social tasks
+  referralCount        Int    @default(0) // successful referrals
+  updatedAt            DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@index([seasonId, points(sort: Desc)])
+  @@index([userId, seasonId])
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  key         String @unique
+  title       String
+  description String
+  icon        String // emoji or icon name
+  rules       Json   // { type: "streak", threshold: 5 } etc.
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id         String   @id @default(cuid())
+  userId     String
+  badgeId    String
+  unlockedAt DateTime @default(now())
+  progress   Json?    // { current: 3, target: 5 }
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+// ─── Social & Referral Models ────────────────────────────────────────────────
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+}
+
+model SocialTask {
+  id            String @id @default(cuid())
+  key           String @unique // e.g. "share_prediction", "share_result", "share_rank", "invite_friend"
+  title         String
+  description   String
+  icon          String // emoji
+  pointsReward  Int    @default(25)
+  cooldownHours Int    @default(24)  // hours between claims
+  maxPerSeason  Int?                 // null = unlimited
+  active        Boolean @default(true)
+  createdAt     DateTime @default(now())
+
+  claims SocialTaskClaim[]
+}
+
+model SocialTaskClaim {
+  id           String   @id @default(cuid())
+  userId       String
+  socialTaskId String
+  seasonId     String
+  metadata     Json?    // { predictionId, platform, episodeId, etc. }
+  pointsAwarded Int     @default(0)
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialTask SocialTask @relation(fields: [socialTaskId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([socialTaskId])
+  @@index([userId, socialTaskId, createdAt])
+  @@index([seasonId])
+}
+
+model Referral {
+  id            String         @id @default(cuid())
+  referrerId    String
+  refereeId     String         @unique // a user can only be referred once
+  referralCode  String
+  pointsAwarded Int            @default(0)
+  status        ReferralStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+
+  referrer User @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee  User @relation("ReferralReferee", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([referralCode])
+}
