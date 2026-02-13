@@ -183,7 +183,7 @@ async function main() {
           type: "ELIMINATION",
           prompt: "Who gets eliminated this week?",
           odds: 300,
-          options: teamRot,
+          options: teamRot.map(c => c.name),
           correctOption: "Seda Albayrak",
         },
         {

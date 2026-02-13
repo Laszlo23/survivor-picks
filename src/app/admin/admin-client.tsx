@@ -1180,8 +1180,11 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
                   <img
                     src={c.imageUrl}
                     alt={c.name}
-                    className="h-8 w-8 rounded-full object-cover ring-2"
-                    style={{ ringColor: c.tribe?.color || "#888" }}
+                    className="h-8 w-8 rounded-full object-cover"
+                    style={{
+                      outline: `2px solid ${c.tribe?.color || "#888"}`,
+                      outlineOffset: "1px",
+                    }}
                   />
                 ) : (
                   <div

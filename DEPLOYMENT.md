@@ -19,6 +19,7 @@ Before starting, ensure you have:
 - [ ] **Node.js v18+** and **npm v9+** installed
 - [ ] A **PostgreSQL database** (e.g., Neon, Supabase, Railway)
 - [ ] A **Vercel account** for frontend deployment
+- [ ] An **SMTP email provider** for magic link auth (Resend, SendGrid, or Postmark)
 
 ---
 
@@ -26,60 +27,72 @@ Before starting, ensure you have:
 
 ### A1. Deploy $PICKS Token via Clanker
 
-**Option 1: Web UI (easiest)**
+**Option 1: Clanker SDK (recommended)**
+
+Uses the official `clanker-sdk` v4. No API key needed -- signs directly with your wallet.
+
+```bash
+cd contracts/
+
+# Create .env from example
+cp .env.example .env
+
+# Edit .env and set your deployer key:
+#   DEPLOYER_PRIVATE_KEY=0xYOUR_PRIVATE_KEY
+
+# Deploy $PICKS token via Clanker SDK
+npm run deploy:clanker:token
+```
+
+This will:
+- Deploy the $PICKS ERC-20 token on Base via Clanker
+- Create a Uniswap V4 pool (PICKS/WETH) with instant liquidity
+- Lock 50% in a vault (7-day lockup, 2-year vesting)
+- Set 1% static fees on both sides
+- Print the token address and save it to `deployments/clanker-token.json`
+
+**Option 2: Clanker Web UI**
 
 1. Go to [clanker.world/deploy](https://www.clanker.world/deploy)
 2. Connect your deployer wallet
-3. Configure the token:
+3. Configure:
    - **Name:** SurvivorPicks
    - **Symbol:** PICKS
-   - **Vault:** 50% of supply, 7-day lockup, 730-day (2yr) vesting
-   - **Airdrop:** 5% to early supporters, 30-day lockup, 30-day vesting
+   - **Vault:** 50%, 7-day lockup, 730-day vesting
    - **Fees:** Static 1% on both sides
    - **Rewards:** 100% to your admin wallet
-   - **Pool:** Standard, paired with WETH, initial market cap ~10 ETH
-4. Deploy and note the token contract address
-
-**Option 2: API / Script**
-
-```bash
-cd contracts/
-
-# Set your Clanker API key and deployer key
-export CLANKER_API_KEY=your_clanker_api_key
-export DEPLOYER_PRIVATE_KEY=0xYOUR_KEY
-
-# Deploy token via Clanker + utility contracts in one go
-npm run deploy:clanker:mainnet
-```
-
-**Option 3: Use existing Clanker token**
-
-If you already deployed $PICKS via Clanker:
-
-```bash
-cd contracts/
-
-export PICKS_TOKEN_ADDRESS=0xYOUR_CLANKER_TOKEN_ADDRESS
-export DEPLOYER_PRIVATE_KEY=0xYOUR_KEY
-
-npm run deploy:clanker:mainnet
-```
+   - **Pool:** Standard, paired with WETH
+4. Deploy and note the token address
 
 ### A2. Deploy Utility Contracts
 
-The Clanker deploy script (`deploy-clanker.ts`) automatically deploys:
-- Treasury (fee collection, buyback-and-burn)
-- PredictionEngine (on-chain prediction market)
-- StakingVault (tiered staking with boost multipliers)
-- BadgeNFT (ERC-1155 achievement badges)
-- SeasonPass (ERC-721 premium passes)
+After deploying the token, deploy the 5 utility contracts:
 
-And configures roles (MINTER_ROLE, RESOLVER_ROLE).
+```bash
+cd contracts/
+
+# Set the token address from step A1
+export PICKS_TOKEN_ADDRESS=0xYOUR_CLANKER_TOKEN_ADDRESS
+
+# Deploy utility contracts to Base mainnet
+npm run deploy:clanker:mainnet
+```
+
+This deploys:
+- **Treasury** (fee collection, buyback-and-burn)
+- **PredictionEngine** (on-chain prediction market)
+- **StakingVault** (tiered staking with boost multipliers)
+- **BadgeNFT** (ERC-1155 achievement badges)
+- **SeasonPass** (ERC-721 premium passes)
+
+And configures roles (MINTER_ROLE on BadgeNFT for PredictionEngine).
 
 ### A3. Verify Contracts
 
 ```bash
+# Set your Basescan API key
+export BASESCAN_API_KEY=your_key
+
 npm run verify:mainnet
 ```
 
@@ -103,19 +116,8 @@ Claim LP rewards at: `https://www.clanker.world/clanker/YOUR_TOKEN_ADDRESS/admin
 
 ```bash
 cd contracts/
-
-cat > .env << 'EOF'
-DEPLOYER_PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
-BASESCAN_API_KEY=YOUR_BASESCAN_API_KEY
-BASE_MAINNET_RPC=https://mainnet.base.org
-
-# Token allocation wallets (OPTIONAL - defaults to deployer)
-# COMMUNITY_REWARDS_WALLET=0x...
-# LIQUIDITY_WALLET=0x...
-# TEAM_WALLET=0x...
-# STAKING_REWARDS_WALLET=0x...
-# ECOSYSTEM_WALLET=0x...
-EOF
+cp .env.example .env
+# Edit .env with your keys and wallet addresses
 ```
 
 ### B2. Deploy All Contracts
@@ -155,13 +157,15 @@ Copy the generated env snippet from the deployment output:
 cat contracts/deployments/base*.env >> .env.local
 ```
 
-Required variables:
+Add remaining required variables to `.env.local`:
 
 ```env
+# Chain
 NEXT_PUBLIC_CHAIN=mainnet
-NEXT_PUBLIC_BASE_RPC=https://mainnet.base.org
+NEXT_PUBLIC_BASE_RPC=https://base-mainnet.g.alchemy.com/v2/YOUR_KEY
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 
+# Contract addresses (from deployment output)
 NEXT_PUBLIC_PICKS_TOKEN_ADDRESS=0x...
 NEXT_PUBLIC_TREASURY_ADDRESS=0x...
 NEXT_PUBLIC_PREDICTION_ENGINE_ADDRESS=0x...
@@ -169,26 +173,56 @@ NEXT_PUBLIC_STAKING_VAULT_ADDRESS=0x...
 NEXT_PUBLIC_BADGE_NFT_ADDRESS=0x...
 NEXT_PUBLIC_SEASON_PASS_ADDRESS=0x...
 
-# For Clanker path: set the token page link
-NEXT_PUBLIC_CLANKER_TOKEN_URL=https://www.clanker.world/clanker/0xYOUR_TOKEN/admin
+# Clanker admin link (Path A only)
+NEXT_PUBLIC_CLANKER_TOKEN_URL=https://www.clanker.world/clanker/0xTOKEN/admin
 
+# Database
 DATABASE_URL=postgresql://...
-NEXTAUTH_SECRET=generate_a_random_secret
+
+# Auth
+NEXTAUTH_SECRET=generate_with_openssl_rand_base64_32
 NEXTAUTH_URL=https://yourdomain.com
+
+# Email (magic link login)
+EMAIL_SERVER_HOST=smtp.resend.com
+EMAIL_SERVER_PORT=465
+EMAIL_SERVER_USER=resend
+EMAIL_SERVER_PASSWORD=re_YOUR_KEY
+EMAIL_FROM=noreply@survivorpicks.com
+
+# Admin
+ADMIN_EMAIL=your@email.com
+
+# Indexer
+INDEXER_API_KEY=generate_a_random_string
 ```
 
 ### 2. Deploy to Vercel
 
 ```bash
-git add . && git commit -m "production deployment"
+# Push latest code
+git add . && git commit -m "production config"
 git push origin main
-# Import repo in Vercel, set env vars, deploy
+
+# Then in Vercel:
+# 1. Import the GitHub repo
+# 2. Set all environment variables from .env.local
+# 3. Deploy
+```
+
+Or use the Vercel CLI:
+
+```bash
+npx vercel --prod
 ```
 
 ### 3. Database Setup
 
 ```bash
-npx prisma migrate deploy
+# Create tables
+npx prisma db push
+
+# Seed initial data (seasons, episodes, contestants)
 npx prisma db seed
 ```
 
@@ -203,7 +237,8 @@ npx prisma db seed
 - [ ] Token page (`/token`) shows correct info and links
 - [ ] Staking page functional
 - [ ] Admin panel can create questions and resolve episodes
-- [ ] Event indexer running
+- [ ] Email magic link login working
+- [ ] WalletConnect working
 
 ### Launch Day (Clanker Path)
 1. Token is already live on Uniswap via Clanker
@@ -242,6 +277,7 @@ npx prisma db seed
 - Treasury has timelocked withdrawals (48h delay, 10% cap)
 - Use a hardware wallet for the deployer key
 - Consider transferring ownership to a multisig (Gnosis Safe) after deployment
+- Dev login route is blocked in production (`NODE_ENV=production`)
 
 ---
 
@@ -258,9 +294,10 @@ contracts/
     SeasonPass.sol              # ERC-721 passes
     Treasury.sol                # Fee management
   scripts/
+    deploy-token-clanker.ts     # Clanker SDK token deployment
+    deploy-clanker.ts           # Utility contracts (Clanker path)
     deploy.ts                   # Custom deploy (all contracts)
-    deploy-clanker.ts           # Clanker deploy (utility contracts only)
-    verify.ts                   # Basescan verification
+    verify.ts                   # Basescan verification (both paths)
   test/                         # Contract tests (65 passing)
   deployments/                  # Generated addresses after deploy
 

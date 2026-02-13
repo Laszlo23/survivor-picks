@@ -15,36 +15,53 @@ import * as path from "path";
  */
 async function main() {
   const networkName = process.env.HARDHAT_NETWORK || "hardhat";
-  const deploymentsPath = path.join(__dirname, "..", "deployments", `${networkName}.json`);
+
+  // Try Clanker deployment first, then custom
+  const clankerPath = path.join(__dirname, "..", "deployments", `${networkName}-clanker.json`);
+  const customPath = path.join(__dirname, "..", "deployments", `${networkName}.json`);
+  const isClanker = fs.existsSync(clankerPath);
+  const deploymentsPath = isClanker ? clankerPath : customPath;
 
   if (!fs.existsSync(deploymentsPath)) {
-    console.error(`No deployment file found at ${deploymentsPath}`);
-    console.error("Run the deploy script first: npm run deploy:sepolia (or deploy:mainnet)");
+    console.error(`No deployment file found.`);
+    console.error(`Checked: ${clankerPath}`);
+    console.error(`Checked: ${customPath}`);
+    console.error("Run the deploy script first.");
     process.exit(1);
   }
 
   const deployment = JSON.parse(fs.readFileSync(deploymentsPath, "utf8"));
   const contracts = deployment.contracts;
-  const allocations = deployment.allocations;
 
   console.log("===========================================");
-  console.log("SurvivorPicks Contract Verification");
+  console.log(`SurvivorPicks Contract Verification (${isClanker ? "Clanker" : "Custom"})`);
   console.log(`Network: ${networkName}`);
   console.log("===========================================\n");
 
-  const verificationTasks = [
-    {
+  const verificationTasks: Array<{
+    name: string;
+    address: string;
+    constructorArguments: any[];
+  }> = [];
+
+  // Clanker path: skip PicksToken and BondingCurvePresale (deployed by Clanker)
+  if (!isClanker && deployment.allocations) {
+    verificationTasks.push({
       name: "PicksToken",
       address: contracts.PicksToken,
       constructorArguments: [
-        allocations.communityRewards,
-        allocations.liquidity,
-        allocations.teamWallet,
-        deployment.deployer, // presale tokens initially go to deployer
-        allocations.stakingRewards,
-        allocations.ecosystem,
+        deployment.allocations.communityRewards,
+        deployment.allocations.liquidity,
+        deployment.allocations.teamWallet,
+        deployment.deployer,
+        deployment.allocations.stakingRewards,
+        deployment.allocations.ecosystem,
       ],
-    },
+    });
+  }
+
+  // Utility contracts (both paths)
+  verificationTasks.push(
     {
       name: "Treasury",
       address: contracts.Treasury,
@@ -77,12 +94,16 @@ async function main() {
         "SPPASS",
       ],
     },
-    {
+  );
+
+  // Custom path only
+  if (!isClanker && contracts.BondingCurvePresale) {
+    verificationTasks.push({
       name: "BondingCurvePresale",
       address: contracts.BondingCurvePresale,
       constructorArguments: [contracts.PicksToken],
-    },
-  ];
+    });
+  }
 
   let success = 0;
   let failed = 0;

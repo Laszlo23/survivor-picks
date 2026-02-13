@@ -55,6 +55,8 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/leaderboard` | Full leaderboard with search and pagination |
 | `/profile` | User profile with stats, badges, recent predictions |
 | `/admin` | Admin panel for managing seasons, episodes, questions |
+| `/token` | $PICKS token info, Uniswap/Clanker links |
+| `/staking` | $PICKS staking dashboard |
 
 ---
 
@@ -190,24 +192,45 @@ Tests cover:
 - **Styling:** Tailwind CSS 3 + shadcn/ui
 - **Database:** PostgreSQL + Prisma 5
 - **Auth:** NextAuth.js (Email magic link)
+- **Blockchain:** Base (L2) + Clanker token deployment
+- **Web3:** Wagmi + RainbowKit + Viem
+- **Smart Contracts:** Solidity 0.8.24 + Hardhat + OpenZeppelin
+- **Token:** $PICKS ERC-20 (deployed via Clanker)
+- **NFTs:** ERC-1155 badges, ERC-721 season passes
 - **Validation:** Zod
-- **Testing:** Vitest
-- **Deployment:** Vercel-ready
+- **Testing:** Vitest (frontend) + Hardhat/Chai (contracts, 65 tests)
+- **Deployment:** Vercel + Base mainnet
+
+---
+
+## On-Chain Architecture
+
+| Contract | Description |
+|---|---|
+| $PICKS Token | ERC-20 deployed via Clanker with Uniswap V4 liquidity |
+| PredictionEngine | On-chain prediction market with staking |
+| StakingVault | Tiered staking (Bronze/Silver/Gold) with boost multipliers |
+| Treasury | Fee collection, buyback-and-burn, timelocked withdrawals |
+| BadgeNFT | ERC-1155 achievement badges (soulbound + tradeable) |
+| SeasonPass | ERC-721 premium season passes |
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment guide.
 
 ---
 
 ## Environment Variables
+
+See [.env.example](.env.example) for the full list. Key variables:
 
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `NEXTAUTH_SECRET` | Random secret for session encryption |
 | `NEXTAUTH_URL` | App URL (http://localhost:3000 for dev) |
-| `EMAIL_SERVER_HOST` | SMTP host |
-| `EMAIL_SERVER_PORT` | SMTP port |
-| `EMAIL_SERVER_USER` | SMTP username |
-| `EMAIL_SERVER_PASSWORD` | SMTP password |
-| `EMAIL_FROM` | Sender email address |
+| `NEXT_PUBLIC_CHAIN` | "local", "testnet", or "mainnet" |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID |
+| `NEXT_PUBLIC_PICKS_TOKEN_ADDRESS` | Deployed $PICKS token address |
+| `EMAIL_SERVER_*` | SMTP settings for magic link auth |
 | `ADMIN_EMAIL` | Email auto-promoted to admin role |
 
 ---
@@ -215,6 +238,7 @@ Tests cover:
 ## Scripts
 
 ```bash
+# Frontend
 npm run dev          # Start dev server
 npm run build        # Production build
 npm run start        # Start production server
@@ -222,8 +246,15 @@ npm run test         # Run tests (watch mode)
 npm run test:run     # Run tests once
 npm run db:push      # Push schema to database
 npm run db:seed      # Seed database
-npm run db:migrate   # Run migrations
+npm run db:migrate:deploy  # Apply migrations (production)
 npm run db:studio    # Open Prisma Studio
+
+# Smart Contracts (from contracts/ directory)
+npm run compile      # Compile Solidity contracts
+npm test             # Run 65 contract tests
+npm run deploy:clanker:token    # Deploy $PICKS via Clanker SDK
+npm run deploy:clanker:mainnet  # Deploy utility contracts to Base
+npm run verify:mainnet          # Verify on Basescan
 ```
 
 ---
