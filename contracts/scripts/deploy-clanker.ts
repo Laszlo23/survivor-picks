@@ -174,6 +174,9 @@ async function main() {
     process.exit(1);
   }
 
+  // Helper: wait a bit between deploys to avoid nonce race conditions on public RPCs
+  const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
   // ─── Step 2: Deploy Treasury ───────────────────────────────────────
   console.log("\n2. Deploying Treasury...");
   const Treasury = await ethers.getContractFactory("Treasury");
@@ -181,6 +184,7 @@ async function main() {
   await treasury.waitForDeployment();
   const treasuryAddress = await treasury.getAddress();
   console.log(`   Treasury deployed: ${treasuryAddress}`);
+  await pause(3000);
 
   // ─── Step 3: Deploy PredictionEngine ───────────────────────────────
   console.log("\n3. Deploying PredictionEngine...");
@@ -189,6 +193,7 @@ async function main() {
   await engine.waitForDeployment();
   const engineAddress = await engine.getAddress();
   console.log(`   PredictionEngine deployed: ${engineAddress}`);
+  await pause(3000);
 
   // ─── Step 4: Deploy StakingVault ───────────────────────────────────
   console.log("\n4. Deploying StakingVault...");
@@ -197,6 +202,7 @@ async function main() {
   await vault.waitForDeployment();
   const vaultAddress = await vault.getAddress();
   console.log(`   StakingVault deployed: ${vaultAddress}`);
+  await pause(3000);
 
   // ─── Step 5: Deploy BadgeNFT ───────────────────────────────────────
   console.log("\n5. Deploying BadgeNFT...");
@@ -208,6 +214,7 @@ async function main() {
   await badge.waitForDeployment();
   const badgeAddress = await badge.getAddress();
   console.log(`   BadgeNFT deployed: ${badgeAddress}`);
+  await pause(3000);
 
   // ─── Step 6: Deploy SeasonPass ─────────────────────────────────────
   console.log("\n6. Deploying SeasonPass...");
@@ -220,6 +227,7 @@ async function main() {
   await pass.waitForDeployment();
   const passAddress = await pass.getAddress();
   console.log(`   SeasonPass deployed: ${passAddress}`);
+  await pause(3000);
 
   // ─── Step 7: Post-Deployment Configuration ─────────────────────────
   console.log("\n7. Post-deployment configuration...");
