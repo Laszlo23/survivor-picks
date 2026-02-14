@@ -65,6 +65,14 @@ import {
   AlertTriangle,
   ChevronRight,
   Edit,
+  Bot,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Clock,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -144,19 +152,20 @@ export function AdminClient({
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 overflow-x-hidden">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Shield className="h-6 w-6 text-primary" />
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           Admin Panel
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Manage everything — seasons, episodes, questions, contestants, results
+        <p className="text-muted-foreground mt-1 text-sm">
+          Manage seasons, episodes, questions, contestants, results
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6 flex-wrap h-auto gap-1">
+        <div className="overflow-x-auto -mx-4 px-4 mb-6">
+          <TabsList className="inline-flex h-auto gap-1 w-max">
           <TabsTrigger value="overview" className="gap-1.5">
             <BarChart3 className="h-3.5 w-3.5" />
             Overview
@@ -181,7 +190,12 @@ export function AdminClient({
             <CheckCircle className="h-3.5 w-3.5" />
             Resolve
           </TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="ai-agent" className="gap-1.5">
+            <Bot className="h-3.5 w-3.5" />
+            AI Agent
+          </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <OverviewTab stats={stats} seasons={seasons} />
@@ -200,6 +214,9 @@ export function AdminClient({
         </TabsContent>
         <TabsContent value="resolve">
           <ResolveTab seasons={seasons} />
+        </TabsContent>
+        <TabsContent value="ai-agent">
+          <AIAgentTab seasons={seasons} />
         </TabsContent>
       </Tabs>
     </div>
@@ -1525,5 +1542,538 @@ function ResolveEpisodeCard({ episode }: { episode: Episode }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ─── AI Agent Tab ────────────────────────────────────────────────────
+
+interface AgentLogEntry {
+  id: string;
+  type: string;
+  episodeId: string | null;
+  input: any;
+  output: any;
+  confidence: number | null;
+  status: string;
+  createdAt: string;
+}
+
+function AIAgentTab({ seasons }: { seasons: Season[] }) {
+  const [isPending, startTransition] = useTransition();
+  const [logs, setLogs] = useState<AgentLogEntry[]>([]);
+  const [logsLoaded, setLogsLoaded] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [generateResult, setGenerateResult] = useState<any>(null);
+  const [activeSubTab, setActiveSubTab] = useState<"controls" | "logs" | "review">("controls");
+  const router = useRouter();
+
+  // Fetch agent logs
+  const loadLogs = async () => {
+    try {
+      const res = await fetch("/api/admin/agent-logs");
+      if (res.ok) {
+        const data = await res.json();
+        setLogs(data.logs || []);
+        setLogsLoaded(true);
+      }
+    } catch {
+      toast.error("Failed to load agent logs");
+    }
+  };
+
+  // Run verify
+  const runVerify = async (episodeId?: string) => {
+    setVerifyResult(null);
+    try {
+      const url = episodeId
+        ? "/api/agent/verify"
+        : "/api/agent/verify";
+
+      const options: RequestInit = episodeId
+        ? {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-agent-key": "admin-trigger",
+            },
+            body: JSON.stringify({ episodeId }),
+          }
+        : {
+            method: "GET",
+            headers: { "x-agent-key": "admin-trigger" },
+          };
+
+      const res = await fetch(url, options);
+      const data = await res.json();
+      setVerifyResult(data);
+
+      if (data.ok) {
+        toast.success(`Verification complete: ${data.processed ?? 1} episode(s) processed`);
+        router.refresh();
+        loadLogs();
+      } else {
+        toast.error(data.error || "Verification failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Verification failed");
+    }
+  };
+
+  // Run generate
+  const runGenerate = async (episodeId?: string) => {
+    setGenerateResult(null);
+    try {
+      const options: RequestInit = episodeId
+        ? {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-agent-key": "admin-trigger",
+            },
+            body: JSON.stringify({ episodeId }),
+          }
+        : {
+            method: "GET",
+            headers: { "x-agent-key": "admin-trigger" },
+          };
+
+      const res = await fetch(
+        episodeId ? "/api/agent/generate" : "/api/agent/generate",
+        options
+      );
+      const data = await res.json();
+      setGenerateResult(data);
+
+      if (data.ok) {
+        toast.success(`Generation complete: ${data.processed ?? data.questions?.length ?? 0} item(s)`);
+        router.refresh();
+        loadLogs();
+      } else {
+        toast.error(data.error || "Generation failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Generation failed");
+    }
+  };
+
+  // Get episodes
+  const activeSeason = seasons.find((s) => s.active);
+  const lockedEpisodes = activeSeason?.episodes.filter((e) => e.status === "LOCKED") || [];
+  const draftEpisodes = activeSeason?.episodes.filter((e) => e.status === "DRAFT") || [];
+  const draftQuestions = activeSeason?.episodes
+    .flatMap((e) => e.questions.filter((q) => q.status === "DRAFT"))
+    || [];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-violet-950/50 to-indigo-950/50 border-violet-800/40">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-violet-500/20">
+              <Bot className="h-6 w-6 text-violet-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-violet-100">AI Agent</h2>
+              <p className="text-sm text-violet-300">
+                Automatic result verification and question generation
+              </p>
+            </div>
+          </div>
+
+          {/* Status indicators */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-xs text-violet-400 mb-1">Locked Eps</p>
+              <p className="text-xl font-bold text-white">{lockedEpisodes.length}</p>
+              <p className="text-xs text-muted-foreground">awaiting verify</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-xs text-violet-400 mb-1">Draft Eps</p>
+              <p className="text-xl font-bold text-white">{draftEpisodes.length}</p>
+              <p className="text-xs text-muted-foreground">need questions</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-xs text-violet-400 mb-1">Draft Q&apos;s</p>
+              <p className="text-xl font-bold text-white">{draftQuestions.length}</p>
+              <p className="text-xs text-muted-foreground">in review</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-xs text-violet-400 mb-1">Agent Runs</p>
+              <p className="text-xl font-bold text-white">{logsLoaded ? logs.length : "—"}</p>
+              <p className="text-xs text-muted-foreground">
+                {!logsLoaded ? (
+                  <button onClick={loadLogs} className="text-violet-400 underline">
+                    load
+                  </button>
+                ) : (
+                  "total"
+                )}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sub-tabs */}
+      <div className="flex gap-2 border-b border-border/50 pb-2 overflow-x-auto">
+        {(["controls", "review", "logs"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => {
+              setActiveSubTab(tab);
+              if (tab === "logs" && !logsLoaded) loadLogs();
+            }}
+            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeSubTab === tab
+                ? "bg-violet-500/20 text-violet-300 border-b-2 border-violet-500"
+                : "text-muted-foreground hover:text-violet-300"
+            }`}
+          >
+            {tab === "controls" && <><Sparkles className="h-3.5 w-3.5 inline mr-1.5" />Run Agent</>}
+            {tab === "review" && <><Eye className="h-3.5 w-3.5 inline mr-1.5" />Review Queue</>}
+            {tab === "logs" && <><Clock className="h-3.5 w-3.5 inline mr-1.5" />Activity Log</>}
+          </button>
+        ))}
+      </div>
+
+      {/* Controls Sub-tab */}
+      {activeSubTab === "controls" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Verify Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Search className="h-4 w-4 text-blue-400" />
+                Result Verification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Search the web for aired episode results and auto-resolve predictions
+                when confidence is 90%+.
+              </p>
+
+              {/* All pending */}
+              <Button
+                onClick={() => startTransition(() => runVerify())}
+                disabled={isPending || lockedEpisodes.length === 0}
+                className="w-full gap-2"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Verify All Locked Episodes ({lockedEpisodes.length})
+              </Button>
+
+              {/* Per-episode */}
+              {lockedEpisodes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium">Or verify individually:</p>
+                  {lockedEpisodes.map((ep) => (
+                    <Button
+                      key={ep.id}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between"
+                      onClick={() => startTransition(() => runVerify(ep.id))}
+                      disabled={isPending}
+                    >
+                      <span>Episode {ep.number}: {ep.title}</span>
+                      <Search className="h-3 w-3" />
+                    </Button>
+                  ))}
+                </div>
+              )}
+
+              {/* Result */}
+              {verifyResult && (
+                <div className={`rounded-lg p-3 text-sm ${
+                  verifyResult.ok ? "bg-green-950/30 border border-green-800/40" : "bg-red-950/30 border border-red-800/40"
+                }`}>
+                  {verifyResult.ok ? (
+                    <div className="space-y-2">
+                      <p className="font-medium text-green-400">Verification Complete</p>
+                      {(verifyResult.results || [verifyResult]).map((r: any, i: number) => (
+                        <div key={i} className="text-xs text-green-300">
+                          <span className="font-medium">{r.episodeTitle || "Episode"}</span>:{" "}
+                          <Badge variant={
+                            r.status === "auto_resolved" ? "default" :
+                            r.status === "needs_review" ? "secondary" : "outline"
+                          } className="text-[10px] h-4">
+                            {r.status}
+                          </Badge>{" "}
+                          {r.averageConfidence != null && (
+                            <span>({(r.averageConfidence * 100).toFixed(0)}% confidence)</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-red-400">{verifyResult.error}</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Generate Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-4 w-4 text-amber-400" />
+                Question Generation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Search for upcoming episode trends and generate prediction questions.
+                Generated questions go to DRAFT status for your review.
+              </p>
+
+              {/* All drafts */}
+              <Button
+                onClick={() => startTransition(() => runGenerate())}
+                disabled={isPending || draftEpisodes.length === 0}
+                className="w-full gap-2"
+                variant="secondary"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                Generate for All Draft Episodes ({draftEpisodes.length})
+              </Button>
+
+              {/* Per-episode */}
+              {draftEpisodes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium">Or generate individually:</p>
+                  {draftEpisodes.map((ep) => (
+                    <Button
+                      key={ep.id}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between"
+                      onClick={() => startTransition(() => runGenerate(ep.id))}
+                      disabled={isPending}
+                    >
+                      <span>Episode {ep.number}: {ep.title}</span>
+                      <Sparkles className="h-3 w-3" />
+                    </Button>
+                  ))}
+                </div>
+              )}
+
+              {/* Result */}
+              {generateResult && (
+                <div className={`rounded-lg p-3 text-sm ${
+                  generateResult.ok ? "bg-amber-950/30 border border-amber-800/40" : "bg-red-950/30 border border-red-800/40"
+                }`}>
+                  {generateResult.ok ? (
+                    <div className="space-y-2">
+                      <p className="font-medium text-amber-400">Generation Complete</p>
+                      {(generateResult.results || [generateResult]).map((r: any, i: number) => (
+                        <div key={i} className="text-xs text-amber-300">
+                          <span className="font-medium">{r.episodeTitle || "Episode"}</span>:{" "}
+                          {r.questionCount || r.questions?.length || 0} questions generated
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-red-400">{generateResult.error}</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Review Queue Sub-tab */}
+      {activeSubTab === "review" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Draft Questions — Review Queue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {draftQuestions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No draft questions to review.</p>
+                <p className="text-sm mt-1">
+                  Run the question generator to populate this queue.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeSeason?.episodes
+                  .filter((e) => e.questions.some((q) => q.status === "DRAFT"))
+                  .map((ep) => (
+                    <div key={ep.id} className="border border-border/50 rounded-lg p-4">
+                      <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
+                        <Tv className="h-3.5 w-3.5 text-violet-400" />
+                        Episode {ep.number}: {ep.title}
+                      </h3>
+                      <div className="space-y-2">
+                        {ep.questions
+                          .filter((q) => q.status === "DRAFT")
+                          .map((q) => (
+                            <div
+                              key={q.id}
+                              className="flex items-start justify-between gap-3 bg-black/20 rounded-lg p-3"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{q.prompt}</p>
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  <Badge variant="outline" className="text-[10px] h-4">
+                                    {q.type}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-[10px] h-4">
+                                    {q.odds > 0 ? "+" : ""}{q.odds}
+                                  </Badge>
+                                  {(Array.isArray(q.options) ? q.options as string[] : []).map((opt, i) => (
+                                    <Badge key={i} variant="outline" className="text-[10px] h-4 text-muted-foreground">
+                                      {opt}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-950/30"
+                                  onClick={async () => {
+                                    try {
+                                      await updateQuestion(q.id, { status: "OPEN" });
+                                      toast.success("Question approved");
+                                      router.refresh();
+                                    } catch {
+                                      toast.error("Failed to approve");
+                                    }
+                                  }}
+                                  title="Approve"
+                                >
+                                  <ThumbsUp className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                                  onClick={async () => {
+                                    try {
+                                      await deleteQuestion(q.id);
+                                      toast.success("Question rejected");
+                                      router.refresh();
+                                    } catch {
+                                      toast.error("Failed to delete");
+                                    }
+                                  }}
+                                  title="Reject"
+                                >
+                                  <ThumbsDown className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activity Log Sub-tab */}
+      {activeSubTab === "logs" && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Agent Activity Log
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={loadLogs}
+              className="gap-1"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {!logsLoaded ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Clock className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>Loading logs...</p>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Bot className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No agent activity yet.</p>
+                <p className="text-sm mt-1">
+                  Run the verification or generation agent to see logs here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {logs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-start gap-3 bg-black/20 rounded-lg p-3 border border-border/30"
+                  >
+                    <div className={`mt-0.5 p-1.5 rounded-md ${
+                      log.type === "verify" ? "bg-blue-500/20" : "bg-amber-500/20"
+                    }`}>
+                      {log.type === "verify" ? (
+                        <Search className="h-3.5 w-3.5 text-blue-400" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium capitalize">{log.type}</span>
+                        <Badge
+                          variant={
+                            log.status === "success" ? "default" :
+                            log.status === "needs_review" ? "secondary" :
+                            "destructive"
+                          }
+                          className="text-[10px] h-4"
+                        >
+                          {log.status}
+                        </Badge>
+                        {log.confidence != null && (
+                          <span className="text-xs text-muted-foreground">
+                            {(log.confidence * 100).toFixed(0)}% confidence
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {log.output?.message || log.output?.episodeTitle || "No details"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {new Date(log.createdAt).toLocaleString()}
+                        {log.input?.manual && " (manual)"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

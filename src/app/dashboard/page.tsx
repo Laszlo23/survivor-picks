@@ -141,29 +141,31 @@ export default async function DashboardPage() {
           {/* Next Episode */}
           {nextEpisode ? (
             <Card className="bg-card/50 border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">
-                    Episode {nextEpisode.number}: {nextEpisode.title}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {nextEpisode.questions.length} questions open
-                  </p>
+              <CardHeader>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base sm:text-lg truncate">
+                      Ep. {nextEpisode.number}: {nextEpisode.title}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {nextEpisode.questions.length} questions open
+                    </p>
+                  </div>
+                  <StatusChip status={nextEpisode.status} />
                 </div>
-                <StatusChip status={nextEpisode.status} />
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">
                       Locks in
                     </p>
                     <Countdown targetDate={new Date(nextEpisode.lockAt)} />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Shield className="h-4 w-4 text-primary" />
                     <span className="text-sm">
-                      {rankData?.jokersRemaining ?? 3} Jokers left
+                      {rankData?.jokersRemaining ?? 3} Jokers
                     </span>
                   </div>
                 </div>
@@ -173,9 +175,9 @@ export default async function DashboardPage() {
                   {nextEpisode.questions.slice(0, 3).map((q) => (
                     <div
                       key={q.id}
-                      className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2.5"
+                      className="flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2.5 min-w-0"
                     >
-                      <span className="text-sm truncate mr-4">{q.prompt}</span>
+                      <span className="text-sm truncate min-w-0">{q.prompt}</span>
                       <Badge
                         variant="outline"
                         className="shrink-0 bg-primary/10 text-primary border-primary/20 font-mono text-xs"

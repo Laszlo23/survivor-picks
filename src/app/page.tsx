@@ -31,7 +31,7 @@ export default async function LandingPage() {
               <Flame className="h-4 w-4" />
               {season ? `${season.title} is live` : "Coming Soon"}
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               Predict. Compete.{" "}
               <span className="text-primary">Survive.</span>
             </h1>
@@ -103,7 +103,7 @@ export default async function LandingPage() {
 
       {/* Scoring Preview */}
       <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="rounded-2xl border border-border/50 bg-card/30 p-8 sm:p-12">
+        <div className="rounded-2xl border border-border/50 bg-card/30 p-4 sm:p-8 md:p-12">
           <div className="grid gap-8 lg:grid-cols-2">
             <div>
               <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">

@@ -29,18 +29,18 @@ export function ProfileWeb3Section() {
         </div>
 
         {isConnected && (
-          <div className="grid grid-cols-3 gap-3 mt-3">
-            <div className="p-3 bg-zinc-900/50 rounded-lg">
-              <p className="text-xs text-zinc-500">$PICKS Balance</p>
-              <p className="text-lg font-bold text-white">{formatPicks(balance as bigint | undefined)}</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3">
+            <div className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg">
+              <p className="text-[10px] sm:text-xs text-zinc-500">$PICKS</p>
+              <p className="text-sm sm:text-lg font-bold text-white truncate">{formatPicks(balance as bigint | undefined)}</p>
             </div>
-            <div className="p-3 bg-zinc-900/50 rounded-lg">
-              <p className="text-xs text-zinc-500">Staked</p>
-              <p className="text-lg font-bold text-white">{formatPicks(userStaked)}</p>
+            <div className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg">
+              <p className="text-[10px] sm:text-xs text-zinc-500">Staked</p>
+              <p className="text-sm sm:text-lg font-bold text-white truncate">{formatPicks(userStaked)}</p>
             </div>
-            <div className="p-3 bg-zinc-900/50 rounded-lg">
-              <p className="text-xs text-zinc-500">Tier</p>
-              <p className={`text-lg font-bold ${
+            <div className="p-2 sm:p-3 bg-zinc-900/50 rounded-lg">
+              <p className="text-[10px] sm:text-xs text-zinc-500">Tier</p>
+              <p className={`text-sm sm:text-lg font-bold truncate ${
                 userTier === 3 ? "text-yellow-400" :
                 userTier === 2 ? "text-zinc-300" :
                 userTier === 1 ? "text-amber-500" : "text-zinc-500"

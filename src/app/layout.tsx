@@ -22,10 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen overflow-x-hidden`}>
         <Providers>
           <Navbar />
-          <main className="min-h-[calc(100vh-64px)]">{children}</main>
+          <main className="min-h-[calc(100vh-64px)] overflow-x-hidden">{children}</main>
         </Providers>
       </body>
     </html>

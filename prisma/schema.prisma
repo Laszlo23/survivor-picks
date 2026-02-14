@@ -85,6 +85,7 @@ model Season {
   description String?  @db.Text
   active      Boolean  @default(false)
   imageUrl    String?
+  showSlug    String?  // links to ShowConfig (e.g. "survivor-2026")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -323,4 +324,23 @@ model Referral {
 
   @@index([referrerId])
   @@index([referralCode])
+}
+
+// ─── AI Agent Models ─────────────────────────────────────────────────
+
+model AgentLog {
+  id         String   @id @default(cuid())
+  type       String   // "verify" | "generate"
+  seasonId   String?
+  episodeId  String?
+  input      Json     // search queries, context sent to LLM
+  output     Json     // LLM response, actions taken
+  confidence Float?
+  status     String   // "success" | "needs_review" | "failed"
+  createdAt  DateTime @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@index([episodeId])
 }

@@ -98,22 +98,22 @@ export function EpisodeClient({
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm text-muted-foreground">
               {episode.season.title}
             </p>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">
               Episode {episode.number}: {episode.title}
             </h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <ConnectWallet />
             <StatusChip status={episode.status as any} />
           </div>
         </div>
 
-        <div className="flex items-center gap-6 mt-4">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 mt-4">
           <div>
             <p className="text-xs text-muted-foreground mb-1">
               {isLocked ? "Locked" : "Locks in"}
@@ -123,7 +123,7 @@ export function EpisodeClient({
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
             <span className="text-sm">
-              {jokersRemaining} Joker{jokersRemaining !== 1 ? "s" : ""} remaining
+              {jokersRemaining} Joker{jokersRemaining !== 1 ? "s" : ""} left
             </span>
           </div>
         </div>
@@ -293,65 +293,67 @@ function QuestionCard({
 
         {/* Risk + Joker controls */}
         {!isLocked && (
-          <div className="flex flex-wrap items-center gap-6 border-t border-border/30 pt-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id={`risk-${question.id}`}
-                checked={isRisk}
-                onCheckedChange={(v) => {
-                  setIsRisk(v);
-                  if (v) setUseJoker(false);
-                }}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label
-                    htmlFor={`risk-${question.id}`}
-                    className="flex items-center gap-1 cursor-pointer text-sm"
-                  >
-                    <AlertTriangle className="h-3.5 w-3.5 text-accent" />
-                    Risk Bet
-                  </Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs max-w-[200px]">
-                    1.5x multiplier if correct, but 0 points if wrong. Joker
-                    cannot save a risk bet.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+          <div className="border-t border-border/30 pt-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`risk-${question.id}`}
+                  checked={isRisk}
+                  onCheckedChange={(v) => {
+                    setIsRisk(v);
+                    if (v) setUseJoker(false);
+                  }}
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Label
+                      htmlFor={`risk-${question.id}`}
+                      className="flex items-center gap-1 cursor-pointer text-sm"
+                    >
+                      <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+                      Risk Bet
+                    </Label>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-[200px]">
+                      1.5x multiplier if correct, but 0 points if wrong. Joker
+                      cannot save a risk bet.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`joker-${question.id}`}
+                  checked={useJoker}
+                  onCheckedChange={(v) => {
+                    setUseJoker(v);
+                    if (v) setIsRisk(false);
+                  }}
+                  disabled={jokersRemaining <= 0 || isRisk}
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Label
+                      htmlFor={`joker-${question.id}`}
+                      className="flex items-center gap-1 cursor-pointer text-sm"
+                    >
+                      <Shield className="h-3.5 w-3.5 text-primary" />
+                      Joker ({jokersRemaining})
+                    </Label>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-[200px]">
+                      If your pick is wrong, you still get 100 base points.
+                      Cannot be used with Risk Bet.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch
-                id={`joker-${question.id}`}
-                checked={useJoker}
-                onCheckedChange={(v) => {
-                  setUseJoker(v);
-                  if (v) setIsRisk(false);
-                }}
-                disabled={jokersRemaining <= 0 || isRisk}
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label
-                    htmlFor={`joker-${question.id}`}
-                    className="flex items-center gap-1 cursor-pointer text-sm"
-                  >
-                    <Shield className="h-3.5 w-3.5 text-primary" />
-                    Immunity Joker ({jokersRemaining})
-                  </Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs max-w-[200px]">
-                    If your pick is wrong, you still get 100 base points.
-                    Cannot be used with Risk Bet.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2">
               {saved && (
                 <ShareButton
                   shareType="prediction"
@@ -367,7 +369,7 @@ function QuestionCard({
                   metadata={{ questionId: question.id }}
                   variant="ghost"
                   size="sm"
-                  label="Share Pick"
+                  label="Share"
                 />
               )}
               <Button
@@ -381,7 +383,7 @@ function QuestionCard({
                 ) : saved ? (
                   <Check className="h-3.5 w-3.5" />
                 ) : null}
-                {saved ? "Update Pick" : "Confirm Pick"}
+                {saved ? "Update" : "Confirm Pick"}
               </Button>
             </div>
           </div>
@@ -405,8 +407,8 @@ function QuestionCard({
         {/* Resolved result */}
         {isResolved && prediction && (
           <div className="border-t border-border/30 pt-4 mt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {prediction.isCorrect ? (
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                     Correct
@@ -418,16 +420,16 @@ function QuestionCard({
                 )}
                 {prediction.usedJoker && (
                   <Badge variant="outline" className="text-primary border-primary/30">
-                    Joker Used
+                    Joker
                   </Badge>
                 )}
                 {prediction.isRisk && (
                   <Badge variant="outline" className="text-accent border-accent/30">
-                    Risk Bet
+                    Risk
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <ShareButton
                   shareType={prediction.isCorrect ? "result_win" : "result_loss"}
                   shareData={{
@@ -443,9 +445,9 @@ function QuestionCard({
                   metadata={{ questionId: question.id, isCorrect: prediction.isCorrect }}
                   variant="ghost"
                   size="sm"
-                  label={prediction.isCorrect ? "Share Win" : "Share"}
+                  label="Share"
                 />
-                <span className="font-mono font-bold text-lg">
+                <span className="font-mono font-bold text-lg whitespace-nowrap">
                   {prediction.pointsAwarded !== null
                     ? `+${prediction.pointsAwarded}`
                     : "—"}{" "}

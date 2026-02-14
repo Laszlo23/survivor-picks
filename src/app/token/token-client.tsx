@@ -70,31 +70,33 @@ export function TokenClient() {
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Flame className="h-8 w-8 text-orange-400" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+              <Flame className="h-6 w-6 sm:h-8 sm:w-8 text-orange-400 shrink-0" />
               $PICKS Token
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               The utility token powering SurvivorPicks on Base
             </p>
           </div>
-          <ConnectWallet />
+          <div className="shrink-0">
+            <ConnectWallet />
+          </div>
         </div>
       </div>
 
       {/* Your Balance */}
       {isConnected && (
-        <div className="mb-6 p-5 bg-gradient-to-r from-orange-900/30 to-amber-900/30 rounded-xl border border-orange-800/30">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="mb-6 p-4 sm:p-5 bg-gradient-to-r from-orange-900/30 to-amber-900/30 rounded-xl border border-orange-800/30">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-sm text-orange-300">Your $PICKS Balance</p>
-              <p className="text-3xl font-bold text-white">
+              <p className="text-2xl sm:text-3xl font-bold text-white truncate">
                 {formatPicks(balance as bigint | undefined)}
               </p>
             </div>
-            <Coins className="h-10 w-10 text-orange-400/50" />
+            <Coins className="h-8 w-8 sm:h-10 sm:w-10 text-orange-400/50 shrink-0" />
           </div>
         </div>
       )}
@@ -394,14 +396,14 @@ function TokenomicsRow({
   note?: string;
 }) {
   return (
-    <div className="flex items-center justify-between text-sm">
-      <div className="flex items-center gap-2">
-        <span className={color || "text-muted-foreground"}>{label}</span>
+    <div className="flex items-center justify-between gap-2 text-sm">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0 min-w-0">
+        <span className={`${color || "text-muted-foreground"} truncate`}>{label}</span>
         {note && (
           <span className="text-xs text-muted-foreground/60">({note})</span>
         )}
       </div>
-      <div className="text-right">
+      <div className="text-right shrink-0">
         <span className="font-medium">{pct}</span>
       </div>
     </div>

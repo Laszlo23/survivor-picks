@@ -151,17 +151,13 @@ export function LeaderboardClient({
             <CardContent>
               <div className="space-y-1">
                 {/* Header */}
-                <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
-                  <div className="col-span-1">#</div>
-                  <div className="col-span-4">Player</div>
-                  <div className="col-span-2 text-right">Points</div>
-                  <div className="col-span-2 text-right hidden sm:block">
-                    Record
-                  </div>
-                  <div className="col-span-1 text-right hidden sm:block">
-                    Win%
-                  </div>
-                  <div className="col-span-2 text-right">Streak</div>
+                <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
+                  <div className="w-7 shrink-0 text-center">#</div>
+                  <div className="flex-1 min-w-0">Player</div>
+                  <div className="w-16 text-right shrink-0">Points</div>
+                  <div className="w-14 text-right shrink-0 hidden sm:block">Record</div>
+                  <div className="w-12 text-right shrink-0 hidden sm:block">Win%</div>
+                  <div className="w-12 text-right shrink-0">Streak</div>
                 </div>
 
                 {data.entries.map((entry) => {
@@ -169,13 +165,13 @@ export function LeaderboardClient({
                   return (
                     <div
                       key={entry.id}
-                      className={`grid grid-cols-12 gap-2 items-center rounded-lg px-3 py-3 text-sm ${
+                      className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm ${
                         isCurrentUser
                           ? "bg-primary/10 border border-primary/20"
                           : "hover:bg-secondary/30"
                       }`}
                     >
-                      <div className="col-span-1">
+                      <div className="w-7 shrink-0 text-center">
                         <span
                           className={`font-bold ${
                             entry.rank === 1
@@ -190,7 +186,7 @@ export function LeaderboardClient({
                           {entry.rank}
                         </span>
                       </div>
-                      <div className="col-span-4 flex items-center gap-2 min-w-0">
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
                           {entry.user.name?.[0]?.toUpperCase() || "?"}
                         </div>
@@ -203,16 +199,16 @@ export function LeaderboardClient({
                           )}
                         </span>
                       </div>
-                      <div className="col-span-2 text-right font-mono font-bold text-primary">
+                      <div className="w-16 text-right shrink-0 font-mono font-bold text-primary">
                         {entry.points.toLocaleString()}
                       </div>
-                      <div className="col-span-2 text-right text-muted-foreground hidden sm:block">
+                      <div className="w-14 text-right text-muted-foreground shrink-0 hidden sm:block">
                         {entry.correctCount}/{entry.totalCount}
                       </div>
-                      <div className="col-span-1 text-right hidden sm:block">
+                      <div className="w-12 text-right shrink-0 hidden sm:block">
                         {Math.round(entry.winRate * 100)}%
                       </div>
-                      <div className="col-span-2 text-right">
+                      <div className="w-12 text-right shrink-0">
                         {entry.currentStreak > 0 && (
                           <span className="inline-flex items-center gap-1 text-accent">
                             <Flame className="h-3 w-3" />
@@ -272,12 +268,12 @@ export function LeaderboardClient({
           <CardContent>
             <div className="space-y-1">
               {/* Header */}
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
-                <div className="col-span-1">#</div>
-                <div className="col-span-4">Player</div>
-                <div className="col-span-2 text-right">Social Pts</div>
-                <div className="col-span-2 text-right">Referrals</div>
-                <div className="col-span-3 text-right">Total Pts</div>
+              <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
+                <div className="w-7 shrink-0 text-center">#</div>
+                <div className="flex-1 min-w-0">Player</div>
+                <div className="w-16 text-right shrink-0">Social</div>
+                <div className="w-14 text-right shrink-0 hidden sm:block">Refs</div>
+                <div className="w-16 text-right shrink-0">Total</div>
               </div>
 
               {communityData && communityData.length > 0 ? (
@@ -286,13 +282,13 @@ export function LeaderboardClient({
                   return (
                     <div
                       key={entry.userId}
-                      className={`grid grid-cols-12 gap-2 items-center rounded-lg px-3 py-3 text-sm ${
+                      className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm ${
                         isCurrentUser
                           ? "bg-primary/10 border border-primary/20"
                           : "hover:bg-secondary/30"
                       }`}
                     >
-                      <div className="col-span-1">
+                      <div className="w-7 shrink-0 text-center">
                         <span
                           className={`font-bold ${
                             entry.rank === 1
@@ -307,7 +303,7 @@ export function LeaderboardClient({
                           {entry.rank}
                         </span>
                       </div>
-                      <div className="col-span-4 flex items-center gap-2 min-w-0">
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold">
                           {entry.name[0]?.toUpperCase() || "?"}
                         </div>
@@ -320,10 +316,10 @@ export function LeaderboardClient({
                           )}
                         </span>
                       </div>
-                      <div className="col-span-2 text-right font-mono font-bold text-amber-400">
+                      <div className="w-16 text-right shrink-0 font-mono font-bold text-amber-400">
                         {entry.socialPoints.toLocaleString()}
                       </div>
-                      <div className="col-span-2 text-right">
+                      <div className="w-14 text-right shrink-0 hidden sm:block">
                         {entry.referralCount > 0 && (
                           <span className="inline-flex items-center gap-1 text-primary">
                             <Users className="h-3 w-3" />
@@ -331,7 +327,7 @@ export function LeaderboardClient({
                           </span>
                         )}
                       </div>
-                      <div className="col-span-3 text-right font-mono text-muted-foreground">
+                      <div className="w-16 text-right shrink-0 font-mono text-muted-foreground">
                         {entry.totalPoints.toLocaleString()}
                       </div>
                     </div>

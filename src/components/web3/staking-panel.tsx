@@ -77,59 +77,59 @@ export function StakingPanel() {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-          <p className="text-xs text-zinc-500 uppercase">Your Stake</p>
-          <p className="text-xl font-bold text-white mt-1">{formatPicks(userStaked)}</p>
-          <p className="text-xs text-zinc-400">$PICKS</p>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="p-3 sm:p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+          <p className="text-[10px] sm:text-xs text-zinc-500 uppercase">Your Stake</p>
+          <p className="text-lg sm:text-xl font-bold text-white mt-1 truncate">{formatPicks(userStaked)}</p>
+          <p className="text-[10px] sm:text-xs text-zinc-400">$PICKS</p>
         </div>
 
-        <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-          <p className="text-xs text-zinc-500 uppercase">Tier</p>
-          <p className={`text-xl font-bold mt-1 ${
+        <div className="p-3 sm:p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+          <p className="text-[10px] sm:text-xs text-zinc-500 uppercase">Tier</p>
+          <p className={`text-lg sm:text-xl font-bold mt-1 ${
             userTier === 3 ? "text-yellow-400" :
             userTier === 2 ? "text-zinc-300" :
             userTier === 1 ? "text-amber-500" : "text-zinc-500"
           }`}>
             {getTierName(userTier)}
           </p>
-          <p className="text-xs text-zinc-400">{boostMultiplier}x boost</p>
+          <p className="text-[10px] sm:text-xs text-zinc-400">{boostMultiplier}x boost</p>
         </div>
 
-        <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-          <p className="text-xs text-zinc-500 uppercase">Pending Rewards</p>
-          <p className="text-xl font-bold text-green-400 mt-1">{formatPicks(pendingRewards)}</p>
-          <p className="text-xs text-zinc-400">$PICKS</p>
+        <div className="p-3 sm:p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+          <p className="text-[10px] sm:text-xs text-zinc-500 uppercase">Rewards</p>
+          <p className="text-lg sm:text-xl font-bold text-green-400 mt-1 truncate">{formatPicks(pendingRewards)}</p>
+          <p className="text-[10px] sm:text-xs text-zinc-400">$PICKS</p>
         </div>
 
-        <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
-          <p className="text-xs text-zinc-500 uppercase">Total Staked</p>
-          <p className="text-xl font-bold text-blue-400 mt-1">{formatPicks(totalStakedData as bigint | undefined)}</p>
-          <p className="text-xs text-zinc-400">$PICKS (all users)</p>
+        <div className="p-3 sm:p-4 bg-zinc-900 rounded-xl border border-zinc-800">
+          <p className="text-[10px] sm:text-xs text-zinc-500 uppercase">Total Staked</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-400 mt-1 truncate">{formatPicks(totalStakedData as bigint | undefined)}</p>
+          <p className="text-[10px] sm:text-xs text-zinc-400">all users</p>
         </div>
       </div>
 
       {/* Tier Info */}
       <div className="p-4 bg-zinc-900 rounded-xl border border-zinc-800">
         <h3 className="text-sm font-medium text-white mb-3">Staking Tiers</h3>
-        <div className="grid grid-cols-3 gap-3 text-center text-xs">
-          <div className={`p-3 rounded-lg ${userTier >= 1 ? "bg-amber-900/30 border border-amber-800/50" : "bg-zinc-800"}`}>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center text-[10px] sm:text-xs">
+          <div className={`p-2 sm:p-3 rounded-lg ${userTier >= 1 ? "bg-amber-900/30 border border-amber-800/50" : "bg-zinc-800"}`}>
             <p className="font-bold text-amber-400">Bronze</p>
-            <p className="text-zinc-400 mt-1">1,000+ $PICKS</p>
+            <p className="text-zinc-400 mt-1">1K+</p>
             <p className="text-zinc-400">7+ days</p>
-            <p className="text-amber-300 font-medium mt-1">1.1x boost</p>
+            <p className="text-amber-300 font-medium mt-1">1.1x</p>
           </div>
-          <div className={`p-3 rounded-lg ${userTier >= 2 ? "bg-zinc-700/50 border border-zinc-600" : "bg-zinc-800"}`}>
+          <div className={`p-2 sm:p-3 rounded-lg ${userTier >= 2 ? "bg-zinc-700/50 border border-zinc-600" : "bg-zinc-800"}`}>
             <p className="font-bold text-zinc-300">Silver</p>
-            <p className="text-zinc-400 mt-1">10,000+ $PICKS</p>
+            <p className="text-zinc-400 mt-1">10K+</p>
             <p className="text-zinc-400">30+ days</p>
-            <p className="text-zinc-200 font-medium mt-1">1.25x boost</p>
+            <p className="text-zinc-200 font-medium mt-1">1.25x</p>
           </div>
-          <div className={`p-3 rounded-lg ${userTier >= 3 ? "bg-yellow-900/30 border border-yellow-800/50" : "bg-zinc-800"}`}>
+          <div className={`p-2 sm:p-3 rounded-lg ${userTier >= 3 ? "bg-yellow-900/30 border border-yellow-800/50" : "bg-zinc-800"}`}>
             <p className="font-bold text-yellow-400">Gold</p>
-            <p className="text-zinc-400 mt-1">100,000+ $PICKS</p>
+            <p className="text-zinc-400 mt-1">100K+</p>
             <p className="text-zinc-400">90+ days</p>
-            <p className="text-yellow-300 font-medium mt-1">1.5x boost</p>
+            <p className="text-yellow-300 font-medium mt-1">1.5x</p>
           </div>
         </div>
       </div>
@@ -169,9 +169,9 @@ export function StakingPanel() {
         <div className="p-4 space-y-3">
           {activeTab === "stake" ? (
             <>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-400">Available</span>
-                <span className="font-mono text-white">{formatPicks(balance as bigint | undefined)} $PICKS</span>
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-zinc-400 shrink-0">Available</span>
+                <span className="font-mono text-white truncate">{formatPicks(balance as bigint | undefined)} $PICKS</span>
               </div>
               <div className="relative">
                 <input
@@ -198,9 +198,9 @@ export function StakingPanel() {
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-400">Staked</span>
-                <span className="font-mono text-white">{formatPicks(userStaked)} $PICKS</span>
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-zinc-400 shrink-0">Staked</span>
+                <span className="font-mono text-white truncate">{formatPicks(userStaked)} $PICKS</span>
               </div>
               <div className="relative">
                 <input

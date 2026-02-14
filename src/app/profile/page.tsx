@@ -49,15 +49,15 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Profile Header */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-primary text-2xl font-bold">
+      <div className="mb-8 flex items-center gap-3 sm:gap-4">
+        <div className="flex h-12 w-12 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xl sm:text-2xl font-bold">
           {profile.name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">
             {profile.name || "Survivor Player"}
           </h1>
-          <p className="text-muted-foreground text-sm">{profile.email}</p>
+          <p className="text-muted-foreground text-sm truncate">{profile.email}</p>
           <p className="text-xs text-muted-foreground mt-1">
             Joined {new Date(profile.createdAt).toLocaleDateString()}
           </p>

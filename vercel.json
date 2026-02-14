@@ -3,6 +3,16 @@
   "buildCommand": "npx prisma generate && next build",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/agent/verify",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/agent/generate",
+      "schedule": "0 9 * * 1"
+    }
+  ],
   "headers": [
     {
       "source": "/contestants/(.*)",

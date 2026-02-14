@@ -72,6 +72,7 @@ CREATE TABLE "Season" (
     "description" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT false,
     "imageUrl" TEXT,
+    "showSlug" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -244,6 +245,21 @@ CREATE TABLE "Referral" (
     CONSTRAINT "Referral_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "AgentLog" (
+    "id" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "seasonId" TEXT,
+    "episodeId" TEXT,
+    "input" JSONB NOT NULL,
+    "output" JSONB NOT NULL,
+    "confidence" DOUBLE PRECISION,
+    "status" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AgentLog_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE INDEX "Account_userId_idx" ON "Account"("userId");
 
@@ -354,6 +370,18 @@ CREATE INDEX "Referral_referrerId_idx" ON "Referral"("referrerId");
 
 -- CreateIndex
 CREATE INDEX "Referral_referralCode_idx" ON "Referral"("referralCode");
+
+-- CreateIndex
+CREATE INDEX "AgentLog_type_idx" ON "AgentLog"("type");
+
+-- CreateIndex
+CREATE INDEX "AgentLog_status_idx" ON "AgentLog"("status");
+
+-- CreateIndex
+CREATE INDEX "AgentLog_createdAt_idx" ON "AgentLog"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "AgentLog_episodeId_idx" ON "AgentLog"("episodeId");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
