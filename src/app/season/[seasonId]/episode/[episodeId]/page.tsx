@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getEpisodeWithQuestions } from "@/lib/actions/episodes";
-import { getUserPredictions } from "@/lib/actions/predictions";
+import { getUserPredictions, getCommunityPicks } from "@/lib/actions/predictions";
 import { getUserRank } from "@/lib/actions/profile";
 import { getOrCreateReferralCode } from "@/lib/actions/referral";
 import { prisma } from "@/lib/prisma";
@@ -42,6 +42,10 @@ export default async function EpisodePage({
     );
   }
 
+  // Get community pick percentages
+  const questionIds = episode.questions.map((q: any) => q.id);
+  const communityPicks = await getCommunityPicks(questionIds);
+
   const userPredictions = predictions.reduce(
     (acc, p) => {
       acc[p.questionId] = {
@@ -73,6 +77,7 @@ export default async function EpisodePage({
         lockAt: episode.lockAt.toISOString(),
       }}
       userPredictions={userPredictions}
+      communityPicks={communityPicks}
       jokersRemaining={rankData?.jokersRemaining ?? 3}
       seasonId={seasonId}
       referralCode={referralCode}
