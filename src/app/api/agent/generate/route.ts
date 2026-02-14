@@ -1,35 +1,32 @@
 import { generateForAllDraft, generateForEpisode } from "@/lib/agent/generate";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { heavyLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 // ─── Auth ────────────────────────────────────────────────────────────
 
 async function isAuthorized(req: Request): Promise<boolean> {
-  // Only accept auth via headers (not query params — prevents URL log leaks)
+  // Check API key (cron / external callers)
   const key =
     req.headers.get("x-agent-key") ||
     req.headers.get("authorization")?.replace("Bearer ", "");
 
-  if (!key) return false;
+  if (key) {
+    if (process.env.AGENT_SECRET_KEY && key === process.env.AGENT_SECRET_KEY) return true;
+    if (process.env.CRON_SECRET && key === process.env.CRON_SECRET) return true;
+  }
 
-  // Allow cron / API key auth
-  if (process.env.AGENT_SECRET_KEY && key === process.env.AGENT_SECRET_KEY) return true;
-
-  // Allow Vercel Cron (sends Authorization: Bearer <CRON_SECRET>)
-  if (process.env.CRON_SECRET && key === process.env.CRON_SECRET) return true;
-
-  // Allow admin-triggered calls from the panel (requires valid admin session)
-  if (key === "admin-trigger") {
-    try {
-      const session = await getSession();
-      if (!session?.user?.id) return false;
+  // Check admin session (admin panel calls include session cookies)
+  try {
+    const session = await getSession();
+    if (session?.user?.id) {
       const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-      return user?.role === "ADMIN";
-    } catch {
-      return false;
+      if (user?.role === "ADMIN") return true;
     }
+  } catch {
+    // Session check failed — fall through
   }
 
   return false;
@@ -38,6 +35,10 @@ async function isAuthorized(req: Request): Promise<boolean> {
 // ─── GET: Cron-triggered generation ──────────────────────────────────
 
 export async function GET(req: Request) {
+  const ip = getClientIP(req);
+  const rl = heavyLimiter.check(`agent-gen:${ip}`);
+  if (!rl.success) return rateLimitResponse(rl.resetAt);
+
   if (!(await isAuthorized(req))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -91,6 +92,10 @@ export async function GET(req: Request) {
 // ─── POST: Manual single-episode generation ──────────────────────────
 
 export async function POST(req: Request) {
+  const ipPost = getClientIP(req);
+  const rlPost = heavyLimiter.check(`agent-gen:${ipPost}`);
+  if (!rlPost.success) return rateLimitResponse(rlPost.resetAt);
+
   if (!(await isAuthorized(req))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

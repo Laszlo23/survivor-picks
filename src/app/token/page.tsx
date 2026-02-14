@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+// Token page is client-only — no server data needed; cache the shell
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "$PICKS Token | RealityPicks",

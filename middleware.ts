@@ -37,8 +37,8 @@ const CSRF_EXEMPT_ROUTES = [
   "/api/auth/farcaster",
 ];
 
-// TODO: Add rate limiting for production. Recommended: @upstash/ratelimit with Redis.
-// This protects against brute-force, DoS, and abuse of expensive endpoints.
+// Rate limiting is handled per-route in src/lib/rate-limit.ts (in-memory).
+// For multi-instance scaling, replace with @upstash/ratelimit + Redis.
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

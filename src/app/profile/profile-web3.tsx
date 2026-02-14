@@ -139,7 +139,7 @@ function ProfileWeb3Inner() {
   const { data: tier } = useUserTier(address);
   const { data: stakeInfo } = useStakeInfo(address);
 
-  const userStaked = stakeInfo ? (stakeInfo as [bigint, bigint, bigint])[0] : 0n;
+  const userStaked = stakeInfo ? (stakeInfo as unknown as [bigint, bigint, bigint])[0] : 0n;
   const userTier = Number(tier || 0n);
 
   return (

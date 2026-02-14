@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { encode } from "next-auth/jwt";
+import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 /**
  * Farcaster Quick Auth bridge.
@@ -9,6 +10,10 @@ import { encode } from "next-auth/jwt";
  * and sets a NextAuth-compatible session cookie.
  */
 export async function POST(req: Request) {
+  // Rate limit: 10 auth attempts per minute per IP
+  const ip = getClientIP(req);
+  const rl = authLimiter.check(ip);
+  if (!rl.success) return rateLimitResponse(rl.resetAt);
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
     return Response.json(

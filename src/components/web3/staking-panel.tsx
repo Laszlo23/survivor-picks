@@ -49,7 +49,7 @@ export function StakingPanel() {
   const { unstake, isPending: isUnstaking } = useUnstake();
   const { claimRewards, isPending: isClaiming } = useClaimStakingRewards();
 
-  const userStaked = stakeInfo ? (stakeInfo as [bigint, bigint, bigint])[0] : 0n;
+  const userStaked = stakeInfo ? (stakeInfo as unknown as [bigint, bigint, bigint])[0] : 0n;
   const userTier = Number(tier || 0n);
   const boostBps = Number(boost || 10000n);
   const boostMultiplier = (boostBps / 10000).toFixed(2);

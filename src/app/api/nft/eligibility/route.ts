@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { heavyLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,12 @@ function getChainId(): number {
 
 // ─── GET /api/nft/eligibility ────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Rate limit: 5 eligibility checks per minute per IP
+  const ip = getClientIP(req);
+  const rl = heavyLimiter.check(ip);
+  if (!rl.success) return rateLimitResponse(rl.resetAt);
+
   try {
     const session = await getSession();
     if (!session?.user?.id) {

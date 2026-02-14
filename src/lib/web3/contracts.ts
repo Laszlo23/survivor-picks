@@ -77,4 +77,25 @@ export function isContractDeployed(contractName: string): boolean {
   }
 }
 
+/**
+ * Safe contract config: returns `{ address, abi, deployed }`.
+ * `deployed` is false when the contract address is `0x0` or missing.
+ * Use `deployed` in hooks' `query.enabled` to prevent RPC calls to zero addresses.
+ */
+export function safeContractConfig(contractName: keyof typeof ABIS) {
+  const deployed = isContractDeployed(contractName);
+  if (!deployed) {
+    return {
+      address: "0x0" as Address,
+      abi: ABIS[contractName],
+      deployed: false as const,
+    };
+  }
+  return {
+    address: getContractAddress(contractName),
+    abi: ABIS[contractName],
+    deployed: true as const,
+  };
+}
+
 export { ABIS };

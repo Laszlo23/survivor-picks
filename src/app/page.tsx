@@ -18,8 +18,8 @@ import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
 import { ScoreboardRow } from "@/components/ui/scoreboard-row";
 
-// Dynamic because DB queries run at request time
-export const dynamic = "force-dynamic";
+// Revalidate every 60 seconds (ISR) — landing page data changes infrequently
+export const revalidate = 60;
 
 export default async function LandingPage() {
   // Only fetch season title for the hero — lightweight

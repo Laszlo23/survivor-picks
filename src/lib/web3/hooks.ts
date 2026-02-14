@@ -1,14 +1,10 @@
 "use client";
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther, formatEther, type Address, encodeAbiParameters, keccak256, toHex } from "viem";
+import { parseEther, formatEther, type Address, keccak256, toHex } from "viem";
 import {
-  picksTokenConfig,
-  predictionEngineConfig,
-  stakingVaultConfig,
-  badgeNFTConfig,
-  seasonPassConfig,
-  treasuryConfig,
+  safeContractConfig,
+  isContractDeployed,
   realityPicksNFTConfig,
 } from "./contracts";
 
@@ -19,24 +15,42 @@ export function toBytes32(id: string): `0x${string}` {
   return keccak256(toHex(id));
 }
 
+// ─── Safe Read Hook Helper ──────────────────────────────────────────
+
+/**
+ * Wraps `useReadContract` with zero-address safety.
+ * If the contract is not deployed, the hook returns idle state (enabled: false).
+ */
+function useSafeRead(
+  contractName: Parameters<typeof safeContractConfig>[0],
+  functionName: string,
+  args?: readonly unknown[],
+  extraEnabled: boolean = true,
+) {
+  const config = safeContractConfig(contractName);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return useReadContract({
+    address: config.address,
+    abi: config.abi,
+    functionName: functionName as any,
+    args: args as any,
+    query: { enabled: config.deployed && extraEnabled },
+  } as any);
+}
+
 // ─── $PICKS Token Hooks ─────────────────────────────────────────────
 
 export function usePicksBalance(address?: Address) {
-  return useReadContract({
-    ...picksTokenConfig(),
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
+  return useSafeRead("PicksToken", "balanceOf", address ? [address] : undefined, !!address);
 }
 
 export function usePicksAllowance(owner?: Address, spender?: Address) {
-  return useReadContract({
-    ...picksTokenConfig(),
-    functionName: "allowance",
-    args: owner && spender ? [owner, spender] : undefined,
-    query: { enabled: !!owner && !!spender },
-  });
+  return useSafeRead(
+    "PicksToken",
+    "allowance",
+    owner && spender ? [owner, spender] : undefined,
+    !!owner && !!spender,
+  );
 }
 
 export function useApprovePicksToken() {
@@ -44,8 +58,11 @@ export function useApprovePicksToken() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const approve = (spender: Address, amount: bigint) => {
+    if (!isContractDeployed("PicksToken")) return;
+    const cfg = safeContractConfig("PicksToken");
     writeContract({
-      ...picksTokenConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "approve",
       args: [spender, amount],
     });
@@ -57,29 +74,25 @@ export function useApprovePicksToken() {
 // ─── Prediction Engine Hooks ────────────────────────────────────────
 
 export function useQuestion(questionId: `0x${string}`) {
-  return useReadContract({
-    ...predictionEngineConfig(),
-    functionName: "getQuestion",
-    args: [questionId],
-  });
+  return useSafeRead("PredictionEngine", "getQuestion", [questionId]);
 }
 
 export function useUserPrediction(questionId: `0x${string}`, user?: Address) {
-  return useReadContract({
-    ...predictionEngineConfig(),
-    functionName: "getUserPrediction",
-    args: questionId && user ? [questionId, user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead(
+    "PredictionEngine",
+    "getUserPrediction",
+    questionId && user ? [questionId, user] : undefined,
+    !!user,
+  );
 }
 
 export function useCalculatePayout(questionId: `0x${string}`, user?: Address) {
-  return useReadContract({
-    ...predictionEngineConfig(),
-    functionName: "calculatePayout",
-    args: questionId && user ? [questionId, user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead(
+    "PredictionEngine",
+    "calculatePayout",
+    questionId && user ? [questionId, user] : undefined,
+    !!user,
+  );
 }
 
 export function useMakePrediction() {
@@ -87,8 +100,11 @@ export function useMakePrediction() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const predict = (questionId: `0x${string}`, option: number, amount: bigint, isRisk: boolean) => {
+    if (!isContractDeployed("PredictionEngine")) return;
+    const cfg = safeContractConfig("PredictionEngine");
     writeContract({
-      ...predictionEngineConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "predict",
       args: [questionId, option, amount, isRisk],
     });
@@ -102,8 +118,11 @@ export function useClaimReward() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const claim = (questionId: `0x${string}`) => {
+    if (!isContractDeployed("PredictionEngine")) return;
+    const cfg = safeContractConfig("PredictionEngine");
     writeContract({
-      ...predictionEngineConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "claim",
       args: [questionId],
     });
@@ -117,8 +136,11 @@ export function useUseJoker() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const useJoker = (questionId: `0x${string}`, seasonId: `0x${string}`) => {
+    if (!isContractDeployed("PredictionEngine")) return;
+    const cfg = safeContractConfig("PredictionEngine");
     writeContract({
-      ...predictionEngineConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "useJoker",
       args: [questionId, seasonId],
     });
@@ -133,8 +155,11 @@ export function useCreateQuestion() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const createQuestion = (questionId: `0x${string}`, episodeId: `0x${string}`, optionCount: number, lockTimestamp: bigint) => {
+    if (!isContractDeployed("PredictionEngine")) return;
+    const cfg = safeContractConfig("PredictionEngine");
     writeContract({
-      ...predictionEngineConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "createQuestion",
       args: [questionId, episodeId, optionCount, lockTimestamp],
     });
@@ -148,8 +173,11 @@ export function useResolveQuestion() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const resolve = (questionId: `0x${string}`, correctOption: number) => {
+    if (!isContractDeployed("PredictionEngine")) return;
+    const cfg = safeContractConfig("PredictionEngine");
     writeContract({
-      ...predictionEngineConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "resolve",
       args: [questionId, correctOption],
     });
@@ -161,46 +189,23 @@ export function useResolveQuestion() {
 // ─── Staking Vault Hooks ────────────────────────────────────────────
 
 export function useStakeInfo(user?: Address) {
-  return useReadContract({
-    ...stakingVaultConfig(),
-    functionName: "getStakeInfo",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("StakingVault", "getStakeInfo", user ? [user] : undefined, !!user);
 }
 
 export function useUserTier(user?: Address) {
-  return useReadContract({
-    ...stakingVaultConfig(),
-    functionName: "getUserTier",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("StakingVault", "getUserTier", user ? [user] : undefined, !!user);
 }
 
 export function useBoostBPS(user?: Address) {
-  return useReadContract({
-    ...stakingVaultConfig(),
-    functionName: "getBoostBPS",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("StakingVault", "getBoostBPS", user ? [user] : undefined, !!user);
 }
 
 export function usePendingRewards(user?: Address) {
-  return useReadContract({
-    ...stakingVaultConfig(),
-    functionName: "pendingRewards",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("StakingVault", "pendingRewards", user ? [user] : undefined, !!user);
 }
 
 export function useTotalStaked() {
-  return useReadContract({
-    ...stakingVaultConfig(),
-    functionName: "totalStaked",
-  });
+  return useSafeRead("StakingVault", "totalStaked");
 }
 
 export function useStake() {
@@ -208,8 +213,11 @@ export function useStake() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const stake = (amount: bigint) => {
+    if (!isContractDeployed("StakingVault")) return;
+    const cfg = safeContractConfig("StakingVault");
     writeContract({
-      ...stakingVaultConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "stake",
       args: [amount],
     });
@@ -223,8 +231,11 @@ export function useUnstake() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const unstake = (amount: bigint) => {
+    if (!isContractDeployed("StakingVault")) return;
+    const cfg = safeContractConfig("StakingVault");
     writeContract({
-      ...stakingVaultConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "unstake",
       args: [amount],
     });
@@ -238,8 +249,11 @@ export function useClaimStakingRewards() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const claimRewards = () => {
+    if (!isContractDeployed("StakingVault")) return;
+    const cfg = safeContractConfig("StakingVault");
     writeContract({
-      ...stakingVaultConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "claimRewards",
     });
   };
@@ -250,54 +264,34 @@ export function useClaimStakingRewards() {
 // ─── Badge NFT Hooks ────────────────────────────────────────────────
 
 export function useUserBadges(user?: Address) {
-  return useReadContract({
-    ...badgeNFTConfig(),
-    functionName: "getUserBadges",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("BadgeNFT", "getUserBadges", user ? [user] : undefined, !!user);
 }
 
 export function useBadgeBalance(user?: Address, tokenId?: bigint) {
-  return useReadContract({
-    ...badgeNFTConfig(),
-    functionName: "balanceOf",
-    args: user && tokenId !== undefined ? [user, tokenId] : undefined,
-    query: { enabled: !!user && tokenId !== undefined },
-  });
+  return useSafeRead(
+    "BadgeNFT",
+    "balanceOf",
+    user && tokenId !== undefined ? [user, tokenId] : undefined,
+    !!user && tokenId !== undefined,
+  );
 }
 
 export function useBadgeURI(tokenId: bigint) {
-  return useReadContract({
-    ...badgeNFTConfig(),
-    functionName: "uri",
-    args: [tokenId],
-  });
+  return useSafeRead("BadgeNFT", "uri", [tokenId]);
 }
 
 // ─── Season Pass Hooks ──────────────────────────────────────────────
 
 export function useSeasonPassPrice() {
-  return useReadContract({
-    ...seasonPassConfig(),
-    functionName: "currentPrice",
-  });
+  return useSafeRead("SeasonPass", "currentPrice");
 }
 
 export function useRemainingPasses() {
-  return useReadContract({
-    ...seasonPassConfig(),
-    functionName: "remainingSupply",
-  });
+  return useSafeRead("SeasonPass", "remainingSupply");
 }
 
 export function useHasActivePass(user?: Address) {
-  return useReadContract({
-    ...seasonPassConfig(),
-    functionName: "hasActivePass",
-    args: user ? [user] : undefined,
-    query: { enabled: !!user },
-  });
+  return useSafeRead("SeasonPass", "hasActivePass", user ? [user] : undefined, !!user);
 }
 
 export function usePurchaseSeasonPass() {
@@ -305,8 +299,11 @@ export function usePurchaseSeasonPass() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const purchase = () => {
+    if (!isContractDeployed("SeasonPass")) return;
+    const cfg = safeContractConfig("SeasonPass");
     writeContract({
-      ...seasonPassConfig(),
+      address: cfg.address,
+      abi: cfg.abi,
       functionName: "purchase",
     });
   };
@@ -317,17 +314,11 @@ export function usePurchaseSeasonPass() {
 // ─── Treasury Hooks ─────────────────────────────────────────────────
 
 export function useTreasuryBalance() {
-  return useReadContract({
-    ...treasuryConfig(),
-    functionName: "treasuryBalance",
-  });
+  return useSafeRead("Treasury", "treasuryBalance");
 }
 
 export function useTotalBurned() {
-  return useReadContract({
-    ...treasuryConfig(),
-    functionName: "totalBurned",
-  });
+  return useSafeRead("Treasury", "totalBurned");
 }
 
 // ─── Formatting Helpers ─────────────────────────────────────────────
@@ -348,7 +339,6 @@ export function formatPicks(amount: bigint | undefined): string {
 }
 
 export function parsePicks(amount: string): bigint {
-  // Validate input before parsing to prevent errors from invalid strings
   const trimmed = amount.trim();
   if (!trimmed || !/^\d*\.?\d+$/.test(trimmed)) {
     throw new Error("Invalid $PICKS amount");
@@ -370,38 +360,24 @@ export function getTierName(tier: number): string {
 // ─── RealityPicks NFT Collection Hooks ───────────────────────────────
 
 export function useNFTTierInfo(tierId: number) {
-  return useReadContract({
-    ...realityPicksNFTConfig(),
-    functionName: "getTierInfo",
-    args: [BigInt(tierId)],
-  });
+  return useSafeRead("RealityPicksNFT", "getTierInfo", [BigInt(tierId)]);
 }
 
 export function useUserNFTTiers(address?: Address) {
-  return useReadContract({
-    ...realityPicksNFTConfig(),
-    functionName: "getUserTiers",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
+  return useSafeRead("RealityPicksNFT", "getUserTiers", address ? [address] : undefined, !!address);
 }
 
 export function useHasMintedTier(address?: Address, tierId?: number) {
-  return useReadContract({
-    ...realityPicksNFTConfig(),
-    functionName: "hasMintedTier",
-    args: address && tierId !== undefined ? [address, BigInt(tierId)] : undefined,
-    query: { enabled: !!address && tierId !== undefined },
-  });
+  return useSafeRead(
+    "RealityPicksNFT",
+    "hasMintedTier",
+    address && tierId !== undefined ? [address, BigInt(tierId)] : undefined,
+    !!address && tierId !== undefined,
+  );
 }
 
 export function useNFTNonce(address?: Address) {
-  return useReadContract({
-    ...realityPicksNFTConfig(),
-    functionName: "getNonce",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
+  return useSafeRead("RealityPicksNFT", "getNonce", address ? [address] : undefined, !!address);
 }
 
 export function useMintNFT() {
@@ -409,6 +385,7 @@ export function useMintNFT() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const mintOpen = (tierId: number, price: bigint) => {
+    if (!isContractDeployed("RealityPicksNFT")) return;
     const config = realityPicksNFTConfig();
     writeContract({
       address: config.address,
@@ -420,6 +397,7 @@ export function useMintNFT() {
   };
 
   const mintWithSig = (tierId: number, signature: `0x${string}`, price: bigint) => {
+    if (!isContractDeployed("RealityPicksNFT")) return;
     const config = realityPicksNFTConfig();
     writeContract({
       address: config.address,
@@ -440,19 +418,5 @@ export function useMintNFT() {
  * Returns true if the core contracts (PicksToken, StakingVault) have valid addresses.
  */
 export function useIsContractsReady(): boolean {
-  try {
-    const { getContractAddress } = require("./contracts");
-    const token = getContractAddress("PicksToken") as string;
-    const vault = getContractAddress("StakingVault") as string;
-    return (
-      !!token &&
-      !!vault &&
-      token !== "0x0" &&
-      vault !== "0x0" &&
-      token !== "0x0000000000000000000000000000000000000000" &&
-      vault !== "0x0000000000000000000000000000000000000000"
-    );
-  } catch {
-    return false;
-  }
+  return isContractDeployed("PicksToken") && isContractDeployed("StakingVault");
 }

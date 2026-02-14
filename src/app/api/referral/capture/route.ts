@@ -3,15 +3,36 @@
  * Called client-side when the landing page detects a ref param.
  */
 
+import { prisma } from "@/lib/prisma";
+import { apiLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
+
 // Strict alphanumeric pattern matching the code generator charset
 const REFERRAL_CODE_REGEX = /^[A-HJ-NP-Z2-9]{8}$/;
 
 export async function POST(req: Request) {
+  // Rate limit: 30 captures per minute per IP
+  const ip = getClientIP(req);
+  const rl = apiLimiter.check(ip);
+  if (!rl.success) return rateLimitResponse(rl.resetAt);
+
   try {
     const { code } = await req.json();
     if (!code || typeof code !== "string" || !REFERRAL_CODE_REGEX.test(code)) {
       return new Response(JSON.stringify({ error: "Invalid code" }), {
         status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify the referral code actually belongs to a user
+    const referrer = await prisma.user.findFirst({
+      where: { referralCode: code },
+      select: { id: true },
+    });
+
+    if (!referrer) {
+      return new Response(JSON.stringify({ error: "Unknown referral code" }), {
+        status: 404,
         headers: { "Content-Type": "application/json" },
       });
     }
