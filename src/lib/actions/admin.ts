@@ -223,6 +223,8 @@ export async function deleteTribe(id: string) {
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
 export async function getAdminStats() {
+  await requireAdminSession();
+
   const [userCount, predictionCount, activeSeasons, totalPoints] =
     await Promise.all([
       prisma.user.count(),
@@ -288,7 +290,7 @@ export async function resolveEpisode(
       userPredictions.set(pred.userId, existing);
     }
 
-    // 5. Score each user
+    // 5. Score each user — batch prediction updates and score events
     for (const [userId, preds] of userPredictions) {
       let episodePoints = 0;
       let correctInEpisode = 0;
@@ -296,6 +298,10 @@ export async function resolveEpisode(
       let riskWon = 0;
       let riskTotal = 0;
       let jokersUsed = 0;
+
+      // Collect all DB writes for this user and execute in parallel
+      const predUpdates: Promise<unknown>[] = [];
+      const scoreCreates: Promise<unknown>[] = [];
 
       for (const pred of preds) {
         const correct = correctMap.get(pred.questionId);
@@ -308,14 +314,16 @@ export async function resolveEpisode(
           usedJoker: pred.usedJoker,
         });
 
-        // Update prediction record
-        await tx.prediction.update({
-          where: { id: pred.id },
-          data: {
-            isCorrect,
-            pointsAwarded: result.points,
-          },
-        });
+        // Batch prediction update
+        predUpdates.push(
+          tx.prediction.update({
+            where: { id: pred.id },
+            data: {
+              isCorrect,
+              pointsAwarded: result.points,
+            },
+          })
+        );
 
         episodePoints += result.points;
 
@@ -326,22 +334,27 @@ export async function resolveEpisode(
         }
         if (pred.usedJoker) jokersUsed++;
 
-        // Create score event
+        // Batch score event creation
         if (result.points > 0) {
-          await tx.scoreEvent.create({
-            data: {
-              userId,
-              episodeId,
-              points: result.points,
-              reason: result.breakdown.jokerSave
-                ? "joker_save"
-                : pred.isRisk
-                ? "risk_correct"
-                : "correct_pick",
-            },
-          });
+          scoreCreates.push(
+            tx.scoreEvent.create({
+              data: {
+                userId,
+                episodeId,
+                points: result.points,
+                reason: result.breakdown.jokerSave
+                  ? "joker_save"
+                  : pred.isRisk
+                  ? "risk_correct"
+                  : "correct_pick",
+              },
+            })
+          );
         }
       }
+
+      // Execute all prediction updates and score events concurrently
+      await Promise.all([...predUpdates, ...scoreCreates]);
 
       // 6. Update user season stats
       const existingStats = await tx.userSeasonStats.findUnique({
@@ -359,14 +372,17 @@ export async function resolveEpisode(
 
       // Award streak bonus
       if (bonusPoints > 0) {
-        await tx.scoreEvent.create({
-          data: {
-            userId,
-            episodeId,
-            points: bonusPoints,
-            reason: "streak_bonus",
-          },
-        });
+        scoreCreates.push(
+          tx.scoreEvent.create({
+            data: {
+              userId,
+              episodeId,
+              points: bonusPoints,
+              reason: "streak_bonus",
+            },
+          })
+        );
+        await Promise.all(scoreCreates.slice(-1)); // execute streak bonus
         episodePoints += bonusPoints;
       }
 
@@ -416,6 +432,29 @@ export async function resolveEpisode(
   // Check badges after transaction
   await checkAndAwardBadges(episodeId);
 
+  // Send Farcaster push notifications (non-blocking)
+  try {
+    const resolvedEpisode = await prisma.episode.findUnique({
+      where: { id: episodeId },
+      include: { season: true },
+    });
+    if (resolvedEpisode?.season) {
+      const { notifyEpisodeResolved } = await import(
+        "@/lib/farcaster/notifications"
+      );
+      // Fire-and-forget: don't block the response
+      notifyEpisodeResolved(
+        episodeId,
+        resolvedEpisode.title,
+        resolvedEpisode.season.showSlug || "survivor-2026"
+      ).catch((e) =>
+        console.warn("[Farcaster] Notification dispatch failed:", e)
+      );
+    }
+  } catch {
+    // Non-critical — don't break resolution if notifications fail
+  }
+
   revalidatePath("/admin");
   revalidatePath("/leaderboard");
   revalidatePath("/dashboard");
@@ -436,6 +475,9 @@ async function checkAndAwardBadges(episodeId: string) {
   const allStats = await prisma.userSeasonStats.findMany({
     where: { seasonId: episode.seasonId },
   });
+
+  // Batch all badge upserts and execute concurrently
+  const badgeUpserts: Promise<unknown>[] = [];
 
   for (const stats of allStats) {
     for (const badge of badges) {
@@ -458,25 +500,30 @@ async function checkAndAwardBadges(episodeId: string) {
       }
 
       if (qualified) {
-        await prisma.userBadge.upsert({
-          where: {
-            userId_badgeId: {
+        badgeUpserts.push(
+          prisma.userBadge.upsert({
+            where: {
+              userId_badgeId: {
+                userId: stats.userId,
+                badgeId: badge.id,
+              },
+            },
+            create: {
               userId: stats.userId,
               badgeId: badge.id,
+              progress: { current: getProgress(stats, rules), target: rules.threshold },
             },
-          },
-          create: {
-            userId: stats.userId,
-            badgeId: badge.id,
-            progress: { current: getProgress(stats, rules), target: rules.threshold },
-          },
-          update: {
-            progress: { current: getProgress(stats, rules), target: rules.threshold },
-          },
-        });
+            update: {
+              progress: { current: getProgress(stats, rules), target: rules.threshold },
+            },
+          })
+        );
       }
     }
   }
+
+  // Execute all badge upserts concurrently
+  await Promise.all(badgeUpserts);
 }
 
 function getProgress(
@@ -495,6 +542,8 @@ function getProgress(
 // ─── Admin Data Fetchers ──────────────────────────────────────────────────────
 
 export async function getAdminSeasons() {
+  await requireAdminSession();
+
   return prisma.season.findMany({
     include: {
       episodes: {

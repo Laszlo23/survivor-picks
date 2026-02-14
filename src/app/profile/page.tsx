@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Profile | RealityPicks",
+  description: "View your prediction stats, badges, NFT collection, and activity history.",
+};
 import { getUserProfile, getUserRecentPredictions, getUserRank } from "@/lib/actions/profile";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getReferralStats } from "@/lib/actions/referral";
@@ -50,11 +56,14 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Profile Header */}
       <div className="mb-8 flex items-center gap-3 sm:gap-4">
-        <div className="flex h-12 w-12 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xl sm:text-2xl font-bold">
-          {profile.name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+        <div className="relative shrink-0">
+          <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary/20 text-primary text-xl sm:text-2xl font-bold relative z-10">
+            {profile.name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+          </div>
+          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-primary via-blue-500 to-violet-500 opacity-50 blur-sm animate-gradient-x" style={{ backgroundSize: "200% 200%" }} />
         </div>
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold truncate">
+          <h1 className="text-xl sm:text-2xl font-display font-bold truncate">
             {profile.name || "RealityPicks Player"}
           </h1>
           <p className="text-muted-foreground text-sm truncate">{profile.email}</p>
@@ -65,80 +74,62 @@ export default async function ProfilePage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-primary" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {[
+          {
+            icon: Zap,
+            label: "Total Points",
+            value: activeStats?.points?.toLocaleString() || "0",
+            color: "text-primary",
+            bg: "bg-primary/10",
+          },
+          {
+            icon: Trophy,
+            label: "Rank",
+            value: `#${rank?.rank || "\u2014"}`,
+            color: "text-amber-400",
+            bg: "bg-amber-500/10",
+          },
+          {
+            icon: Target,
+            label: "Win Rate",
+            value: activeStats
+              ? `${Math.round((activeStats.winRate || 0) * 100)}%`
+              : "\u2014",
+            color: "text-neon-cyan",
+            bg: "bg-neon-cyan/10",
+          },
+          {
+            icon: TrendingUp,
+            label: "Best Streak",
+            value: `${activeStats?.longestStreak || 0}`,
+            color: "text-accent",
+            bg: "bg-accent/10",
+          },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-xl ${stat.bg} border border-white/[0.06] flex items-center justify-center`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className={`text-xl font-bold font-mono ${stat.color}`}>
+                    {stat.value}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Points</p>
-                <p className="text-xl font-bold font-mono text-primary">
-                  {activeStats?.points?.toLocaleString() || "0"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Rank</p>
-                <p className="text-xl font-bold font-mono">
-                  #{rank?.rank || "—"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Target className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Win Rate</p>
-                <p className="text-xl font-bold font-mono">
-                  {activeStats
-                    ? `${Math.round((activeStats.winRate || 0) * 100)}%`
-                    : "—"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Best Streak</p>
-                <p className="text-xl font-bold font-mono">
-                  {activeStats?.longestStreak || 0}
-                  <span className="text-sm text-muted-foreground ml-1">eps</span>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Season Stats */}
-        <Card className="bg-card/50 border-border/50">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg font-display flex items-center gap-2">
               <Flame className="h-5 w-5 text-primary" />
               Season Stats
             </CardTitle>
@@ -212,9 +203,9 @@ export default async function ProfilePage() {
         </Card>
 
         {/* Badges */}
-        <Card className="bg-card/50 border-border/50">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg font-display flex items-center gap-2">
               <Award className="h-5 w-5 text-amber-400" />
               Badges
             </CardTitle>
@@ -225,7 +216,7 @@ export default async function ProfilePage() {
                 {profile.badges.map((ub) => (
                   <div
                     key={ub.id}
-                    className="rounded-lg border border-border/30 bg-secondary/30 p-3 text-center"
+                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-center hover:bg-white/[0.04] transition-colors"
                   >
                     <span className="text-2xl">{ub.badge.icon}</span>
                     <p className="text-sm font-medium mt-1">{ub.badge.title}</p>
@@ -237,7 +228,7 @@ export default async function ProfilePage() {
               </div>
             ) : (
               <EmptyState
-                icon={Award}
+                icon={<Award className="h-7 w-7 text-muted-foreground" />}
                 title="No Badges Yet"
                 description="Keep playing to unlock achievements!"
                 className="py-8"
@@ -260,9 +251,9 @@ export default async function ProfilePage() {
       </div>
 
       {/* Recent Predictions */}
-      <Card className="bg-card/50 border-border/50 mt-8">
+      <Card className="mt-8">
         <CardHeader>
-          <CardTitle className="text-lg">Recent Predictions</CardTitle>
+          <CardTitle className="text-lg font-display">Recent Predictions</CardTitle>
         </CardHeader>
         <CardContent>
           {recentPredictions.length > 0 ? (
@@ -270,11 +261,11 @@ export default async function ProfilePage() {
               {recentPredictions.map((pred) => (
                 <div
                   key={pred.id}
-                  className="flex items-center gap-3 rounded-lg bg-secondary/30 px-4 py-3"
+                  className="flex items-center gap-3 rounded-xl bg-white/[0.02] border border-white/[0.04] px-4 py-3 hover:bg-white/[0.04] transition-colors"
                 >
                   <div className="shrink-0">
                     {pred.isCorrect === true ? (
-                      <CheckCircle className="h-5 w-5 text-emerald-400" />
+                      <CheckCircle className="h-5 w-5 text-neon-cyan" />
                     ) : pred.isCorrect === false ? (
                       <XCircle className="h-5 w-5 text-destructive" />
                     ) : (
@@ -318,7 +309,7 @@ export default async function ProfilePage() {
             </div>
           ) : (
             <EmptyState
-              icon={Target}
+              icon={<Target className="h-7 w-7 text-muted-foreground" />}
               title="No Predictions Yet"
               description="Head to the dashboard to make your first picks!"
               className="py-8"

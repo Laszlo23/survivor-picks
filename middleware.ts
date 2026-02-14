@@ -21,14 +21,35 @@ const PROTECTED_ROUTES = [
 
 const ADMIN_ROUTES = ["/admin"];
 
-const CSRF_POST_ROUTES = ["/api/referral/capture"];
+// CSRF: Validate Origin header on all POST mutation routes.
+// Agent endpoints (/api/agent/*) use their own x-agent-key header auth so they are excluded.
+// Auth routes (/api/auth/*) are handled by NextAuth's built-in CSRF.
+// Farcaster routes are excluded: webhook uses JFS signatures, auth bridge is called from iframe.
+const CSRF_POST_ROUTES = [
+  "/api/referral/capture",
+  "/api/nft",
+  "/api/admin",
+];
+
+// Routes that bypass CSRF origin checks (called from cross-origin contexts)
+const CSRF_EXEMPT_ROUTES = [
+  "/api/farcaster/webhook",
+  "/api/auth/farcaster",
+];
+
+// TODO: Add rate limiting for production. Recommended: @upstash/ratelimit with Redis.
+// This protects against brute-force, DoS, and abuse of expensive endpoints.
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ─── CSRF: Origin validation on custom POST endpoints ───────────
+  const isCsrfExempt = CSRF_EXEMPT_ROUTES.some((route) =>
+    pathname.startsWith(route)
+  );
   if (
     request.method === "POST" &&
+    !isCsrfExempt &&
     CSRF_POST_ROUTES.some((route) => pathname.startsWith(route))
   ) {
     const origin = request.headers.get("origin");
@@ -93,5 +114,8 @@ export const config = {
     "/admin/:path*",
     "/api/admin/:path*",
     "/api/referral/:path*",
+    "/api/nft/:path*",
+    "/api/farcaster/:path*",
+    "/api/auth/farcaster/:path*",
   ],
 };

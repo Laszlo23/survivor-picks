@@ -16,10 +16,7 @@ export async function getLeaderboard(params: {
     ...(search
       ? {
           user: {
-            OR: [
-              { name: { contains: search, mode: "insensitive" as const } },
-              { email: { contains: search, mode: "insensitive" as const } },
-            ],
+            name: { contains: search, mode: "insensitive" as const },
           },
         }
       : {}),
@@ -30,7 +27,7 @@ export async function getLeaderboard(params: {
       where,
       include: {
         user: {
-          select: { id: true, name: true, email: true, image: true },
+          select: { id: true, name: true, image: true },
         },
       },
       orderBy: { points: "desc" },
@@ -60,7 +57,7 @@ export async function getTopLeaderboard(seasonId: string, limit = 10) {
       where: { seasonId },
       include: {
         user: {
-          select: { id: true, name: true, email: true, image: true },
+          select: { id: true, name: true, image: true },
         },
       },
       orderBy: { points: "desc" },

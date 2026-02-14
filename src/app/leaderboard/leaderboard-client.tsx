@@ -2,9 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FadeIn } from "@/components/motion";
 import {
   Trophy,
   Search,
@@ -27,7 +29,6 @@ interface LeaderboardEntry {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -42,6 +43,12 @@ interface CommunityEntry {
 }
 
 type Tab = "points" | "community";
+
+const rankGlow: Record<number, string> = {
+  1: "shadow-[0_0_15px_hsl(40_90%_55%/0.2)] border-amber-500/30",
+  2: "shadow-[0_0_12px_hsl(210_10%_60%/0.15)] border-gray-400/30",
+  3: "shadow-[0_0_12px_hsl(30_70%_40%/0.15)] border-amber-700/30",
+};
 
 export function LeaderboardClient({
   data,
@@ -87,43 +94,49 @@ export function LeaderboardClient({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trophy className="h-6 w-6 text-amber-400" />
-          Leaderboard
-        </h1>
-        <p className="text-muted-foreground mt-1">{seasonTitle}</p>
-      </div>
+      <FadeIn>
+        <div className="mb-8">
+          <h1 className="text-2xl font-display font-bold flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-amber-400" />
+            Leaderboard
+          </h1>
+          <p className="text-muted-foreground mt-1">{seasonTitle}</p>
+        </div>
+      </FadeIn>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 bg-secondary/30 rounded-lg w-fit">
-        <button
-          onClick={() => setTab("points")}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-            tab === "points"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Zap className="h-4 w-4" />
-          Points
-        </button>
-        <button
-          onClick={() => setTab("community")}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-            tab === "community"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          Community
-        </button>
+      <div className="relative flex gap-1 mb-6 p-1 bg-white/[0.03] border border-white/[0.06] rounded-lg w-fit">
+        {(["points", "community"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`relative px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+              tab === t
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab === t && (
+              <motion.div
+                layoutId="leaderboard-tab"
+                className="absolute inset-0 rounded-md bg-white/[0.06] border border-white/[0.08]"
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className="relative">
+              {t === "points" ? (
+                <Zap className="h-4 w-4" />
+              ) : (
+                <Users className="h-4 w-4" />
+              )}
+            </span>
+            <span className="relative capitalize">{t}</span>
+          </button>
+        ))}
       </div>
 
       {tab === "points" ? (
         <>
-          {/* Search */}
           <form onSubmit={handleSearch} className="mb-6">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -141,8 +154,7 @@ export function LeaderboardClient({
             </div>
           </form>
 
-          {/* Points Table */}
-          <Card className="bg-card/50 border-border/50">
+          <Card>
             <CardHeader>
               <CardTitle className="text-sm text-muted-foreground">
                 {data.total} player{data.total !== 1 ? "s" : ""}
@@ -150,7 +162,6 @@ export function LeaderboardClient({
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
-                {/* Header */}
                 <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
                   <div className="w-7 shrink-0 text-center">#</div>
                   <div className="flex-1 min-w-0">Player</div>
@@ -160,22 +171,28 @@ export function LeaderboardClient({
                   <div className="w-12 text-right shrink-0">Streak</div>
                 </div>
 
-                {data.entries.map((entry) => {
+                {data.entries.map((entry, i) => {
                   const isCurrentUser = entry.user.id === currentUserId;
+                  const glow = rankGlow[entry.rank] || "";
                   return (
-                    <div
+                    <motion.div
                       key={entry.id}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm ${
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03, duration: 0.3 }}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-3 text-sm transition-all ${
                         isCurrentUser
-                          ? "bg-primary/10 border border-primary/20"
-                          : "hover:bg-secondary/30"
+                          ? "bg-primary/10 border border-primary/20 shadow-[0_0_15px_hsl(185_100%_55%/0.1)]"
+                          : entry.rank <= 3
+                          ? `border ${glow} bg-white/[0.02]`
+                          : "border border-transparent hover:bg-white/[0.03]"
                       }`}
                     >
                       <div className="w-7 shrink-0 text-center">
                         <span
-                          className={`font-bold ${
+                          className={`font-display font-bold ${
                             entry.rank === 1
-                              ? "text-amber-400"
+                              ? "text-gradient-gold"
                               : entry.rank === 2
                               ? "text-gray-400"
                               : entry.rank === 3
@@ -187,15 +204,13 @@ export function LeaderboardClient({
                         </span>
                       </div>
                       <div className="flex-1 flex items-center gap-2 min-w-0">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold ring-1 ring-primary/20">
                           {entry.user.name?.[0]?.toUpperCase() || "?"}
                         </div>
                         <span className="truncate font-medium">
                           {entry.user.name || "Anonymous"}
                           {isCurrentUser && (
-                            <span className="text-xs text-primary ml-1">
-                              (you)
-                            </span>
+                            <span className="text-xs text-primary ml-1">(you)</span>
                           )}
                         </span>
                       </div>
@@ -216,7 +231,7 @@ export function LeaderboardClient({
                           </span>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
 
@@ -227,9 +242,8 @@ export function LeaderboardClient({
                 )}
               </div>
 
-              {/* Pagination */}
               {data.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/30">
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/[0.06]">
                   <p className="text-xs text-muted-foreground">
                     Page {data.page} of {data.totalPages}
                   </p>
@@ -257,17 +271,15 @@ export function LeaderboardClient({
           </Card>
         </>
       ) : (
-        /* Community Tab */
-        <Card className="bg-card/50 border-border/50">
+        <Card>
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
               <Share2 className="h-4 w-4" />
-              Community Champions — Social Points + Referrals
+              Community Champions
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              {/* Header */}
               <div className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground">
                 <div className="w-7 shrink-0 text-center">#</div>
                 <div className="flex-1 min-w-0">Player</div>
@@ -277,20 +289,23 @@ export function LeaderboardClient({
               </div>
 
               {communityData && communityData.length > 0 ? (
-                communityData.map((entry) => {
+                communityData.map((entry, i) => {
                   const isCurrentUser = entry.userId === currentUserId;
                   return (
-                    <div
+                    <motion.div
                       key={entry.userId}
-                      className={`flex items-center gap-2 rounded-lg px-3 py-3 text-sm ${
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03, duration: 0.3 }}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-3 text-sm ${
                         isCurrentUser
                           ? "bg-primary/10 border border-primary/20"
-                          : "hover:bg-secondary/30"
+                          : "border border-transparent hover:bg-white/[0.03]"
                       }`}
                     >
                       <div className="w-7 shrink-0 text-center">
                         <span
-                          className={`font-bold ${
+                          className={`font-display font-bold ${
                             entry.rank === 1
                               ? "text-amber-400"
                               : entry.rank === 2
@@ -310,9 +325,7 @@ export function LeaderboardClient({
                         <span className="truncate font-medium">
                           {entry.name}
                           {isCurrentUser && (
-                            <span className="text-xs text-primary ml-1">
-                              (you)
-                            </span>
+                            <span className="text-xs text-primary ml-1">(you)</span>
                           )}
                         </span>
                       </div>
@@ -330,18 +343,19 @@ export function LeaderboardClient({
                       <div className="w-16 text-right shrink-0 font-mono text-muted-foreground">
                         {entry.totalPoints.toLocaleString()}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               ) : (
                 <div className="text-center py-12">
-                  <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.06] mx-auto mb-4 animate-float">
+                    <Users className="h-7 w-7 text-muted-foreground" />
+                  </div>
                   <p className="text-muted-foreground text-sm font-medium">
                     No community activity yet
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Be the first! Share predictions and invite friends to earn
-                    social points.
+                    Be the first! Share predictions and invite friends.
                   </p>
                 </div>
               )}

@@ -83,7 +83,7 @@ export function SocialTasksCard({
             key={task.id}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
               task.completedToday
-                ? "bg-emerald-500/5 border border-emerald-500/20"
+                ? "bg-neon-cyan/5 border border-neon-cyan/20"
                 : "bg-secondary/30 hover:bg-secondary/50"
             }`}
           >
@@ -91,7 +91,7 @@ export function SocialTasksCard({
             <div
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                 task.completedToday
-                  ? "bg-emerald-500/20 text-emerald-400"
+                  ? "bg-neon-cyan/20 text-neon-cyan"
                   : "bg-amber-500/10 text-amber-400"
               }`}
             >
@@ -107,7 +107,7 @@ export function SocialTasksCard({
               <p className="text-sm font-medium truncate">{task.title}</p>
               <p className="text-xs text-muted-foreground">
                 {task.completedToday ? (
-                  <span className="text-emerald-400 flex items-center gap-1">
+                  <span className="text-neon-cyan flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     Done — resets in {task.cooldownHours}h
                   </span>
@@ -121,7 +121,7 @@ export function SocialTasksCard({
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={`text-xs font-mono font-bold ${
-                  task.completedToday ? "text-emerald-400" : "text-amber-400"
+                  task.completedToday ? "text-neon-cyan" : "text-amber-400"
                 }`}
               >
                 +{task.pointsReward}

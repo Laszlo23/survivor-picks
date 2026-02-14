@@ -17,22 +17,29 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  // Auth: check Authorization header (Bearer token) or legacy query param
+  // Auth: require INDEXER_API_KEY or CRON_SECRET — always enforced
   const expectedKey = process.env.INDEXER_API_KEY;
-  if (expectedKey) {
-    const authHeader = request.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : null;
+  const cronSecret = process.env.CRON_SECRET;
 
-    // Also accept cron secret for Vercel cron jobs
-    const cronSecret = request.headers.get("authorization")?.startsWith("Bearer ")
-      ? null
-      : null;
+  if (!expectedKey && !cronSecret) {
+    console.error("[Indexer API] Neither INDEXER_API_KEY nor CRON_SECRET is configured");
+    return Response.json(
+      { error: "Service unavailable — not configured" },
+      { status: 503 }
+    );
+  }
 
-    if (bearerToken !== expectedKey) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authHeader = request.headers.get("authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+
+  const isAuthorized =
+    (expectedKey && bearerToken === expectedKey) ||
+    (cronSecret && bearerToken === cronSecret);
+
+  if (!isAuthorized) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -64,7 +71,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("[Indexer API] Error:", error);
     return Response.json(
-      { error: "Indexing failed", message: (error as Error).message },
+      { error: "Indexing failed" },
       { status: 500 }
     );
   }

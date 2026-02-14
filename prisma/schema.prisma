@@ -66,6 +66,13 @@ model User {
   walletAddress  String?   @unique  // Ethereum/Base wallet address
   referralCode   String?   @unique  // auto-generated 8-char code
   referredById   String?             // userId of who referred this user
+
+  // Farcaster Mini App fields
+  farcasterFid         Int?      @unique  // Farcaster user ID
+  farcasterUsername    String?             // Farcaster display username
+  fcNotificationToken  String?             // Push notification token from Farcaster
+  fcNotificationUrl    String?             // Webhook URL for sending notifications
+
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -90,10 +97,11 @@ model Season {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  episodes    Episode[]
-  seasonStats UserSeasonStats[]
-  contestants Contestant[]
-  tribes      Tribe[]
+  episodes         Episode[]
+  seasonStats      UserSeasonStats[]
+  contestants      Contestant[]
+  tribes           Tribe[]
+  socialTaskClaims SocialTaskClaim[]
 }
 
 model Tribe {
@@ -304,6 +312,7 @@ model SocialTaskClaim {
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   socialTask SocialTask @relation(fields: [socialTaskId], references: [id], onDelete: Cascade)
+  season     Season     @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([socialTaskId])

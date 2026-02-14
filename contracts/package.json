@@ -11,6 +11,9 @@
     "deploy:clanker:token": "npx tsx scripts/deploy-token-clanker.ts",
     "deploy:clanker:sepolia": "hardhat run scripts/deploy-clanker.ts --network baseSepolia",
     "deploy:clanker:mainnet": "hardhat run scripts/deploy-clanker.ts --network base",
+    "deploy:nft:local": "hardhat run scripts/deploy-nft.ts --network hardhat",
+    "deploy:nft:sepolia": "hardhat run scripts/deploy-nft.ts --network baseSepolia",
+    "deploy:nft:mainnet": "hardhat run scripts/deploy-nft.ts --network base",
     "verify:sepolia": "hardhat run scripts/verify.ts --network baseSepolia",
     "verify:mainnet": "hardhat run scripts/verify.ts --network base"
   },

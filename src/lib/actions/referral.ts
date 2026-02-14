@@ -218,7 +218,7 @@ export async function getReferralLeaderboard(seasonId: string, limit = 20) {
         referralCount: { gt: 0 },
       },
       include: {
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true } },
       },
       orderBy: { referralCount: "desc" },
       take: limit,
@@ -227,7 +227,7 @@ export async function getReferralLeaderboard(seasonId: string, limit = 20) {
     return stats.map((s, i) => ({
       rank: i + 1,
       userId: s.user.id,
-      name: s.user.name || s.user.email.split("@")[0],
+      name: s.user.name || "Anonymous",
       referralCount: s.referralCount,
       socialPoints: s.socialPoints,
     }));
@@ -249,7 +249,7 @@ export async function getCommunityLeaderboard(seasonId: string, limit = 20) {
         ],
       },
       include: {
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true } },
       },
       orderBy: { socialPoints: "desc" },
       take: limit,
@@ -258,7 +258,7 @@ export async function getCommunityLeaderboard(seasonId: string, limit = 20) {
     return stats.map((s, i) => ({
       rank: i + 1,
       userId: s.user.id,
-      name: s.user.name || s.user.email.split("@")[0],
+      name: s.user.name || "Anonymous",
       socialPoints: s.socialPoints,
       referralCount: s.referralCount,
       totalPoints: s.points,

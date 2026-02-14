@@ -4,19 +4,31 @@ import { encode } from "next-auth/jwt";
 /**
  * DEV-ONLY: Instant login without email verification.
  * Creates/finds user and sets a NextAuth session cookie.
- * Only works when NODE_ENV !== "production".
+ * Blocked unless NODE_ENV !== "production" AND NEXTAUTH_SECRET is set.
  */
 export async function POST(req: Request) {
-  // Block in production
-  if (process.env.NODE_ENV === "production") {
+  // Double gate: block in production AND require explicit dev flag
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.DISABLE_DEV_LOGIN === "true"
+  ) {
     return new Response(JSON.stringify({ error: "Not available" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
 
+  // Require NEXTAUTH_SECRET — never use a fallback
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    return new Response(
+      JSON.stringify({ error: "NEXTAUTH_SECRET not configured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   try {
-    const { email, name, role } = await req.json();
+    const { email, name } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email required" }), {
@@ -25,14 +37,14 @@ export async function POST(req: Request) {
       });
     }
 
-    // Upsert user
+    // Upsert user — role is ALWAYS "USER" for dev-login (no privilege escalation)
     const user = await prisma.user.upsert({
       where: { email },
-      update: { name: name || undefined, role: role || undefined },
+      update: { name: name || undefined },
       create: {
         email,
         name: name || email.split("@")[0],
-        role: role || "USER",
+        role: "USER",
         emailVerified: new Date(),
       },
     });
@@ -46,8 +58,7 @@ export async function POST(req: Request) {
         role: user.role,
         sub: user.id,
       },
-      secret:
-        process.env.NEXTAUTH_SECRET || "dev-secret-change-me-in-production",
+      secret,
     });
 
     // Build Set-Cookie header

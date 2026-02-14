@@ -24,9 +24,10 @@ export async function GET() {
     });
 
     return Response.json({ logs });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    console.error("Agent logs error:", error);
     return Response.json(
-      { error: error.message || "Internal error" },
+      { error: "Failed to fetch logs" },
       { status: 500 }
     );
   }

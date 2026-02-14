@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createPrediction } from "@/lib/actions/predictions";
 import { convertOddsToMultiplier } from "@/lib/scoring";
 import { type ShowInfo } from "@/lib/shows";
@@ -20,8 +21,10 @@ import {
   Loader2,
   Clock,
   Lock,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useFarcaster } from "@/lib/farcaster/provider";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -163,22 +166,56 @@ export function PredictionCard({
   // Card border color when resolved
   const resolvedBorder = isResolved && question.userPick
     ? question.userPick.isCorrect
-      ? "border-emerald-500/40"
+      ? "border-neon-cyan/40"
       : "border-red-500/40"
     : "";
 
   const accentColor = show?.accent || "#a78bfa";
+  const { isInMiniApp, composeCast } = useFarcaster();
+
+  const handleShareOnFarcaster = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
+    const showSlug = show?.slug || "survivor-2026";
+    const resultText = isResolved && question.userPick
+      ? question.userPick.isCorrect
+        ? `I got it right on ${show?.shortName || "RealityPicks"}! +${question.userPick.pointsAwarded} pts`
+        : `Tough break on ${show?.shortName || "RealityPicks"}, but I'm still in the game!`
+      : `I just made my prediction on ${show?.shortName || "RealityPicks"}!`;
+    await composeCast(
+      `${resultText}\n\nMake your picks:`,
+      [`${baseUrl}/frame/${showSlug}`]
+    );
+  };
 
   return (
-    <div
-      className={`rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden transition-all ${resolvedBorder || "border-border/40"}`}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+      whileTap={!isLocked ? { scale: 0.99 } : undefined}
+      className={`rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden transition-shadow duration-300 ${resolvedBorder || "border-white/[0.06]"} ${
+        isResolved && question.userPick?.isCorrect
+          ? "shadow-[0_0_20px_hsl(185_100%_55%/0.15)]"
+          : ""
+      }`}
     >
+      {/* ── Show-colored accent bar at top of card ────────────────── */}
+      {show && (
+        <div
+          className={`h-[3px] w-full bg-gradient-to-r ${show.headerGradient}`}
+        />
+      )}
+
       {/* ── Card Header ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {show && <span>{show.emoji}</span>}
+          <span className="font-medium" style={{ color: show?.accent }}>
+            {show?.shortName}
+          </span>
+          <span className="text-border">·</span>
           <span>Ep. {question.episodeNumber}</span>
-          <span className="text-border">|</span>
+          <span className="text-border">·</span>
           <span className="capitalize">
             {question.type.replace(/_/g, " ").toLowerCase()}
           </span>
@@ -188,7 +225,7 @@ export function PredictionCard({
             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
           )}
           {saved && !isPending && !isResolved && (
-            <Check className="h-3.5 w-3.5 text-emerald-400" />
+            <Check className="h-3.5 w-3.5 text-neon-cyan" />
           )}
           {!isLocked ? (
             <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -251,13 +288,17 @@ export function PredictionCard({
       )}
 
       {/* ── Footer: Points + Risk/Joker ───────────────────────────── */}
-      <div className="px-4 py-3 border-t border-border/20">
+      <div className="px-4 py-3 border-t border-white/[0.04]">
         {isResolved && question.userPick ? (
           /* Resolved footer */
-          <div className="flex items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-between"
+          >
             <div className="flex items-center gap-2">
               {question.userPick.isCorrect ? (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                <Badge className="bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30 text-xs">
                   Correct
                 </Badge>
               ) : (
@@ -282,13 +323,24 @@ export function PredictionCard({
                 </Badge>
               )}
             </div>
-            <span className="font-mono font-bold text-sm">
-              {question.userPick.pointsAwarded !== null
-                ? `+${question.userPick.pointsAwarded}`
-                : "—"}{" "}
-              <span className="text-xs text-muted-foreground">pts</span>
-            </span>
-          </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-bold text-sm">
+                {question.userPick.pointsAwarded !== null
+                  ? `+${question.userPick.pointsAwarded}`
+                  : "—"}{" "}
+                <span className="text-xs text-muted-foreground">pts</span>
+              </span>
+              {isInMiniApp && (
+                <button
+                  onClick={handleShareOnFarcaster}
+                  className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Share on Farcaster"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-muted-foreground hover:text-white" />
+                </button>
+              )}
+            </div>
+          </motion.div>
         ) : (
           /* Active footer */
           <div className="flex items-center justify-between">
@@ -351,20 +403,31 @@ export function PredictionCard({
               )}
             </div>
 
-            {/* Points potential */}
-            <div className="text-right">
-              <span className="text-xs text-muted-foreground">
-                {question.odds >= 0 ? "+" : ""}
-                {question.odds}
-              </span>
-              <span className="ml-2 font-mono text-xs font-bold" style={{ color: accentColor }}>
-                {potentialPts} pts
-              </span>
+            {/* Points potential + share */}
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <span className="text-xs text-muted-foreground">
+                  {question.odds >= 0 ? "+" : ""}
+                  {question.odds}
+                </span>
+                <span className="ml-2 font-mono text-xs font-bold" style={{ color: accentColor }}>
+                  {potentialPts} pts
+                </span>
+              </div>
+              {isInMiniApp && saved && (
+                <button
+                  onClick={handleShareOnFarcaster}
+                  className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Share on Farcaster"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-muted-foreground hover:text-white" />
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -410,7 +473,7 @@ function YesNoOptions({
           !userPick.isCorrect
         }
         isLocked={isLocked}
-        accentColor="#34d399"
+        accentColor="#22d3ee"
         onClick={() => onSelect(yesOption)}
       />
       <OptionButton
@@ -544,7 +607,7 @@ function MultiOptions({
               relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all overflow-hidden
               ${
                 isCorrectOption
-                  ? "border border-emerald-500/50 bg-emerald-500/10"
+                  ? "border border-neon-cyan/50 bg-neon-cyan/10"
                   : isUserWrong
                   ? "border border-red-500/50 bg-red-500/10"
                   : isSelected
@@ -559,11 +622,15 @@ function MultiOptions({
                 : undefined
             }
           >
-            {/* Background percentage bar */}
-            <div
-              className="absolute inset-y-0 left-0 rounded-lg transition-all duration-500"
-              style={{
+            {/* Background percentage bar (animated) */}
+            <motion.div
+              className="absolute inset-y-0 left-0 rounded-lg"
+              initial={{ width: 0 }}
+              animate={{
                 width: `${Math.max((pct / Math.max(maxPct, 1)) * 100, 0)}%`,
+              }}
+              transition={{ duration: 0.6, ease: [0.25, 0.4, 0.25, 1] }}
+              style={{
                 backgroundColor: isSelected
                   ? `${accentColor}15`
                   : "rgba(255,255,255,0.02)",
@@ -593,7 +660,7 @@ function MultiOptions({
                 </span>
               )}
               {isCorrectOption && (
-                <Check className="h-4 w-4 text-emerald-400" />
+                <Check className="h-4 w-4 text-neon-cyan" />
               )}
               {isUserWrong && <X className="h-4 w-4 text-red-400" />}
               {isSelected && !isResolved && (
@@ -645,7 +712,7 @@ function OptionButton({
         relative flex flex-col items-center justify-center gap-1 rounded-xl p-4 min-h-[80px] transition-all
         ${
           isCorrect
-            ? "border-2 border-emerald-500/60 bg-emerald-500/10"
+            ? "border-2 border-neon-cyan/60 bg-neon-cyan/10"
             : isUserWrong
             ? "border-2 border-red-500/60 bg-red-500/10"
             : isSelected
@@ -697,7 +764,7 @@ function OptionButton({
       {/* Result indicator */}
       {isCorrect && (
         <div className="absolute top-2 right-2">
-          <Check className="h-4 w-4 text-emerald-400" />
+          <Check className="h-4 w-4 text-neon-cyan" />
         </div>
       )}
       {isUserWrong && (

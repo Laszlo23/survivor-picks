@@ -241,7 +241,7 @@ function OverviewTab({ stats, seasons }: { stats: Stats; seasons: Season[] }) {
           value={stats.userCount.toLocaleString()}
         />
         <StatCard
-          icon={<Target className="h-5 w-5 text-green-400" />}
+          icon={<Target className="h-5 w-5 text-neon-cyan" />}
           label="Predictions Made"
           value={stats.predictionCount.toLocaleString()}
         />
@@ -433,7 +433,7 @@ function SeasonsTab({ seasons }: { seasons: Season[] }) {
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{season.title}</h3>
                     {season.active && (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                      <Badge className="bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30">
                         Active
                       </Badge>
                     )}
@@ -607,7 +607,7 @@ function EpisodesTab({ seasons }: { seasons: Season[] }) {
                     Air: {new Date(ep.airAt).toLocaleString()} ·{" "}
                     {ep.questions.length} questions
                     {ep.questions.some((q) => q.correctOption) && (
-                      <span className="text-emerald-400">
+                      <span className="text-neon-cyan">
                         {" "}
                         · {ep.questions.filter((q) => q.correctOption).length} resolved
                       </span>
@@ -642,7 +642,7 @@ function EpisodesTab({ seasons }: { seasons: Season[] }) {
                   {ep.status === "RESOLVED" && (
                     <Badge
                       variant="outline"
-                      className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/30"
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Resolved
@@ -907,7 +907,7 @@ function QuestionsTab({ seasons }: { seasons: Season[] }) {
                       </Badge>
                       <StatusChip status={q.status as any} />
                       {q.correctOption && (
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                        <Badge className="bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30 text-xs">
                           Winner: {q.correctOption}
                         </Badge>
                       )}
@@ -919,7 +919,7 @@ function QuestionsTab({ seasons }: { seasons: Season[] }) {
                           key={opt}
                           className={`text-xs rounded-full px-2 py-0.5 ${
                             q.correctOption === opt
-                              ? "bg-emerald-500/20 text-emerald-400 font-semibold"
+                              ? "bg-neon-cyan/20 text-neon-cyan font-semibold"
                               : "bg-secondary text-muted-foreground"
                           }`}
                         >
@@ -1298,7 +1298,7 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                      className="h-7 w-7 text-neon-cyan hover:text-cyan-300 hover:bg-neon-cyan/10"
                       onClick={() => handleReinstate(c)}
                       disabled={isPending}
                       title="Reinstate"
@@ -1358,7 +1358,7 @@ function ResolveTab({ seasons }: { seasons: Season[] }) {
       {lockedEpisodes.length === 0 && (
         <Card className="bg-card/50 border-border/50">
           <CardContent className="py-8 text-center">
-            <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
+            <CheckCircle className="h-10 w-10 text-neon-cyan mx-auto mb-3" />
             <p className="font-medium">All caught up!</p>
             <p className="text-sm text-muted-foreground">
               No episodes waiting for results right now.
@@ -1386,7 +1386,7 @@ function ResolveTab({ seasons }: { seasons: Season[] }) {
                   <CardContent className="py-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-emerald-400" />
+                        <CheckCircle className="h-4 w-4 text-neon-cyan" />
                         <span className="font-mono text-sm text-muted-foreground">
                           #{ep.number}
                         </span>
@@ -1397,7 +1397,7 @@ function ResolveTab({ seasons }: { seasons: Season[] }) {
                           <Badge
                             key={q.id}
                             variant="outline"
-                            className="text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            className="text-xs bg-neon-cyan/10 text-neon-cyan border-neon-cyan/30"
                           >
                             {q.correctOption}
                           </Badge>
@@ -1444,9 +1444,9 @@ function ResolveEpisodeCard({ episode }: { episode: Episode }) {
 
   if (resolved) {
     return (
-      <Card className="border-emerald-500/30 bg-emerald-500/5">
+      <Card className="border-neon-cyan/30 bg-neon-cyan/5">
         <CardContent className="py-6 text-center">
-          <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto mb-2" />
+          <CheckCircle className="h-10 w-10 text-neon-cyan mx-auto mb-2" />
           <p className="font-semibold">
             Episode {episode.number} Resolved!
           </p>
@@ -1487,7 +1487,7 @@ function ResolveEpisodeCard({ episode }: { episode: Episode }) {
                   {q.type.replace(/_/g, " ")}
                 </Badge>
                 {selected && (
-                  <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
+                  <CheckCircle className="h-3.5 w-3.5 text-neon-cyan" />
                 )}
               </div>
               <p className="text-sm font-medium mb-3">{q.prompt}</p>
@@ -1499,7 +1499,7 @@ function ResolveEpisodeCard({ episode }: { episode: Episode }) {
                     size="sm"
                     className={`justify-start ${
                       selected === opt
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        ? "bg-cyan-600 hover:bg-cyan-700 text-white"
                         : ""
                     }`}
                     onClick={() =>
@@ -1791,13 +1791,13 @@ function AIAgentTab({ seasons }: { seasons: Season[] }) {
               {/* Result */}
               {verifyResult && (
                 <div className={`rounded-lg p-3 text-sm ${
-                  verifyResult.ok ? "bg-green-950/30 border border-green-800/40" : "bg-red-950/30 border border-red-800/40"
+                  verifyResult.ok ? "bg-cyan-950/30 border border-cyan-800/40" : "bg-red-950/30 border border-red-800/40"
                 }`}>
                   {verifyResult.ok ? (
                     <div className="space-y-2">
-                      <p className="font-medium text-green-400">Verification Complete</p>
+                      <p className="font-medium text-neon-cyan">Verification Complete</p>
                       {(verifyResult.results || [verifyResult]).map((r: any, i: number) => (
-                        <div key={i} className="text-xs text-green-300">
+                        <div key={i} className="text-xs text-cyan-300">
                           <span className="font-medium">{r.episodeTitle || "Episode"}</span>:{" "}
                           <Badge variant={
                             r.status === "auto_resolved" ? "default" :
@@ -1949,7 +1949,7 @@ function AIAgentTab({ seasons }: { seasons: Season[] }) {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-green-400 hover:text-green-300 hover:bg-green-950/30"
+                                  className="h-7 w-7 p-0 text-neon-cyan hover:text-cyan-300 hover:bg-cyan-950/30"
                                   onClick={async () => {
                                     try {
                                       await updateQuestion(q.id, { status: "OPEN" });

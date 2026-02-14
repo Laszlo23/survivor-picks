@@ -1,13 +1,139 @@
 "use client";
 
+import React from "react";
 import { useAccount } from "wagmi";
+import Image from "next/image";
+import Link from "next/link";
 import { BadgeGallery } from "@/components/web3/badge-gallery";
 import { WalletLink } from "@/components/web3/wallet-link";
-import { usePicksBalance, useUserTier, useStakeInfo, formatPicks, getTierName } from "@/lib/web3/hooks";
-import { Wallet, Coins, TrendingUp } from "lucide-react";
-import Link from "next/link";
+import { usePicksBalance, useUserTier, useStakeInfo, useUserNFTTiers, formatPicks, getTierName } from "@/lib/web3/hooks";
+import { isContractDeployed } from "@/lib/web3/contracts";
+import { Wallet, Coins, Sparkles, ChevronRight, AlertTriangle } from "lucide-react";
 
-export function ProfileWeb3Section() {
+// ─── Error Boundary to catch Web3 hook failures gracefully ──────────
+
+class Web3ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.warn("[ProfileWeb3] Error caught:", error.message);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center">
+          <AlertTriangle className="h-6 w-6 text-amber-400 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Web3 data temporarily unavailable. Please refresh or connect your wallet.
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── NFT tier images & names ────────────────────────────────────────
+
+const NFT_TIERS = [
+  { id: 0, name: "Early Supporter", image: "/nfts/early-supporter.png", border: "border-amber-500/30" },
+  { id: 1, name: "Player", image: "/nfts/player.png", border: "border-indigo-500/30" },
+  { id: 2, name: "Community OG", image: "/nfts/community-og.png", border: "border-teal-500/30" },
+  { id: 3, name: "Survivor Pro", image: "/nfts/survivor-pro.png", border: "border-red-500/30" },
+  { id: 4, name: "Legend", image: "/nfts/legend.png", border: "border-yellow-500/40" },
+];
+
+// ─── NFT Collection Showcase ────────────────────────────────────────
+
+function NFTShowcase() {
+  const { address } = useAccount();
+  const { data: userTierIds, isLoading } = useUserNFTTiers(address);
+  const nftReady = isContractDeployed("RealityPicksNFT");
+
+  if (!nftReady) return null;
+
+  const ownedTiers = (userTierIds as bigint[] | undefined) || [];
+  const ownedSet = new Set(ownedTiers.map((t) => Number(t)));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          NFT Collection
+        </h3>
+        <Link
+          href="/nfts"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          Mint More <ChevronRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center gap-2 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">Loading collection...</span>
+        </div>
+      ) : ownedTiers.length > 0 ? (
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          {NFT_TIERS.map((nft) => {
+            const owned = ownedSet.has(nft.id);
+            return (
+              <Link
+                key={nft.id}
+                href="/nfts"
+                className={`relative rounded-xl overflow-hidden border transition-all ${
+                  owned
+                    ? `${nft.border} shadow-sm`
+                    : "border-white/[0.06] opacity-40 grayscale"
+                }`}
+              >
+                <div className="aspect-square relative">
+                  <Image
+                    src={nft.image}
+                    alt={nft.name}
+                    fill
+                    className="object-cover"
+                    sizes="100px"
+                  />
+                  {owned && (
+                    <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-sm px-1.5 py-1">
+                      <p className="text-[9px] font-bold text-white text-center truncate">
+                        {nft.name}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <Link
+          href="/nfts"
+          className="block p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-colors text-center"
+        >
+          <Sparkles className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No NFTs yet</p>
+          <p className="text-xs text-primary mt-1">Mint your first NFT &rarr;</p>
+        </Link>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────────────
+
+function ProfileWeb3Inner() {
   const { address, isConnected } = useAccount();
   const { data: balance } = usePicksBalance(address);
   const { data: tier } = useUserTier(address);
@@ -57,13 +183,24 @@ export function ProfileWeb3Section() {
             className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-3"
           >
             <Coins className="h-3 w-3" />
-            Go to Staking Dashboard →
+            Go to Staking Dashboard &rarr;
           </Link>
         )}
       </div>
 
-      {/* NFT Badge Gallery */}
+      {/* NFT Collection Showcase */}
+      {isConnected && <NFTShowcase />}
+
+      {/* NFT Badge Gallery (legacy ERC-1155 badges) */}
       <BadgeGallery />
     </div>
+  );
+}
+
+export function ProfileWeb3Section() {
+  return (
+    <Web3ErrorBoundary>
+      <ProfileWeb3Inner />
+    </Web3ErrorBoundary>
   );
 }

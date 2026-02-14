@@ -8,19 +8,20 @@ export const dynamic = "force-dynamic";
 // ─── Auth ────────────────────────────────────────────────────────────
 
 async function isAuthorized(req: Request): Promise<boolean> {
-  const url = new URL(req.url);
+  // Only accept auth via headers (not query params — prevents URL log leaks)
   const key =
-    url.searchParams.get("key") ||
     req.headers.get("x-agent-key") ||
     req.headers.get("authorization")?.replace("Bearer ", "");
 
+  if (!key) return false;
+
   // Allow cron / API key auth
-  if (key && key === process.env.AGENT_SECRET_KEY) return true;
+  if (process.env.AGENT_SECRET_KEY && key === process.env.AGENT_SECRET_KEY) return true;
 
-  // Allow Vercel Cron (uses CRON_SECRET env var)
-  if (key && key === process.env.CRON_SECRET) return true;
+  // Allow Vercel Cron (sends Authorization: Bearer <CRON_SECRET>)
+  if (process.env.CRON_SECRET && key === process.env.CRON_SECRET) return true;
 
-  // Allow admin-triggered calls from the panel
+  // Allow admin-triggered calls from the panel (requires valid admin session)
   if (key === "admin-trigger") {
     try {
       const session = await getSession();
@@ -77,10 +78,10 @@ export async function GET(req: Request) {
         message: r.message,
       })),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Agent verify error:", error);
     return Response.json(
-      { error: error.message || "Internal error" },
+      { error: "Verification failed" },
       { status: 500 }
     );
   }
@@ -148,10 +149,10 @@ export async function POST(req: Request) {
       ok: true,
       ...result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Agent verify error:", error);
     return Response.json(
-      { error: error.message || "Internal error" },
+      { error: "Verification failed" },
       { status: 500 }
     );
   }

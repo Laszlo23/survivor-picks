@@ -10,8 +10,8 @@
     --card-foreground: 150 5% 93%;
     --popover: 150 12% 9%;
     --popover-foreground: 150 5% 93%;
-    --primary: 145 72% 45%;
-    --primary-foreground: 150 15% 6%;
+    --primary: 185 100% 55%;
+    --primary-foreground: 220 15% 4%;
     --secondary: 150 10% 14%;
     --secondary-foreground: 150 5% 93%;
     --muted: 150 8% 14%;
@@ -22,8 +22,21 @@
     --destructive-foreground: 150 5% 93%;
     --border: 150 8% 18%;
     --input: 150 8% 18%;
-    --ring: 145 72% 45%;
-    --radius: 0.625rem;
+    --ring: 185 100% 55%;
+    --radius: 0.75rem;
+
+    /* Glow tokens */
+    --glow-primary: 0 0 20px hsl(185 100% 55% / 0.3), 0 0 60px hsl(185 100% 55% / 0.1);
+    --glow-accent: 0 0 20px hsl(30 80% 50% / 0.3), 0 0 60px hsl(30 80% 50% / 0.1);
+    --glow-blue: 0 0 20px hsl(220 80% 55% / 0.3), 0 0 60px hsl(220 80% 55% / 0.1);
+
+    /* ── Broadcast neon palette ──────────────────────────────── */
+    --neon-cyan: 185 100% 55%;
+    --neon-magenta: 320 100% 60%;
+    --neon-gold: 45 100% 55%;
+    --studio-black: 220 15% 4%;
+    --studio-dark: 220 12% 8%;
+    --show-scanlines: 1;
   }
 
   * {
@@ -39,10 +52,230 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(ellipse at 10% 20%, hsl(150 15% 10% / 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse at 90% 80%, hsl(30 10% 8% / 0.3) 0%, transparent 50%);
+      radial-gradient(ellipse at 10% 20%, hsl(185 80% 12% / 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 75%, hsl(260 40% 10% / 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(220 30% 8% / 0.2) 0%, transparent 60%);
     background-attachment: fixed;
   }
+}
+
+/* ─── Scanline + grain overlay (broadcast effect) ────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: calc(var(--show-scanlines, 1) * 0.04);
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        hsl(185 100% 55% / 0.03) 2px,
+        hsl(185 100% 55% / 0.03) 4px
+      );
+    mix-blend-mode: overlay;
+  }
+}
+
+/* ─── Neon text glow utility ─────────────────────────────────────── */
+.text-neon-cyan {
+  color: hsl(185 100% 55%);
+  text-shadow: 0 0 8px hsl(185 100% 55% / 0.5), 0 0 20px hsl(185 100% 55% / 0.2);
+}
+.text-neon-magenta {
+  color: hsl(320 100% 60%);
+  text-shadow: 0 0 8px hsl(320 100% 60% / 0.5), 0 0 20px hsl(320 100% 60% / 0.2);
+}
+.text-neon-gold {
+  color: hsl(45 100% 55%);
+  text-shadow: 0 0 8px hsl(45 100% 55% / 0.5), 0 0 20px hsl(45 100% 55% / 0.2);
+}
+
+/* ─── Broadcast gradient text ────────────────────────────────────── */
+.text-gradient-cyan {
+  background: linear-gradient(135deg, hsl(185 100% 55%) 0%, hsl(200 100% 65%) 50%, hsl(170 80% 50%) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-x 5s ease infinite;
+}
+
+/* ─── Glass morphism ──────────────────────────────────────────────── */
+.glass {
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  background: hsl(150 12% 9% / 0.6);
+  border: 1px solid hsl(150 5% 93% / 0.06);
+}
+
+.glass-strong {
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  background: hsl(150 12% 9% / 0.75);
+  border: 1px solid hsl(150 5% 93% / 0.08);
+}
+
+/* ─── Glow effects ────────────────────────────────────────────────── */
+.glow-sm {
+  box-shadow: 0 0 10px hsl(185 100% 55% / 0.15), 0 0 30px hsl(185 100% 55% / 0.05);
+}
+.glow-md {
+  box-shadow: var(--glow-primary);
+}
+.glow-lg {
+  box-shadow: 0 0 30px hsl(185 100% 55% / 0.4), 0 0 80px hsl(185 100% 55% / 0.15);
+}
+.glow-accent {
+  box-shadow: var(--glow-accent);
+}
+.glow-blue {
+  box-shadow: var(--glow-blue);
+}
+
+/* ─── Animated gradient text ──────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(185 100% 55%) 0%,
+    hsl(200 80% 60%) 30%,
+    hsl(260 70% 60%) 60%,
+    hsl(320 80% 55%) 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-x 6s ease infinite;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(30 80% 50%) 50%, hsl(45 95% 60%) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-x 4s ease infinite;
+}
+
+/* ─── Shimmer loading effect ──────────────────────────────────────── */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(150 5% 93% / 0.04) 40%,
+    hsl(150 5% 93% / 0.08) 50%,
+    hsl(150 5% 93% / 0.04) 60%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* ─── Animated gradient border ────────────────────────────────────── */
+.gradient-border {
+  position: relative;
+  border: none !important;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    hsl(185 100% 55% / 0.5),
+    hsl(260 70% 55% / 0.3),
+    hsl(320 80% 50% / 0.3),
+    hsl(185 100% 55% / 0.5)
+  );
+  background-size: 300% 300%;
+  animation: gradient-x 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ─── Keyframes ───────────────────────────────────────────────────── */
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px hsl(185 100% 55% / 0.2); }
+  50% { box-shadow: 0 0 30px hsl(185 100% 55% / 0.4); }
+}
+
+@keyframes particle-float {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(20px) scale(0.5); opacity: 0; }
+}
+
+@keyframes hero-particle-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  5% { opacity: 0.6; }
+  85% { opacity: 0.6; }
+  100% {
+    transform: translateY(-700px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────── */
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Hero floating particles — pure CSS, GPU-accelerated */
+.hero-particle {
+  position: absolute;
+  bottom: -5%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(185 100% 55% / 0.3);
+  will-change: transform, opacity;
+  animation: hero-particle-rise linear infinite;
+}
+.hero-particle--cyan {
+  background: hsl(185 100% 55% / 0.35);
+  box-shadow: 0 0 6px hsl(185 100% 55% / 0.3);
+}
+.hero-particle--magenta {
+  background: hsl(320 100% 60% / 0.3);
+  box-shadow: 0 0 6px hsl(320 100% 60% / 0.25);
 }
 
 /* Hide scrollbar for horizontal scroll containers */
@@ -56,15 +289,20 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(150 12% 8%);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(150 8% 22%);
-  border-radius: 3px;
+  background: hsl(150 8% 20%);
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(150 8% 30%);
+}
+
+/* Safe area for notch phones */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -10,7 +10,7 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
   },
   OPEN: {
     label: "Open",
-    className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    className: "bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30",
   },
   LOCKED: {
     label: "Locked",

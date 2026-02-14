@@ -6,7 +6,8 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: [
-          { key: "X-Frame-Options", value: "DENY" },
+          // X-Frame-Options removed — Mini Apps run in iframes.
+          // frame-ancestors in CSP handles this instead.
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
@@ -17,7 +18,33 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://api.openai.com https://api.tavily.com https://*.infura.io https://*.alchemy.com https://*.base.org https://app.uniswap.org https://*.uniswap.org https://auth.farcaster.xyz https://api.farcaster.xyz",
+              "frame-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://app.uniswap.org https://*.farcaster.xyz https://*.warpcast.com",
+              "frame-ancestors 'self' https://*.farcaster.xyz https://*.warpcast.com https://warpcast.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
         ],
+      },
+    ];
+  },
+
+  // Rewrite /.well-known/farcaster.json to our API route
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/farcaster.json",
+        destination: "/api/farcaster/manifest",
       },
     ];
   },

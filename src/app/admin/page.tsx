@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,11 @@ import { getAdminSeasons, getAdminStats } from "@/lib/actions/admin";
 import { AdminClient } from "./admin-client";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Admin | RealityPicks",
+  description: "Admin panel for managing seasons, episodes, questions, and AI agents.",
+};
 
 export default async function AdminPage() {
   const session = await getSession();

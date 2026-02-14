@@ -96,7 +96,7 @@ export function ShareButton({
       {status === "loading" ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
       ) : status === "done" ? (
-        <Check className="h-3.5 w-3.5 text-emerald-400" />
+        <Check className="h-3.5 w-3.5 text-neon-cyan" />
       ) : (
         <Share2 className="h-3.5 w-3.5" />
       )}
@@ -135,7 +135,7 @@ export function CopyButton({ text, className = "", label }: CopyButtonProps) {
       onClick={handleCopy}
     >
       {copied ? (
-        <Check className="h-3.5 w-3.5 text-emerald-400" />
+        <Check className="h-3.5 w-3.5 text-neon-cyan" />
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}

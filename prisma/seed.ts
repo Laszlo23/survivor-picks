@@ -35,90 +35,101 @@ async function main() {
   });
   console.log(`  ✅ Admin user: ${admin.email} (ref: ADMN2026)`);
 
-  // Create dev test player
+  // Create dev test player — generate unique ref code to avoid conflicts
+  const playerRef = "PLAY" + Date.now().toString(36).slice(-4).toUpperCase();
   const player = await prisma.user.upsert({
     where: { email: "player@realitypicks.xyz" },
-    update: { referralCode: "PLAY2026" },
+    update: {},
     create: {
       email: "player@realitypicks.xyz",
       name: "Test Player",
       role: "USER",
       emailVerified: new Date(),
-      referralCode: "PLAY2026",
+      referralCode: playerRef,
     },
   });
-  console.log(`  ✅ Test player: ${player.email} (ref: PLAY2026)`);
+  console.log(`  ✅ Test player: ${player.email} (ref: ${player.referralCode})`);
 
   // ─── Season ─────────────────────────────────────────────────────────────────
+  // Survivor 2026: All Star & Ünlüler — TV8, premiered Jan 1 2026, Dominican Republic
 
   const season = await prisma.season.create({
     data: {
-      title: "Survivor 2026 — Island of Competition",
+      title: "Survivor 2026: All Star",
       description:
-        "21 contestants, two tribes, one island. Who will outlast the rest? Make your predictions, earn points, and climb to the top!",
+        "Ünlüler vs Gönüllüler — All Stars clash with Volunteers in the Dominican Republic. 32 episodes of raw competition on TV8. Who will survive?",
       active: true,
+      showSlug: "survivor-2026",
     },
   });
-  console.log(`  ✅ Season: ${season.title}`);
+  console.log(`  ✅ Season: ${season.title} (slug: survivor-2026)`);
 
   // ─── Tribes ─────────────────────────────────────────────────────────────────
 
-  const tribeRot = await prisma.tribe.create({
-    data: { name: "Red", color: "#ef4444", seasonId: season.id },
+  const tribeUnluler = await prisma.tribe.create({
+    data: { name: "Ünlüler", color: "#ef4444", seasonId: season.id },
   });
-  const tribeBlau = await prisma.tribe.create({
-    data: { name: "Blue", color: "#3b82f6", seasonId: season.id },
+  const tribeGonulluler = await prisma.tribe.create({
+    data: { name: "Gönüllüler", color: "#3b82f6", seasonId: season.id },
   });
-  console.log("  ✅ Tribes: 🔴 Red, 🔵 Blue");
+  console.log("  ✅ Tribes: 🔴 Ünlüler (Celebrities), 🔵 Gönüllüler (Volunteers)");
 
   // ─── Contestants ────────────────────────────────────────────────────────────
 
-  // 🔴 Team Red (12 players)
-  const teamRot = [
-    { name: "Bayhan Gürhan", image: "/contestants/bayhan-gurhan.jpeg" },
-    { name: "Deniz Çatalbaş", image: "/contestants/deniz-cataltas.jpeg" },
-    { name: "Nagihan Karadere", image: "/contestants/nagihan-karadere.jpeg" },
-    { name: "Sercan Yıldırım", image: "/contestants/sercan-yildirim.jpeg" },
-    { name: "Mert Nobre", image: "/contestants/mert-nobre.jpeg" },
+  // 🔴 Ünlüler (Celebrities)
+  const teamUnluler = [
+    { name: "Keremcem", image: "/contestants/keremcem.jpeg" },
     { name: "Meryem Boz", image: "/contestants/meryem-boz.jpeg" },
-    { name: "Murat Arkın", image: "/contestants/murat-arkin.jpeg" },
-    { name: "Seren Ay Çetin", image: "/contestants/seren-ay-cetin.jpeg" },
     { name: "Serhan Onat", image: "/contestants/serhan-onat.jpeg" },
-    { name: "Büşra Yalçın", image: "/contestants/busra-yalcin.jpeg" },
-    { name: "Can Berkay Ertemiz", image: "/contestants/can-berkay-ertemiz.jpeg" },
-    { name: "Seda Albayrak", image: "/contestants/seda-albayrak.jpeg" },
+    { name: "Selen Görgüzel", image: "/contestants/selen-gorguzel.jpeg" },
+    { name: "Mert Nobre", image: "/contestants/mert-nobre.jpeg" },
+    { name: "Dilan Çıtak", image: "/contestants/dilan-citak.jpeg" },
+    { name: "Seren Ay Çetin", image: "/contestants/seren-ay-cetin.jpeg" },
+    { name: "Murat Arkın", image: "/contestants/murat-arkin.jpeg" },
+    { name: "Deniz Çatalbaş", image: "/contestants/deniz-cataltas.jpeg" },
+    { name: "Bayhan", image: "/contestants/bayhan.jpeg" },
   ];
 
-  // 🔵 Team Blue (9 players)
-  const teamBlau = [
-    { name: "Ramazan Sarı", image: "/contestants/ramazan-sari.jpeg" },
+  // 🔵 Gönüllüler (Volunteers)
+  const teamGonulluler = [
     { name: "Engincan Tura", image: "/contestants/engincan-tura.jpeg" },
     { name: "Eren Semerci", image: "/contestants/eren-semerci.jpeg" },
-    { name: "Gözde Bozkurt", image: "/contestants/gozde-bozkurt.jpeg" },
-    { name: "Lina Hourieh", image: "/contestants/lina-hourieh.jpeg" },
-    { name: "Nisanur Güler", image: "/contestants/nisanur-guler.jpeg" },
+    { name: "Erkan Bilben", image: "/contestants/erkan-bilben.jpeg" },
     { name: "Onur Alp Çam", image: "/contestants/onur-alp-cam.jpeg" },
-    { name: "Nefise Karatay", image: "/contestants/nefise-karatay.jpeg" },
-    { name: "Osman Can Ural", image: "/contestants/osman-can-ural.jpeg" },
+    { name: "Ramazan Sarı", image: "/contestants/ramazan-sari.jpeg" },
+    { name: "Lina Hourieh", image: "/contestants/lina-hourieh.jpeg" },
+    { name: "Gözde Bozkurt", image: "/contestants/gozde-bozkurt.jpeg" },
+    { name: "Nisanur Güler", image: "/contestants/nisanur-guler.jpeg" },
+    { name: "Başak Cücü", image: "/contestants/basak-cucu.jpeg" },
   ];
 
-  for (const c of teamRot) {
+  for (const c of teamUnluler) {
     await prisma.contestant.create({
-      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeRot.id },
+      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeUnluler.id },
     });
   }
-  for (const c of teamBlau) {
+  for (const c of teamGonulluler) {
     await prisma.contestant.create({
-      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeBlau.id },
+      data: { name: c.name, imageUrl: c.image, seasonId: season.id, tribeId: tribeGonulluler.id },
     });
   }
-  console.log(`  ✅ ${teamRot.length + teamBlau.length} contestants with profile images (${teamRot.length} Red + ${teamBlau.length} Blue)`);
+  console.log(
+    `  ✅ ${teamUnluler.length + teamGonulluler.length} contestants (${teamUnluler.length} Ünlüler + ${teamGonulluler.length} Gönüllüler)`
+  );
 
-  const allNames = [...teamRot.map(c => c.name), ...teamBlau.map(c => c.name)];
+  const allUnluler = teamUnluler.map((c) => c.name);
+  const allGonulluler = teamGonulluler.map((c) => c.name);
+  const allNames = [...allUnluler, ...allGonulluler];
 
   // ─── Episodes ───────────────────────────────────────────────────────────────
+  // Show premiered Jan 1 2026, airs daily on TV8.
+  // Today: ~Feb 11 2026, so about 42 days / 6 weeks in.
+  // We model key weekly "recap" episodes (not all 32 daily episodes).
+  // Past episodes are RESOLVED, current week is OPEN, future is DRAFT.
 
-  const now = new Date();
+  // Eliminated contestants (fictional but realistic progression)
+  const eliminated = ["Başak Cücü", "Deniz Çatalbaş", "Erkan Bilben", "Selen Görgüzel"];
+  const remaining = allNames.filter((n) => !eliminated.includes(n));
 
   interface QuestionDef {
     type: "CHALLENGE_WINNER" | "ELIMINATION" | "TWIST" | "TRIBAL_COUNCIL" | "IMMUNITY" | "REWARD" | "CUSTOM";
@@ -131,211 +142,307 @@ async function main() {
   interface EpisodeDef {
     number: number;
     title: string;
-    daysFromNow: number;
+    airDate: string; // ISO date YYYY-MM-DD
     status: "DRAFT" | "OPEN" | "LOCKED" | "RESOLVED";
     questions: QuestionDef[];
   }
 
   const episodes: EpisodeDef[] = [
+    // ── Week 1: Jan 1-4 (RESOLVED) ──────────────────────
     {
       number: 1,
-      title: "First Steps on the Island",
-      daysFromNow: -14,
+      title: "Adaya İlk Adım",
+      airDate: "2026-01-01",
       status: "RESOLVED",
       questions: [
         {
           type: "CHALLENGE_WINNER",
           prompt: "Which tribe wins the first reward challenge?",
           odds: 100,
-          options: ["Red", "Blue"],
-          correctOption: "Red",
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Ünlüler",
+        },
+        {
+          type: "IMMUNITY",
+          prompt: "Which tribe wins the first immunity?",
+          odds: -110,
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Gönüllüler",
         },
         {
           type: "ELIMINATION",
-          prompt: "Who is the first person eliminated at tribal council?",
-          odds: 350,
+          prompt: "Who is the first contestant eliminated?",
+          odds: 400,
           options: allNames,
-          correctOption: "Osman Can Ural",
+          correctOption: "Başak Cücü",
+        },
+      ],
+    },
+    // ── Week 2: Jan 8-11 (RESOLVED) ─────────────────────
+    {
+      number: 2,
+      title: "İttifaklar Kuruluyor",
+      airDate: "2026-01-08",
+      status: "RESOLVED",
+      questions: [
+        {
+          type: "IMMUNITY",
+          prompt: "Which tribe wins immunity this week?",
+          odds: -110,
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Ünlüler",
+        },
+        {
+          type: "ELIMINATION",
+          prompt: "Who gets eliminated this week?",
+          odds: 350,
+          options: allGonulluler.filter((n) => n !== "Başak Cücü"),
+          correctOption: "Erkan Bilben",
         },
         {
           type: "TWIST",
-          prompt: "Is a hidden immunity idol found in Episode 1?",
+          prompt: "Is a hidden immunity idol found this week?",
           odds: 200,
           options: ["Yes", "No"],
           correctOption: "No",
         },
       ],
     },
+    // ── Week 3: Jan 15-18 (RESOLVED) ────────────────────
     {
-      number: 2,
-      title: "Alliances Form",
-      daysFromNow: -7,
+      number: 3,
+      title: "Ada Konseyi Sürprizi",
+      airDate: "2026-01-15",
       status: "RESOLVED",
       questions: [
         {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins immunity?",
-          odds: -110,
-          options: ["Red", "Blue"],
-          correctOption: "Blue",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated this week?",
-          odds: 300,
-          options: teamRot.map(c => c.name),
-          correctOption: "Seda Albayrak",
-        },
-        {
-          type: "REWARD",
+          type: "CHALLENGE_WINNER",
           prompt: "Which tribe wins the reward challenge?",
           odds: 100,
-          options: ["Red", "Blue"],
-          correctOption: "Red",
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Gönüllüler",
         },
-      ],
-    },
-    {
-      number: 3,
-      title: "Surprise Council",
-      daysFromNow: -1,
-      status: "LOCKED",
-      questions: [
         {
           type: "IMMUNITY",
           prompt: "Which tribe wins immunity?",
           odds: 120,
-          options: ["Red", "Blue"],
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Gönüllüler",
         },
         {
           type: "ELIMINATION",
-          prompt: "Who gets eliminated in Episode 3?",
-          odds: 400,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
-        },
-        {
-          type: "TWIST",
-          prompt: "Does someone play a hidden immunity idol?",
-          odds: 250,
-          options: ["Yes", "No"],
+          prompt: "Who gets eliminated in Week 3?",
+          odds: 350,
+          options: allUnluler,
+          correctOption: "Deniz Çatalbaş",
         },
       ],
     },
+    // ── Week 4: Jan 22-25 (RESOLVED) ────────────────────
     {
       number: 4,
-      title: "The Merge",
-      daysFromNow: 6,
-      status: "OPEN",
+      title: "Büyük Ödül",
+      airDate: "2026-01-22",
+      status: "RESOLVED",
       questions: [
         {
-          type: "CHALLENGE_WINNER",
-          prompt: "Who wins the first individual immunity?",
-          odds: 450,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          type: "REWARD",
+          prompt: "Which tribe wins the big reward (food & comfort)?",
+          odds: 100,
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Ünlüler",
+        },
+        {
+          type: "IMMUNITY",
+          prompt: "Which tribe wins immunity?",
+          odds: -105,
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Ünlüler",
         },
         {
           type: "ELIMINATION",
-          prompt: "Who is the first person eliminated after the merge?",
-          odds: 400,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          prompt: "Who gets eliminated in Week 4?",
+          odds: 300,
+          options: allGonulluler.filter((n) => !["Başak Cücü", "Erkan Bilben"].includes(n)),
+          correctOption: "Selen Görgüzel",
         },
         {
           type: "TWIST",
-          prompt: "Is there a tribe swap or merge this episode?",
-          odds: -150,
-          options: ["Yes — Merge", "Yes — Tribe Swap", "No"],
+          prompt: "Does someone play an immunity idol at council?",
+          odds: 250,
+          options: ["Yes", "No"],
+          correctOption: "No",
+        },
+      ],
+    },
+    // ── Week 5: Jan 29 - Feb 1 (RESOLVED) ───────────────
+    {
+      number: 5,
+      title: "Takım Değişikliği",
+      airDate: "2026-01-29",
+      status: "RESOLVED",
+      questions: [
+        {
+          type: "TWIST",
+          prompt: "Is there a tribe swap this week?",
+          odds: 150,
+          options: ["Yes", "No"],
+          correctOption: "Yes",
+        },
+        {
+          type: "IMMUNITY",
+          prompt: "Which tribe wins immunity after the swap?",
+          odds: 110,
+          options: ["Ünlüler", "Gönüllüler"],
+          correctOption: "Ünlüler",
+        },
+        {
+          type: "ELIMINATION",
+          prompt: "Who is eliminated after the tribe swap?",
+          odds: 400,
+          options: remaining,
+        },
+      ],
+    },
+    // ── Week 6: Feb 5-8 (LOCKED — just aired, awaiting resolution) ──
+    {
+      number: 6,
+      title: "Bireysel Dokunulmazlık",
+      airDate: "2026-02-05",
+      status: "LOCKED",
+      questions: [
+        {
+          type: "IMMUNITY",
+          prompt: "Who wins individual immunity this week?",
+          odds: 500,
+          options: remaining,
+        },
+        {
+          type: "ELIMINATION",
+          prompt: "Who gets eliminated in Week 6?",
+          odds: 400,
+          options: remaining,
         },
         {
           type: "TRIBAL_COUNCIL",
-          prompt: "How many votes does the eliminated person receive?",
+          prompt: "How many votes does the eliminated player receive?",
           odds: 200,
           options: ["3 or fewer", "4-6", "7 or more", "Unanimous"],
         },
       ],
     },
+    // ── Week 7: Feb 12-15 (OPEN — upcoming, predictions open!) ──────
     {
-      number: 5,
-      title: "Shifting Alliances",
-      daysFromNow: 13,
-      status: "DRAFT",
+      number: 7,
+      title: "Hayatta Kalma Savaşı",
+      airDate: "2026-02-12",
+      status: "OPEN",
       questions: [
         {
           type: "IMMUNITY",
-          prompt: "Who wins individual immunity in Episode 5?",
+          prompt: "Who wins individual immunity this week?",
           odds: 450,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          options: remaining,
         },
         {
           type: "ELIMINATION",
-          prompt: "Who gets eliminated in Episode 5?",
-          odds: 350,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          prompt: "Who will be eliminated this week?",
+          odds: 400,
+          options: remaining,
+        },
+        {
+          type: "TWIST",
+          prompt: "Will a hidden immunity idol be played at council?",
+          odds: 200,
+          options: ["Yes", "No"],
+        },
+        {
+          type: "REWARD",
+          prompt: "Who wins the reward challenge?",
+          odds: 450,
+          options: remaining,
         },
       ],
     },
+    // ── Week 8: Feb 19-22 (OPEN — next week) ────────────────────────
     {
-      number: 6,
-      title: "Double Tribal",
-      daysFromNow: 20,
-      status: "DRAFT",
+      number: 8,
+      title: "Çift Eleme Gecesi",
+      airDate: "2026-02-19",
+      status: "OPEN",
       questions: [
         {
           type: "TWIST",
-          prompt: "Will there be a double elimination?",
-          odds: 150,
+          prompt: "Will there be a double elimination this week?",
+          odds: 175,
           options: ["Yes", "No"],
+        },
+        {
+          type: "IMMUNITY",
+          prompt: "Who wins individual immunity?",
+          odds: 500,
+          options: remaining,
         },
         {
           type: "ELIMINATION",
           prompt: "Name someone who gets eliminated this episode",
           odds: 350,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          options: remaining,
         },
       ],
     },
+    // ── Week 9: Feb 26 - Mar 1 (DRAFT — future) ────────────────────
     {
-      number: 7,
-      title: "Family Visit",
-      daysFromNow: 27,
+      number: 9,
+      title: "Aile Ziyareti",
+      airDate: "2026-02-26",
       status: "DRAFT",
       questions: [
         {
           type: "REWARD",
           prompt: "Who wins the family visit reward?",
           odds: 500,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          options: remaining,
         },
         {
           type: "ELIMINATION",
-          prompt: "Who gets eliminated in Episode 7?",
+          prompt: "Who gets eliminated in Week 9?",
           odds: 400,
-          options: allNames.filter(
-            (n) => !["Osman Can Ural", "Seda Albayrak"].includes(n)
-          ),
+          options: remaining,
+        },
+      ],
+    },
+    // ── Week 10: Mar 5-8 (DRAFT — future) ───────────────────────────
+    {
+      number: 10,
+      title: "Final Yolu",
+      airDate: "2026-03-05",
+      status: "DRAFT",
+      questions: [
+        {
+          type: "IMMUNITY",
+          prompt: "Who wins individual immunity heading into the finale stretch?",
+          odds: 500,
+          options: remaining,
+        },
+        {
+          type: "ELIMINATION",
+          prompt: "Who gets eliminated in Week 10?",
+          odds: 450,
+          options: remaining,
+        },
+        {
+          type: "CUSTOM",
+          prompt: "Will the eliminated contestant cry during their farewell speech?",
+          odds: -130,
+          options: ["Yes", "No"],
         },
       ],
     },
   ];
 
   for (const ep of episodes) {
-    const airDate = new Date(now);
-    airDate.setDate(airDate.getDate() + ep.daysFromNow);
-    airDate.setHours(20, 0, 0, 0); // 20:00
-
+    const airDate = new Date(ep.airDate + "T20:00:00+03:00"); // 20:00 Turkey time
     const lockDate = new Date(airDate);
     lockDate.setMinutes(lockDate.getMinutes() - 5); // Lock 5 min before air
 

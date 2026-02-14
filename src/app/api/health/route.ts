@@ -12,11 +12,16 @@ export async function GET() {
     // Simple DB connectivity check
     await prisma.$queryRaw`SELECT 1`;
 
-    return Response.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || "unknown",
-    });
+    return Response.json(
+      {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || "unknown",
+      },
+      {
+        headers: { "Cache-Control": "public, max-age=30, s-maxage=30" },
+      }
+    );
   } catch (error) {
     return Response.json(
       {

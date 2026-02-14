@@ -16,6 +16,7 @@ const ADDRESSES: Record<number, Record<string, Address>> = {
     BadgeNFT: (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9") as Address,
     SeasonPass: (process.env.NEXT_PUBLIC_SEASON_PASS_ADDRESS || "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707") as Address,
     Treasury: (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512") as Address,
+    RealityPicksNFT: (process.env.NEXT_PUBLIC_REALITYPICKS_NFT_ADDRESS || "0x0") as Address,
   },
   // Base Sepolia testnet
   84532: {
@@ -25,6 +26,7 @@ const ADDRESSES: Record<number, Record<string, Address>> = {
     BadgeNFT: (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || "0x0") as Address,
     SeasonPass: (process.env.NEXT_PUBLIC_SEASON_PASS_ADDRESS || "0x0") as Address,
     Treasury: (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0x0") as Address,
+    RealityPicksNFT: (process.env.NEXT_PUBLIC_REALITYPICKS_NFT_ADDRESS || "0x0") as Address,
   },
   // Base mainnet
   8453: {
@@ -34,6 +36,7 @@ const ADDRESSES: Record<number, Record<string, Address>> = {
     BadgeNFT: (process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS || "0x0") as Address,
     SeasonPass: (process.env.NEXT_PUBLIC_SEASON_PASS_ADDRESS || "0x0") as Address,
     Treasury: (process.env.NEXT_PUBLIC_TREASURY_ADDRESS || "0x0") as Address,
+    RealityPicksNFT: (process.env.NEXT_PUBLIC_REALITYPICKS_NFT_ADDRESS || "0x0") as Address,
   },
 };
 
@@ -60,5 +63,18 @@ export const stakingVaultConfig = () => getContractConfig("StakingVault");
 export const badgeNFTConfig = () => getContractConfig("BadgeNFT");
 export const seasonPassConfig = () => getContractConfig("SeasonPass");
 export const treasuryConfig = () => getContractConfig("Treasury");
+export const realityPicksNFTConfig = () => getContractConfig("RealityPicksNFT");
+
+/**
+ * Check if a contract has a valid (non-zero) address on the current chain.
+ */
+export function isContractDeployed(contractName: string): boolean {
+  try {
+    const addr = getContractAddress(contractName);
+    return !!addr && addr !== "0x0" && addr !== "0x0000000000000000000000000000000000000000";
+  } catch {
+    return false;
+  }
+}
 
 export { ABIS };

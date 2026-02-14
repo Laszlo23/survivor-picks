@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,67 +13,120 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  Menu,
   User,
   Trophy,
   LayoutDashboard,
   Shield,
   LogOut,
+  Coins,
+  Sparkles,
+  Menu,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/nfts", label: "NFTs", icon: Sparkles },
+  { href: "/token", label: "$PICKS", icon: Coins },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function Navbar() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] glass-strong">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <Image
-            src="/logo.png"
-            alt="RealityPicks"
-            width={36}
-            height={36}
-            className="rounded-lg"
-          />
-          <span className="text-xl font-bold tracking-tight">
-            Reality<span className="text-primary">Picks</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            <Image
+              src="/logo.png"
+              alt="RealityPicks"
+              width={32}
+              height={32}
+              className="rounded-lg group-hover:shadow-glow transition-shadow duration-300"
+              style={{ mixBlendMode: "screen" }}
+            />
+          </motion.div>
+          <span className="text-lg font-display font-bold tracking-tight">
+            Reality<span className="text-neon-cyan">Picks</span>
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-0.5">
           {status === "authenticated" &&
-            navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            ))}
+            navItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-active"
+                      className="absolute inset-0 rounded-lg bg-neon-cyan/[0.08] border border-neon-cyan/10 -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
         </nav>
 
         {/* Right side */}
         <div className="flex items-center gap-2">
           {status === "loading" && (
-            <div className="h-8 w-20 animate-pulse rounded-md bg-secondary" />
+            <div className="h-8 w-20 rounded-md bg-secondary shimmer" />
           )}
 
           {status === "unauthenticated" && (
-            <Button onClick={() => signIn("email")} size="sm">
+            <Button
+              onClick={() => signIn("email")}
+              size="sm"
+              className="shadow-glow"
+            >
               Sign In
             </Button>
           )}
@@ -96,7 +151,7 @@ export function Navbar() {
                     size="sm"
                     className="gap-2 text-muted-foreground"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30">
                       {session.user.name?.[0]?.toUpperCase() ||
                         session.user.email?.[0]?.toUpperCase()}
                     </div>
@@ -117,52 +172,116 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Mobile menu */}
-              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetTrigger asChild className="md:hidden">
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-64">
-                  <div className="flex flex-col gap-2 pt-8">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-md hover:bg-secondary transition-colors"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    ))}
-                    {session.user.role === "ADMIN" && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-md hover:bg-secondary transition-colors text-primary"
-                      >
-                        <Shield className="h-4 w-4" />
-                        Admin Panel
-                      </Link>
-                    )}
-                    <div className="border-t border-border mt-4 pt-4">
-                      <button
-                        onClick={() => signOut()}
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-md hover:bg-secondary transition-colors w-full text-destructive"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+              {/* Mobile hamburger button */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              >
+                {mobileOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </button>
             </>
           )}
         </div>
       </div>
+
+      {/* Mobile slide-out menu */}
+      <AnimatePresence>
+        {mobileOpen && status === "authenticated" && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 top-14 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+
+            {/* Menu panel */}
+            <motion.nav
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed top-14 right-0 bottom-0 w-72 bg-studio-dark border-l border-white/[0.06] z-50 md:hidden overflow-y-auto"
+            >
+              <div className="px-4 py-6 space-y-1">
+                {/* User info */}
+                {session?.user && (
+                  <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-sm font-bold ring-1 ring-neon-cyan/30">
+                      {session.user.name?.[0]?.toUpperCase() ||
+                        session.user.email?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {session.user.name || "Player"}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Nav items */}
+                {navItems.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    pathname.startsWith(item.href + "/");
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                        isActive
+                          ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
+                          : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+
+                {/* Admin link (mobile) */}
+                {session?.user?.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                      pathname === "/admin"
+                        ? "text-neon-gold bg-neon-gold/[0.08] border border-neon-gold/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin Panel
+                  </Link>
+                )}
+
+                {/* Divider */}
+                <div className="my-4 border-t border-white/[0.06]" />
+
+                {/* Sign out */}
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/[0.08] transition-colors w-full text-left"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </button>
+              </div>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

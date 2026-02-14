@@ -22,6 +22,31 @@ export async function getActiveSeason() {
   }
 }
 
+/**
+ * Fetch ALL active seasons (one per show).
+ * Used by the dashboard to build per-show prediction feeds.
+ */
+export async function getAllActiveSeasons() {
+  try {
+    return await prisma.season.findMany({
+      where: { active: true },
+      include: {
+        episodes: {
+          orderBy: { number: "asc" },
+        },
+        tribes: true,
+        contestants: {
+          include: { tribe: true },
+          orderBy: { name: "asc" },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function getNextOpenEpisode(seasonId: string) {
   try {
     return await prisma.episode.findFirst({

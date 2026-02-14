@@ -9,6 +9,7 @@ import {
   badgeNFTConfig,
   seasonPassConfig,
   treasuryConfig,
+  realityPicksNFTConfig,
 } from "./contracts";
 
 // ─── Utility ────────────────────────────────────────────────────────
@@ -333,11 +334,30 @@ export function useTotalBurned() {
 
 export function formatPicks(amount: bigint | undefined): string {
   if (!amount) return "0";
-  return formatEther(amount);
+  try {
+    const raw = formatEther(amount);
+    const num = parseFloat(raw);
+    if (!Number.isFinite(num) || num === 0) return "0";
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+    if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+    if (Number.isInteger(num)) return num.toLocaleString();
+    return num.toFixed(2);
+  } catch {
+    return "0";
+  }
 }
 
 export function parsePicks(amount: string): bigint {
-  return parseEther(amount);
+  // Validate input before parsing to prevent errors from invalid strings
+  const trimmed = amount.trim();
+  if (!trimmed || !/^\d*\.?\d+$/.test(trimmed)) {
+    throw new Error("Invalid $PICKS amount");
+  }
+  try {
+    return parseEther(trimmed);
+  } catch {
+    throw new Error("Invalid $PICKS amount");
+  }
 }
 
 export const TIER_NAMES = ["None", "Bronze", "Silver", "Gold"] as const;
@@ -345,4 +365,94 @@ export const TIER_COLORS = ["gray", "amber", "slate", "yellow"] as const;
 
 export function getTierName(tier: number): string {
   return TIER_NAMES[tier] || "None";
+}
+
+// ─── RealityPicks NFT Collection Hooks ───────────────────────────────
+
+export function useNFTTierInfo(tierId: number) {
+  return useReadContract({
+    ...realityPicksNFTConfig(),
+    functionName: "getTierInfo",
+    args: [BigInt(tierId)],
+  });
+}
+
+export function useUserNFTTiers(address?: Address) {
+  return useReadContract({
+    ...realityPicksNFTConfig(),
+    functionName: "getUserTiers",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+}
+
+export function useHasMintedTier(address?: Address, tierId?: number) {
+  return useReadContract({
+    ...realityPicksNFTConfig(),
+    functionName: "hasMintedTier",
+    args: address && tierId !== undefined ? [address, BigInt(tierId)] : undefined,
+    query: { enabled: !!address && tierId !== undefined },
+  });
+}
+
+export function useNFTNonce(address?: Address) {
+  return useReadContract({
+    ...realityPicksNFTConfig(),
+    functionName: "getNonce",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+}
+
+export function useMintNFT() {
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  const mintOpen = (tierId: number, price: bigint) => {
+    const config = realityPicksNFTConfig();
+    writeContract({
+      address: config.address,
+      abi: config.abi,
+      functionName: "mint",
+      args: [BigInt(tierId)],
+      value: price,
+    } as any);
+  };
+
+  const mintWithSig = (tierId: number, signature: `0x${string}`, price: bigint) => {
+    const config = realityPicksNFTConfig();
+    writeContract({
+      address: config.address,
+      abi: config.abi,
+      functionName: "mintWithSignature",
+      args: [BigInt(tierId), signature],
+      value: price,
+    } as any);
+  };
+
+  return { mintOpen, mintWithSig, hash, isPending, isConfirming, isSuccess, error };
+}
+
+// ─── Contract Readiness Check ────────────────────────────────────────
+
+/**
+ * Check if contracts are deployed and ready (addresses are not 0x0).
+ * Returns true if the core contracts (PicksToken, StakingVault) have valid addresses.
+ */
+export function useIsContractsReady(): boolean {
+  try {
+    const { getContractAddress } = require("./contracts");
+    const token = getContractAddress("PicksToken") as string;
+    const vault = getContractAddress("StakingVault") as string;
+    return (
+      !!token &&
+      !!vault &&
+      token !== "0x0" &&
+      vault !== "0x0" &&
+      token !== "0x0000000000000000000000000000000000000000" &&
+      vault !== "0x0000000000000000000000000000000000000000"
+    );
+  } catch {
+    return false;
+  }
 }
