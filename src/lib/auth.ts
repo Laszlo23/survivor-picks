@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           pass: process.env.EMAIL_SERVER_PASSWORD,
         },
       },
-      from: process.env.EMAIL_FROM || "noreply@survivorpicks.com",
+      from: process.env.EMAIL_FROM || "noreply@realitypicks.xyz",
     }),
   ],
   callbacks: {

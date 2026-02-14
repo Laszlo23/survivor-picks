@@ -34,7 +34,7 @@ async function main() {
   const contracts = deployment.contracts;
 
   console.log("===========================================");
-  console.log(`SurvivorPicks Contract Verification (${isClanker ? "Clanker" : "Custom"})`);
+  console.log(`RealityPicks Contract Verification (${isClanker ? "Clanker" : "Custom"})`);
   console.log(`Network: ${networkName}`);
   console.log("===========================================\n");
 
@@ -81,7 +81,7 @@ async function main() {
       name: "BadgeNFT",
       address: contracts.BadgeNFT,
       constructorArguments: [
-        "https://api.survivorpicks.com/badges/",
+        "https://api.realitypicks.com/badges/",
         contracts.Treasury,
       ],
     },
@@ -90,7 +90,7 @@ async function main() {
       address: contracts.SeasonPass,
       constructorArguments: [
         contracts.PicksToken,
-        "SurvivorPicks Season Pass",
+        "RealityPicks Season Pass",
         "SPPASS",
       ],
     },

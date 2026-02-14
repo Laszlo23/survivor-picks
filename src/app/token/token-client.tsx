@@ -77,7 +77,7 @@ export function TokenClient() {
               $PICKS Token
             </h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              The utility token powering SurvivorPicks on Base
+              The utility token powering RealityPicks on Base
             </p>
           </div>
           <div className="shrink-0">
@@ -197,7 +197,7 @@ export function TokenClient() {
           </h2>
           <div className="space-y-4 text-sm text-muted-foreground">
             <p>
-              $PICKS is the utility token for the SurvivorPicks prediction
+              $PICKS is the utility token for the RealityPicks prediction
               platform, deployed on <strong className="text-foreground">Base</strong> (Ethereum L2)
               via Clanker for instant liquidity and fair launch.
             </p>

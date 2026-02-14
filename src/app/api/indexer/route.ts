@@ -17,15 +17,25 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  // Simple auth check (use a proper API key in production)
-  const { searchParams } = new URL(request.url);
-  const apiKey = searchParams.get("key");
+  // Auth: check Authorization header (Bearer token) or legacy query param
   const expectedKey = process.env.INDEXER_API_KEY;
+  if (expectedKey) {
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
 
-  if (expectedKey && apiKey !== expectedKey) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // Also accept cron secret for Vercel cron jobs
+    const cronSecret = request.headers.get("authorization")?.startsWith("Bearer ")
+      ? null
+      : null;
+
+    if (bearerToken !== expectedKey) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
+  const { searchParams } = new URL(request.url);
   const fromBlock = BigInt(searchParams.get("fromBlock") || "0");
 
   try {

@@ -1,7 +1,7 @@
 import { ethers, network } from "hardhat";
 
 /**
- * SurvivorPicks Deployment Script -- Clanker Token Flow
+ * RealityPicks Deployment Script -- Clanker Token Flow
  *
  * This script is for when $PICKS has been deployed via Clanker (clanker.world).
  * It deploys only the utility contracts (Treasury, PredictionEngine, StakingVault,
@@ -127,7 +127,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   console.log("===========================================");
-  console.log("SurvivorPicks Deployment (Clanker Token)");
+  console.log("RealityPicks Deployment (Clanker Token)");
   console.log("===========================================");
   console.log(`Network: ${network.name}`);
   console.log(`Deployer: ${deployer.address}`);
@@ -146,11 +146,11 @@ async function main() {
   } else if (process.env.CLANKER_API_KEY) {
     console.log("\n1. Deploying $PICKS via Clanker API...");
     tokenAddress = await deployClankerToken({
-      name: "SurvivorPicks",
+      name: "RealityPicks",
       symbol: "PICKS",
       image: process.env.TOKEN_IMAGE_URL || "",
       description:
-        "The utility token for SurvivorPicks -- stake on Survivor predictions, earn rewards, collect NFT badges.",
+        "The utility token for RealityPicks -- stake on reality TV predictions, earn rewards, collect NFT badges.",
       tokenAdmin: deployer.address,
       socialMediaUrls: [
         process.env.TWITTER_URL || "",
@@ -208,7 +208,7 @@ async function main() {
   console.log("\n5. Deploying BadgeNFT...");
   const BadgeNFT = await ethers.getContractFactory("BadgeNFT");
   const badge = await BadgeNFT.deploy(
-    "https://api.survivorpicks.com/badges/",
+    "https://api.realitypicks.com/badges/",
     treasuryAddress
   );
   await badge.waitForDeployment();
@@ -221,7 +221,7 @@ async function main() {
   const SeasonPass = await ethers.getContractFactory("SeasonPass");
   const pass = await SeasonPass.deploy(
     tokenAddress,
-    "SurvivorPicks Season Pass",
+    "RealityPicks Season Pass",
     "SPPASS"
   );
   await pass.waitForDeployment();

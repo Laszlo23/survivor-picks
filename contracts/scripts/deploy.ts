@@ -4,7 +4,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   console.log("===========================================");
-  console.log("SurvivorPicks Contract Deployment");
+  console.log("RealityPicks Contract Deployment");
   console.log("===========================================");
   console.log(`Network: ${network.name}`);
   console.log(`Deployer: ${deployer.address}`);
@@ -66,7 +66,7 @@ async function main() {
   console.log("\n5. Deploying BadgeNFT...");
   const BadgeNFT = await ethers.getContractFactory("BadgeNFT");
   const badge = await BadgeNFT.deploy(
-    "https://api.survivorpicks.com/badges/",
+    "https://api.realitypicks.xyz/badges/",
     treasuryAddress
   );
   await badge.waitForDeployment();
@@ -76,7 +76,7 @@ async function main() {
   // ─── 6. Deploy SeasonPass ────────────────────────────────────────
   console.log("\n6. Deploying SeasonPass...");
   const SeasonPass = await ethers.getContractFactory("SeasonPass");
-  const pass = await SeasonPass.deploy(tokenAddress, "SurvivorPicks Season Pass", "SPPASS");
+  const pass = await SeasonPass.deploy(tokenAddress, "RealityPicks Season Pass", "SPPASS");
   await pass.waitForDeployment();
   const passAddress = await pass.getAddress();
   console.log(`   SeasonPass deployed: ${passAddress}`);

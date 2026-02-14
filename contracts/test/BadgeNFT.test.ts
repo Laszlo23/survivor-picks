@@ -7,7 +7,7 @@ describe("BadgeNFT", function () {
     const [owner, minter, user1, user2, treasury] = await ethers.getSigners();
 
     const BadgeNFT = await ethers.getContractFactory("BadgeNFT");
-    const badge = await BadgeNFT.deploy("https://api.survivorpicks.com/badges/", treasury.address);
+    const badge = await BadgeNFT.deploy("https://api.realitypicks.xyz/badges/", treasury.address);
 
     const MINTER_ROLE = await badge.MINTER_ROLE();
     await badge.grantRole(MINTER_ROLE, minter.address);

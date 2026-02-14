@@ -1,7 +1,7 @@
 {
-  "name": "survivorpicks-contracts",
+  "name": "realitypicks-contracts",
   "version": "1.0.0",
-  "description": "SurvivorPicks smart contracts on Base chain",
+  "description": "RealityPicks smart contracts on Base chain",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",

@@ -1,6 +1,6 @@
-# SurvivorPicks — Prediction Game
+# RealityPicks — Predict Reality TV. Win Glory.
 
-A **Survivor-style Prediction Market** web app where users predict episode outcomes (challenge winners, eliminations, twists) and compete for points on a leaderboard. **No real money** — just bragging rights.
+A **reality TV prediction market** web app where users predict outcomes across shows like Survivor, The Traitors, The Bachelor, and more. Compete for points on a leaderboard. **No real money** — just bragging rights.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Prisma](https://img.shields.io/badge/Prisma-5-2D3748) ![Tailwind](https://img.shields.io/badge/Tailwind-3-38BDF8)
 
@@ -162,7 +162,7 @@ Core models:
 - **ScoreEvent** — Points awarded per episode
 - **UserSeasonStats** — Aggregated stats per user per season
 - **Badge / UserBadge** — Achievement system
-- **Tribe / Contestant** — Survivor cast data
+- **Tribe / Contestant** — Show cast data
 
 ---
 

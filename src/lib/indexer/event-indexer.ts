@@ -1,5 +1,5 @@
 /**
- * Event Indexer for SurvivorPicks
+ * Event Indexer for RealityPicks
  *
  * Listens to on-chain events from PredictionEngine, StakingVault, BadgeNFT, and SeasonPass
  * contracts and syncs relevant data back to PostgreSQL for fast reads.

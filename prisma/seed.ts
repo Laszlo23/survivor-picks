@@ -21,7 +21,7 @@ async function main() {
   await prisma.season.deleteMany();
 
   // Create admin user
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@survivorpicks.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@realitypicks.xyz";
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: { role: "ADMIN", referralCode: "ADMN2026" },
@@ -37,10 +37,10 @@ async function main() {
 
   // Create dev test player
   const player = await prisma.user.upsert({
-    where: { email: "player@survivorpicks.com" },
+    where: { email: "player@realitypicks.xyz" },
     update: { referralCode: "PLAY2026" },
     create: {
-      email: "player@survivorpicks.com",
+      email: "player@realitypicks.xyz",
       name: "Test Player",
       role: "USER",
       emailVerified: new Date(),
@@ -545,8 +545,8 @@ async function main() {
 
   console.log("\n🎉 Seed complete!");
   console.log("\n📌 Dev Login Accounts:");
-  console.log("   Admin: admin@survivorpicks.com (ref: ADMN2026)");
-  console.log("   Player: player@survivorpicks.com (ref: PLAY2026)");
+  console.log("   Admin: admin@realitypicks.xyz (ref: ADMN2026)");
+  console.log("   Player: player@realitypicks.xyz (ref: PLAY2026)");
 }
 
 main()

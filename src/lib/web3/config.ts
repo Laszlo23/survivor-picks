@@ -11,9 +11,9 @@ const activeChains =
       : ([hardhat] as const);
 
 export const wagmiConfig = getDefaultConfig({
-  appName: "SurvivorPicks",
-  appDescription: "Survivor prediction market on Base",
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://survivorpicks.com",
+  appName: "RealityPicks",
+  appDescription: "Reality TV prediction market on Base",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
   chains: activeChains,
   transports: {

@@ -1,5 +1,5 @@
 /**
- * Survivor Picks — Scoring System
+ * RealityPicks — Scoring System
  * ================================
  *
  * SCORING RULES:

@@ -10,9 +10,35 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Survivor Picks — Prediction Game",
+  title: "RealityPicks — Predict Reality TV. Win Glory.",
   description:
-    "Predict challenge winners, eliminations, and twists. Earn points, climb the leaderboard, and prove you know the game better than anyone.",
+    "Predict outcomes across Survivor, The Traitors, The Bachelor, and more. Earn points, build streaks, climb the leaderboard. Free to play.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz"
+  ),
+  openGraph: {
+    title: "RealityPicks — Predict Reality TV. Win Glory.",
+    description:
+      "Predict outcomes across Survivor, The Traitors, The Bachelor, and more. Free to play prediction game.",
+    url: "https://realitypicks.xyz",
+    siteName: "RealityPicks",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RealityPicks — Predict Reality TV",
+    description: "Free prediction game for reality TV fans.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

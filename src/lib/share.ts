@@ -5,7 +5,7 @@
  * All share links include the user's referral code for viral growth.
  */
 
-const APP_NAME = "SurvivorPicks";
+const APP_NAME = "RealityPicks";
 
 function getBaseUrl(): string {
   if (typeof window !== "undefined") return window.location.origin;
@@ -80,7 +80,7 @@ export function generateShareContent(
     case "result_loss":
       return {
         title: `${APP_NAME} — Next Time!`,
-        text: `Voted off the island this round... but I'll be back stronger! Episode ${data.episodeNumber} didn't go my way. Join ${APP_NAME}`,
+        text: `Didn't call it this round... but I'll be back stronger! Episode ${data.episodeNumber} didn't go my way. Join ${APP_NAME}`,
         url: link,
       };
 
@@ -88,7 +88,7 @@ export function generateShareContent(
       return {
         title: `${APP_NAME} Leaderboard`,
         text: `I'm ranked #${data.rank} with ${data.totalPoints?.toLocaleString()} points in ${
-          data.seasonTitle || "Survivor Picks"
+          data.seasonTitle || "RealityPicks"
         }! Can you beat me?`,
         url: link,
       };
@@ -96,14 +96,14 @@ export function generateShareContent(
     case "invite":
       return {
         title: `Join ${APP_NAME}!`,
-        text: `I'm playing ${APP_NAME} — predict challenge winners, eliminations and twists to earn points. No real money, just bragging rights. Join free`,
+        text: `I'm playing ${APP_NAME} — predict reality TV outcomes across Survivor, The Traitors, The Bachelor & more. No real money, just bragging rights. Join free`,
         url: link,
       };
 
     default:
       return {
         title: APP_NAME,
-        text: `Check out ${APP_NAME} — a free Survivor prediction game!`,
+        text: `Check out ${APP_NAME} — a free reality TV prediction game!`,
         url: link,
       };
   }

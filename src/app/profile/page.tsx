@@ -55,7 +55,7 @@ export default async function ProfilePage() {
         </div>
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold truncate">
-            {profile.name || "Survivor Player"}
+            {profile.name || "RealityPicks Player"}
           </h1>
           <p className="text-muted-foreground text-sm truncate">{profile.email}</p>
           <p className="text-xs text-muted-foreground mt-1">

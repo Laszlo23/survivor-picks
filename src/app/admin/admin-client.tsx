@@ -404,7 +404,7 @@ function SeasonsTab({ seasons }: { seasons: Season[] }) {
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Survivor 2026"
+                  placeholder="Reality Show 2026"
                 />
               </div>
               <div>

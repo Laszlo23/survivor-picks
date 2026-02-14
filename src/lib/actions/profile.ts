@@ -82,3 +82,22 @@ export async function getUserRank(seasonId: string) {
     return null;
   }
 }
+
+/**
+ * Mark the current user as having completed onboarding.
+ */
+export async function completeOnboarding() {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) return { success: false };
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { hasOnboarded: true },
+    });
+
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}

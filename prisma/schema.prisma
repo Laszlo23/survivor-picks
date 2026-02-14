@@ -62,6 +62,7 @@ model User {
   image          String?
   emailVerified  DateTime?
   role           Role      @default(USER)
+  hasOnboarded   Boolean   @default(false)
   walletAddress  String?   @unique  // Ethereum/Base wallet address
   referralCode   String?   @unique  // auto-generated 8-char code
   referredById   String?             // userId of who referred this user

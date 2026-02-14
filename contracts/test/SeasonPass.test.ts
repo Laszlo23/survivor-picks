@@ -14,7 +14,7 @@ describe("SeasonPass", function () {
     );
 
     const SeasonPass = await ethers.getContractFactory("SeasonPass");
-    const pass = await SeasonPass.deploy(await token.getAddress(), "SurvivorPicks Season Pass", "SPPASS");
+    const pass = await SeasonPass.deploy(await token.getAddress(), "RealityPicks Season Pass", "SPPASS");
 
     // Give users tokens
     const userAmount = ethers.parseEther("500000");

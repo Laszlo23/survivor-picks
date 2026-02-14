@@ -13,6 +13,7 @@ import { Countdown } from "@/components/ui/countdown";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SocialTasksCard } from "@/components/social/social-tasks-card";
 import { ReferralCard } from "@/components/social/referral-card";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import {
   Flame,
   Trophy,
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
           Dashboard
         </h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back, {session.user.name || "Survivor"}! — {season.title}
+          Welcome back, {session.user.name || "Player"}! — {season.title}
         </p>
       </div>
 
@@ -265,6 +266,9 @@ export default async function DashboardPage() {
           <ReferralCard stats={referralStats} seasonId={season.id} />
         </div>
       </div>
+
+      {/* Onboarding for first-time users */}
+      <OnboardingModal />
     </div>
   );
 }

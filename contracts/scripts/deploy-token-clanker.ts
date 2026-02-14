@@ -56,7 +56,7 @@ async function main() {
   const balanceEth = Number(balance) / 1e18;
 
   console.log("===========================================");
-  console.log("SurvivorPicks — Clanker Token Deployment");
+  console.log("RealityPicks — Clanker Token Deployment");
   console.log("===========================================");
   console.log(`Deployer:  ${account.address}`);
   console.log(`Balance:   ${balanceEth.toFixed(4)} ETH`);
@@ -72,7 +72,7 @@ async function main() {
   const rewardRecipient = (process.env.REWARD_RECIPIENT || account.address) as `0x${string}`;
 
   console.log("\nDeploying $PICKS via Clanker SDK v4...");
-  console.log("  Name:          SurvivorPicks");
+  console.log("  Name:          RealityPicks");
   console.log("  Symbol:        PICKS");
   console.log("  Vault:         50% locked 7d, vesting 730d");
   console.log("  Fees:          Static 1% both sides");
@@ -85,13 +85,13 @@ async function main() {
   });
 
   const { waitForTransaction, error: deployError } = await clanker.deploy({
-    name: "SurvivorPicks",
+    name: "RealityPicks",
     symbol: "PICKS",
     tokenAdmin: account.address,
     image: process.env.TOKEN_IMAGE_URL || "",
     metadata: {
       description:
-        "The utility token for SurvivorPicks — stake on Survivor predictions, earn rewards, collect NFT badges.",
+        "The utility token for RealityPicks — stake on reality TV predictions, earn rewards, collect NFT badges.",
       socialMediaUrls: [
         process.env.TWITTER_URL || "",
         process.env.WEBSITE_URL || "",
@@ -101,7 +101,7 @@ async function main() {
       })),
     },
     context: {
-      interface: "SurvivorPicks",
+      interface: "RealityPicks",
     },
     fees: {
       type: "static",
@@ -165,7 +165,7 @@ async function main() {
   const deploymentInfo = {
     token: {
       address: tokenAddress,
-      name: "SurvivorPicks",
+      name: "RealityPicks",
       symbol: "PICKS",
       chain: "base",
       chainId: 8453,

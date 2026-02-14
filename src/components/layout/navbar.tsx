@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  Flame,
   Menu,
   User,
   Trophy,
@@ -37,9 +37,15 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <Flame className="h-7 w-7 text-primary animate-torch" />
+          <Image
+            src="/logo.png"
+            alt="RealityPicks"
+            width={36}
+            height={36}
+            className="rounded-lg"
+          />
           <span className="text-xl font-bold tracking-tight">
-            Survivor<span className="text-primary">Picks</span>
+            Reality<span className="text-primary">Picks</span>
           </span>
         </Link>
 

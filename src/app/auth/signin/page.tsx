@@ -12,7 +12,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Flame, Mail, Zap, Shield } from "lucide-react";
+import Image from "next/image";
+import { Mail, Zap, Shield } from "lucide-react";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -59,8 +60,8 @@ export default function SignInPage() {
         {/* Main sign-in card */}
         <Card className="bg-card/50 border-border/50">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-              <Flame className="h-7 w-7 text-primary" />
+            <div className="mx-auto mb-4">
+              <Image src="/logo.png" alt="RealityPicks" width={64} height={64} className="rounded-xl" />
             </div>
             <CardTitle className="text-2xl">Sign In</CardTitle>
             <CardDescription>
@@ -116,19 +117,19 @@ export default function SignInPage() {
                 variant="outline"
                 className="w-full justify-start gap-3 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-300"
                 onClick={() =>
-                  handleDevLogin("admin@survivorpicks.com", "Admin", "ADMIN")
+                  handleDevLogin("admin@realitypicks.xyz", "Admin", "ADMIN")
                 }
                 disabled={devLoading !== null}
               >
                 <Shield className="h-4 w-4 text-amber-400" />
                 <div className="text-left">
                   <p className="text-sm font-medium">
-                    {devLoading === "admin@survivorpicks.com"
+                    {devLoading === "admin@realitypicks.xyz"
                       ? "Logging in..."
                       : "Login as Admin"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    admin@survivorpicks.com — full access
+                    admin@realitypicks.xyz — full access
                   </p>
                 </div>
               </Button>
@@ -137,19 +138,19 @@ export default function SignInPage() {
                 variant="outline"
                 className="w-full justify-start gap-3 border-primary/20 hover:bg-primary/10 hover:text-primary"
                 onClick={() =>
-                  handleDevLogin("player@survivorpicks.com", "Test Player", "USER")
+                  handleDevLogin("player@realitypicks.xyz", "Test Player", "USER")
                 }
                 disabled={devLoading !== null}
               >
-                <Flame className="h-4 w-4 text-primary" />
+                <Image src="/logo.png" alt="" width={16} height={16} className="rounded" />
                 <div className="text-left">
                   <p className="text-sm font-medium">
-                    {devLoading === "player@survivorpicks.com"
+                    {devLoading === "player@realitypicks.xyz"
                       ? "Logging in..."
                       : "Login as Player"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    player@survivorpicks.com — regular user
+                    player@realitypicks.xyz — regular user
                   </p>
                 </div>
               </Button>
