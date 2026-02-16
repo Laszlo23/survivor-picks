@@ -17,10 +17,13 @@ export async function GET() {
   const manifest = {
     accountAssociation: {
       header:
+        process.env.FARCASTER_MANIFEST_HEADER ||
         "eyJmaWQiOjg3Mzk0NCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDUwMmNlOUZCMTgxNGNiMDM4NDM5NjdFQzVFMEQ4RjZBQTNBM0MyZTEifQ",
       payload:
+        process.env.FARCASTER_MANIFEST_PAYLOAD ||
         "eyJkb21haW4iOiJzdXJ2aXZvci1waWNrcy52ZXJjZWwuYXBwIn0",
       signature:
+        process.env.FARCASTER_MANIFEST_SIGNATURE ||
         "mSyH7RHOJs3o85jlbVoQiK8QO1Y3jggOg9NciFnyvnM7YjjqtFe7wwkmXwykst0BcF0OXKScz8tLBBhKCgl3SBw=",
     },
     miniapp: {
