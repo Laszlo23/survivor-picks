@@ -13,6 +13,9 @@
  *   FARCASTER_MANIFEST_PAYLOAD=...
  *   FARCASTER_MANIFEST_SIGNATURE=...
  */
+
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
 
