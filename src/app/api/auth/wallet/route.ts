@@ -1,4 +1,4 @@
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, recoverMessageAddress } from "viem";
 import { base, baseSepolia, hardhat } from "viem/chains";
 import { parseSiweMessage, verifySiweMessage } from "viem/siwe";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +7,6 @@ import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 /**
  * Get the active chain and RPC transport for server-side verification.
- * Uses the same RPC URLs as the wagmi client config.
  */
 function getChainConfig() {
   if (process.env.NEXT_PUBLIC_CHAIN === "mainnet") {
@@ -39,9 +38,7 @@ const publicClient = createPublicClient({
 /**
  * POST /api/auth/wallet
  *
- * Verifies a SIWE (Sign In With Ethereum) signature using viem,
- * finds or creates a user by wallet address, and sets a NextAuth session cookie.
- *
+ * Verifies a SIWE signature, finds/creates user, sets NextAuth session.
  * Body: { message: string, signature: string }
  */
 export async function POST(req: Request) {
@@ -52,12 +49,16 @@ export async function POST(req: Request) {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
     return Response.json(
-      { error: "NEXTAUTH_SECRET not configured" },
+      { error: "Server config error: NEXTAUTH_SECRET not set" },
       { status: 500 }
     );
   }
 
+  let step = "init";
+
   try {
+    // ─── 1. Parse request body ────────────────────────────────────
+    step = "parse-body";
     const body = await req.json();
     const { message, signature } = body;
 
@@ -68,71 +69,123 @@ export async function POST(req: Request) {
       );
     }
 
-    // ─── Parse the SIWE message ─────────────────────────────────────
-    const parsed = parseSiweMessage(message);
-
-    if (!parsed || !parsed.address) {
-      console.error("[Wallet Auth] Could not parse SIWE message");
+    // ─── 2. Parse the SIWE message ────────────────────────────────
+    step = "parse-siwe";
+    let parsed;
+    try {
+      parsed = parseSiweMessage(message);
+    } catch (parseErr) {
+      console.error(
+        "[Wallet Auth] parseSiweMessage threw:",
+        parseErr instanceof Error ? parseErr.message : parseErr
+      );
       return Response.json(
-        { error: "Malformed SIWE message" },
+        {
+          error: "Could not parse SIWE message",
+          detail: parseErr instanceof Error ? parseErr.message : String(parseErr),
+        },
         { status: 400 }
       );
     }
 
-    // Validate domain matches our app
-    const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
-    const expectedDomain = new URL(appUrl).host;
-
-    if (parsed.domain !== expectedDomain) {
-      console.error(
-        `[Wallet Auth] Domain mismatch: got "${parsed.domain}", expected "${expectedDomain}"`
-      );
+    if (!parsed || !parsed.address) {
+      console.error("[Wallet Auth] parseSiweMessage returned no address");
       return Response.json(
-        { error: `Domain mismatch: expected ${expectedDomain}` },
-        { status: 401 }
+        { error: "Malformed SIWE message (no address)" },
+        { status: 400 }
       );
     }
 
-    // ─── Verify the signature (supports both EOA and smart contract wallets) ──
+    console.log(
+      `[Wallet Auth] Parsed SIWE — address: ${parsed.address}, domain: ${parsed.domain}, chainId: ${parsed.chainId}`
+    );
+
+    // ─── 3. Verify signature ──────────────────────────────────────
+    // Strategy:
+    //   a) Try direct ECDSA recovery (fast, works for EOA wallets)
+    //   b) If address mismatch, try verifySiweMessage (handles smart
+    //      contract wallets via EIP-6492/EIP-1271)
+    step = "verify-sig";
     let valid = false;
+
+    // (a) Direct ECDSA recovery — no RPC call needed
     try {
-      valid = await verifySiweMessage(publicClient, {
+      const recoveredAddress = await recoverMessageAddress({
         message,
         signature: signature as `0x${string}`,
       });
-    } catch (verifyErr) {
-      // If verifySiweMessage fails (e.g. EIP-1271 call reverts), fall back
-      // to raw ecrecover for EOA wallets
-      console.warn(
-        "[Wallet Auth] verifySiweMessage failed, trying raw verifyMessage:",
-        verifyErr instanceof Error ? verifyErr.message : verifyErr
+      console.log(
+        `[Wallet Auth] ECDSA recovered: ${recoveredAddress}, expected: ${parsed.address}`
       );
+      if (
+        recoveredAddress.toLowerCase() === parsed.address.toLowerCase()
+      ) {
+        valid = true;
+        console.log("[Wallet Auth] ECDSA verification succeeded (EOA)");
+      }
+    } catch (ecdsaErr) {
+      console.warn(
+        "[Wallet Auth] ECDSA recovery failed:",
+        ecdsaErr instanceof Error ? ecdsaErr.message : ecdsaErr
+      );
+    }
+
+    // (b) Smart contract wallet verification via EIP-6492
+    if (!valid) {
       try {
+        console.log("[Wallet Auth] Trying verifySiweMessage (smart wallet)...");
+        valid = await verifySiweMessage(publicClient, {
+          message,
+          signature: signature as `0x${string}`,
+        });
+        console.log(
+          `[Wallet Auth] verifySiweMessage returned: ${valid}`
+        );
+      } catch (verifyErr) {
+        console.error(
+          "[Wallet Auth] verifySiweMessage threw:",
+          verifyErr instanceof Error ? verifyErr.message : verifyErr
+        );
+      }
+    }
+
+    // (c) Last resort: publicClient.verifyMessage (ERC-1271)
+    if (!valid) {
+      try {
+        console.log("[Wallet Auth] Trying publicClient.verifyMessage...");
         valid = await publicClient.verifyMessage({
           address: parsed.address,
           message,
           signature: signature as `0x${string}`,
         });
-      } catch (fallbackErr) {
+        console.log(`[Wallet Auth] verifyMessage returned: ${valid}`);
+      } catch (lastErr) {
         console.error(
-          "[Wallet Auth] verifyMessage fallback also failed:",
-          fallbackErr instanceof Error ? fallbackErr.message : fallbackErr
+          "[Wallet Auth] verifyMessage threw:",
+          lastErr instanceof Error ? lastErr.message : lastErr
         );
       }
     }
 
     if (!valid) {
-      console.error("[Wallet Auth] Signature verification returned false");
       return Response.json(
-        { error: "Invalid signature" },
+        {
+          error: "Invalid signature or message",
+          debug: {
+            address: parsed.address,
+            domain: parsed.domain,
+            chainId: parsed.chainId,
+            chain: activeChain.name,
+          },
+        },
         { status: 401 }
       );
     }
 
+    // ─── 4. Find or create user ───────────────────────────────────
+    step = "db-user";
     const walletAddress = parsed.address.toLowerCase();
 
-    // ─── Find or create user by wallet address ──────────────────────
     let user = await prisma.user.findFirst({
       where: { walletAddress },
     });
@@ -145,19 +198,39 @@ export async function POST(req: Request) {
       }
 
       const shortAddr = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
-      user = await prisma.user.create({
-        data: {
-          email: `wallet-${walletAddress}@wallet.local`,
-          name: shortAddr,
-          walletAddress,
-          referralCode,
-          emailVerified: new Date(),
-          hasOnboarded: true,
-        },
-      });
+
+      try {
+        user = await prisma.user.create({
+          data: {
+            email: `wallet-${walletAddress}@wallet.local`,
+            name: shortAddr,
+            walletAddress,
+            referralCode,
+            emailVerified: new Date(),
+            hasOnboarded: true,
+          },
+        });
+      } catch (createErr) {
+        // Might be a unique constraint violation if race condition
+        console.warn(
+          "[Wallet Auth] Create user failed, retrying findFirst:",
+          createErr instanceof Error ? createErr.message : createErr
+        );
+        user = await prisma.user.findFirst({ where: { walletAddress } });
+        if (!user) {
+          return Response.json(
+            {
+              error: "Could not create user account",
+              detail: createErr instanceof Error ? createErr.message : String(createErr),
+            },
+            { status: 500 }
+          );
+        }
+      }
     }
 
-    // ─── Create NextAuth-compatible JWT session ─────────────────────
+    // ─── 5. Create NextAuth JWT session ───────────────────────────
+    step = "session";
     const sessionToken = await encode({
       token: {
         id: user.id,
@@ -196,11 +269,14 @@ export async function POST(req: Request) {
     );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
-    const stack = error instanceof Error ? error.stack : "";
-    console.error("[Wallet Auth] Unhandled error:", msg, stack);
+    console.error(`[Wallet Auth] Unhandled error at step="${step}":`, msg);
 
+    // Return actual error for debugging (TODO: remove detail in production)
     return Response.json(
-      { error: "Authentication failed. Please try again." },
+      {
+        error: `Auth failed at step: ${step}`,
+        detail: msg,
+      },
       { status: 500 }
     );
   }

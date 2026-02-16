@@ -54,7 +54,10 @@ function WalletSignInInner() {
 
       if (!authRes.ok) {
         const data = await authRes.json().catch(() => ({}));
-        throw new Error(data.error || "Authentication failed");
+        const errMsg = data.detail
+          ? `${data.error}: ${data.detail}`
+          : data.error || "Authentication failed";
+        throw new Error(errMsg);
       }
 
       // 5. Success — redirect to dashboard
