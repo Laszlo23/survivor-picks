@@ -77,38 +77,14 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         const isRealMiniApp =
           typeof fid === "number" && fid > 0 && Number.isInteger(fid);
 
+        // Signal to the host that the app is ready IMMEDIATELY.
+        // This must happen as early as possible to dismiss the splash screen.
+        // Auth bridging and wallet connection happen after.
+        await sdk.actions.ready();
+
         if (isRealMiniApp && context?.user) {
-          // Confirmed: running inside a Farcaster Mini App
           const username = context.user.username ?? null;
           const pfpUrl = context.user.pfpUrl ?? null;
-
-          // Auto-connect wallet via the farcaster miniapp connector
-          if (!isConnected) {
-            const fcConnector = connectors.find(
-              (c) => c.id === "farcasterMiniApp" || c.name === "Farcaster"
-            );
-            if (fcConnector) {
-              try {
-                connect({ connector: fcConnector });
-              } catch (e) {
-                console.warn("[Farcaster] Auto-connect failed:", e);
-              }
-            }
-          }
-
-          // Bridge Farcaster auth to NextAuth session
-          if (sessionStatus !== "authenticated") {
-            try {
-              const { token } = await sdk.quickAuth.getToken();
-              await fetch("/api/auth/farcaster", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token }),
-              });
-            } catch (e) {
-              console.warn("[Farcaster] Quick Auth bridge failed:", e);
-            }
-          }
 
           setCtx({
             isInMiniApp: true,
@@ -129,7 +105,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
             },
             swapToken: async (tokenAddress: string) => {
               try {
-                // CAIP-19 format for Base ERC-20 tokens
                 const buyToken = `eip155:8453/erc20:${tokenAddress}`;
                 await sdk.actions.swapToken({ buyToken });
               } catch (e) {
@@ -138,11 +113,35 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
             },
           });
 
-          // Signal to the host that the app is ready
-          await sdk.actions.ready();
+          // Auto-connect wallet (non-blocking, after ready)
+          if (!isConnected) {
+            const fcConnector = connectors.find(
+              (c) => c.id === "farcasterMiniApp" || c.name === "Farcaster"
+            );
+            if (fcConnector) {
+              try {
+                connect({ connector: fcConnector });
+              } catch (e) {
+                console.warn("[Farcaster] Auto-connect failed:", e);
+              }
+            }
+          }
+
+          // Bridge Farcaster auth to NextAuth session (non-blocking, after ready)
+          if (sessionStatus !== "authenticated") {
+            try {
+              const { token } = await sdk.quickAuth.getToken();
+              await fetch("/api/auth/farcaster", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+              });
+            } catch (e) {
+              console.warn("[Farcaster] Quick Auth bridge failed:", e);
+            }
+          }
         } else {
-          // We have the SDK but no user context -- still call ready()
-          await sdk.actions.ready();
+          // SDK loaded but no user context
           setCtx((prev) => ({ ...prev, isReady: true }));
         }
       } catch {

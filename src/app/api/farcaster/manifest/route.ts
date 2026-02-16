@@ -1,12 +1,14 @@
 /**
- * Serves the Farcaster Mini App manifest.
+ * Serves the Farcaster Mini App manifest at /.well-known/farcaster.json
+ * (rewritten via next.config.mjs).
  *
- * This is rewritten from /.well-known/farcaster.json via next.config.mjs.
+ * IMPORTANT: The accountAssociation MUST be signed for the exact domain
+ * where this app is hosted (e.g. realitypicks.xyz — NOT survivor-picks.vercel.app).
  *
- * The accountAssociation must be generated using the Farcaster developer tools:
- * https://farcaster.xyz/~/developers/mini-apps/manifest?domain=realitypicks.xyz
+ * Sign your manifest at:
+ *   https://farcaster.xyz/~/developers/mini-apps/manifest?domain=realitypicks.xyz
  *
- * After signing, copy the header, payload, and signature into .env:
+ * Then set the env vars on Vercel:
  *   FARCASTER_MANIFEST_HEADER=...
  *   FARCASTER_MANIFEST_PAYLOAD=...
  *   FARCASTER_MANIFEST_SIGNATURE=...
@@ -14,19 +16,13 @@
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
 
-  const manifest = {
+  const manifest: Record<string, unknown> = {
     accountAssociation: {
-      header:
-        process.env.FARCASTER_MANIFEST_HEADER ||
-        "eyJmaWQiOjg3Mzk0NCwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDUwMmNlOUZCMTgxNGNiMDM4NDM5NjdFQzVFMEQ4RjZBQTNBM0MyZTEifQ",
-      payload:
-        process.env.FARCASTER_MANIFEST_PAYLOAD ||
-        "eyJkb21haW4iOiJzdXJ2aXZvci1waWNrcy52ZXJjZWwuYXBwIn0",
-      signature:
-        process.env.FARCASTER_MANIFEST_SIGNATURE ||
-        "mSyH7RHOJs3o85jlbVoQiK8QO1Y3jggOg9NciFnyvnM7YjjqtFe7wwkmXwykst0BcF0OXKScz8tLBBhKCgl3SBw=",
+      header: process.env.FARCASTER_MANIFEST_HEADER || "",
+      payload: process.env.FARCASTER_MANIFEST_PAYLOAD || "",
+      signature: process.env.FARCASTER_MANIFEST_SIGNATURE || "",
     },
-    miniapp: {
+    frame: {
       version: "1",
       name: "RealityPicks",
       subtitle: "Reality TV Predictions on Base",
@@ -52,12 +48,18 @@ export async function GET() {
         "Free reality TV prediction game. Pick winners, earn points, collect badges. Built on Base.",
       ogImageUrl: `${baseUrl}/og-image.png`,
       noindex: false,
+      requiredChains: ["eip155:8453"],
+      requiredCapabilities: [
+        "actions.signIn",
+        "wallet.getEthereumProvider",
+        "actions.swapToken",
+      ],
     },
   };
 
   return Response.json(manifest, {
     headers: {
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Cache-Control": "public, max-age=300, s-maxage=300",
       "Access-Control-Allow-Origin": "*",
     },
   });
