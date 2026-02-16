@@ -336,6 +336,14 @@ model Referral {
   @@index([referralCode])
 }
 
+// ─── Newsletter ─────────────────────────────────────────────────────
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 // ─── AI Agent Models ─────────────────────────────────────────────────
 
 model AgentLog {

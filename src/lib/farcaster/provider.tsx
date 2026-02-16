@@ -55,18 +55,30 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
+        // Quick bail-out: if we're not in an iframe, we can't be in a Mini App
+        if (typeof window !== "undefined" && window.parent === window && !window.opener) {
+          if (!cancelled) setCtx((prev) => ({ ...prev, isReady: true }));
+          return;
+        }
+
         // Dynamically import to avoid breaking SSR / standalone web builds
         const { sdk } = await import("@farcaster/miniapp-sdk");
 
-        // Attempt to get context -- this will throw or return null
-        // if we're not running inside a Farcaster client
-        const context = await sdk.context;
+        // Attempt to get context with a timeout to prevent hanging
+        const context = await Promise.race([
+          sdk.context,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        ]);
 
         if (cancelled) return;
 
-        if (context?.user) {
-          // We're inside a Farcaster Mini App
-          const fid = context.user.fid;
+        // Strict check: fid must be a positive integer to confirm real Mini App
+        const fid = context?.user?.fid;
+        const isRealMiniApp =
+          typeof fid === "number" && fid > 0 && Number.isInteger(fid);
+
+        if (isRealMiniApp && context?.user) {
+          // Confirmed: running inside a Farcaster Mini App
           const username = context.user.username ?? null;
           const pfpUrl = context.user.pfpUrl ?? null;
 
@@ -100,7 +112,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
           setCtx({
             isInMiniApp: true,
-            fid,
+            fid: fid as number,
             username,
             pfpUrl,
             isReady: true,

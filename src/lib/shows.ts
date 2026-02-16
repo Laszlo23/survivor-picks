@@ -34,6 +34,8 @@ export interface ShowInfo {
   emptyTitle: string;
   /** Show-specific empty state description */
   emptyDescription: string;
+  /** Whether this show has seeded data in the database (seasons, episodes, questions) */
+  hasData?: boolean;
 }
 
 export const LIVE_SHOWS: ShowInfo[] = [
@@ -56,6 +58,7 @@ export const LIVE_SHOWS: ShowInfo[] = [
     vibeText: "The island is calling. Unluler vs Gonulluler -- who will survive?",
     emptyTitle: "The island awaits your predictions...",
     emptyDescription: "New predictions drop when the next episode airs on TV8.",
+    hasData: true,
   },
   {
     slug: "survivor-50",

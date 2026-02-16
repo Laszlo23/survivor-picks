@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import type { Prisma } from "@prisma/client";
 import { heavyLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
+import { agentEpisodeSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
@@ -101,14 +102,16 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { episodeId } = body;
+    const parsed = agentEpisodeSchema.safeParse(body);
 
-    if (!episodeId) {
+    if (!parsed.success) {
       return Response.json(
-        { error: "episodeId is required" },
+        { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+
+    const { episodeId } = parsed.data;
 
     const episode = await prisma.episode.findUnique({
       where: { id: episodeId },

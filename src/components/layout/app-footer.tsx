@@ -34,7 +34,7 @@ export function AppFooter() {
               LIVE ON BASE
             </span>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 flex-wrap">
             <Link href="/token" className="hover:text-neon-cyan transition-colors">
               $PICKS
             </Link>
@@ -44,6 +44,25 @@ export function AppFooter() {
             <Link href="/leaderboard" className="hover:text-neon-cyan transition-colors">
               Leaderboard
             </Link>
+            <Link href="/whitepaper" className="hover:text-neon-cyan transition-colors">
+              Whitepaper
+            </Link>
+            <Link href="/tokenomics" className="hover:text-neon-cyan transition-colors">
+              Tokenomics
+            </Link>
+            <Link href="/contracts" className="hover:text-neon-cyan transition-colors">
+              Contracts
+            </Link>
+            <span className="w-px h-3 bg-white/10" />
+            <a href="https://discord.gg/Km7Tw6jHhk" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">
+              Discord
+            </a>
+            <a href="https://warpcast.com/0xlaszlo" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">
+              Farcaster
+            </a>
+            <a href="https://x.com/laszloleonardo" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">
+              X
+            </a>
           </div>
         </div>
       </div>

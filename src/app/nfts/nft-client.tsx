@@ -492,9 +492,32 @@ export function NFTCollectionClient() {
         ))}
       </StaggerContainer>
 
+      {/* Season Pass - Coming Soon */}
+      <FadeIn>
+        <div className="mt-12 p-6 rounded-2xl bg-gradient-to-br from-violet-950/30 to-purple-950/20 border border-violet-500/20">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 border border-violet-500/20">
+              <Crown className="h-7 w-7 text-violet-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-display font-bold text-lg text-white">Season Pass</h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/20">
+                  Coming Soon
+                </span>
+              </div>
+              <p className="text-sm text-violet-300/70">
+                Premium access with exclusive perks — boosted points, priority predictions, and unique rewards.
+                Burns $PICKS tokens on purchase.
+              </p>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
       {/* Revenue Info */}
       <FadeIn>
-        <div className="mt-12 text-center">
+        <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             75% of mint revenue goes to $PICKS liquidity &middot; 25% to treasury

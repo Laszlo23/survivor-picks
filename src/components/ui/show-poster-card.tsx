@@ -21,6 +21,10 @@ function getStatus(show: ShowInfo): "live" | "airing" | "premiere" {
 
 export function ShowPosterCard({ show, index = 0 }: ShowPosterCardProps) {
   const status = getStatus(show);
+  const comingSoon = !show.hasData;
+
+  const Wrapper = comingSoon ? "div" : Link;
+  const wrapperProps = comingSoon ? {} : { href: "/dashboard" };
 
   return (
     <motion.div
@@ -28,32 +32,41 @@ export function ShowPosterCard({ show, index = 0 }: ShowPosterCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ scale: 1.03, y: -4 }}
-      className="group relative"
+      whileHover={comingSoon ? {} : { scale: 1.03, y: -4 }}
+      className={`group relative ${comingSoon ? "opacity-70" : ""}`}
     >
-      <Link href="/dashboard" className="block">
+      <Wrapper {...(wrapperProps as any)} className="block">
         {/* Poster body */}
         <div
-          className={`relative aspect-[2/3] overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-b ${show.landingGradient} transition-shadow duration-300 group-hover:shadow-neon-cyan`}
+          className={`relative aspect-[2/3] overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-b ${show.landingGradient} transition-shadow duration-300 ${comingSoon ? "" : "group-hover:shadow-neon-cyan"}`}
         >
           {/* Glow backdrop behind emoji */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div
-              className="h-32 w-32 rounded-full blur-3xl opacity-30 transition-opacity duration-300 group-hover:opacity-50"
+              className={`h-32 w-32 rounded-full blur-3xl transition-opacity duration-300 ${comingSoon ? "opacity-15" : "opacity-30 group-hover:opacity-50"}`}
               style={{ background: show.accent }}
             />
           </div>
 
           {/* Emoji focal point */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl sm:text-8xl drop-shadow-lg transition-transform duration-300 group-hover:scale-110">
+            <span className={`text-7xl sm:text-8xl drop-shadow-lg transition-transform duration-300 ${comingSoon ? "grayscale-[30%]" : "group-hover:scale-110"}`}>
               {show.emoji}
             </span>
           </div>
 
+          {/* Coming Soon overlay */}
+          {comingSoon && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+              <div className="rounded-lg bg-white/10 border border-white/20 px-4 py-2 backdrop-blur-md">
+                <p className="text-sm font-bold uppercase tracking-wider text-white">Coming Soon</p>
+              </div>
+            </div>
+          )}
+
           {/* Top bar: status + network */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-            <LivePill status={status} label={status === "premiere" ? show.status : undefined} />
+            <LivePill status={comingSoon ? "premiere" : status} label={comingSoon ? "Coming Soon" : (status === "premiere" ? show.status : undefined)} />
             <NetworkBadge network={show.network} />
           </div>
 
@@ -82,12 +95,18 @@ export function ShowPosterCard({ show, index = 0 }: ShowPosterCardProps) {
             </div>
 
             {/* CTA */}
-            <NeonButton variant="primary" fullWidth className="text-xs py-2">
-              CAST YOUR PICKS
-            </NeonButton>
+            {comingSoon ? (
+              <div className="w-full py-2 text-center text-xs font-medium text-white/50 border border-white/10 rounded-lg bg-white/5">
+                PREDICTIONS OPENING SOON
+              </div>
+            ) : (
+              <NeonButton variant="primary" fullWidth className="text-xs py-2">
+                CAST YOUR PICKS
+              </NeonButton>
+            )}
           </div>
         </div>
-      </Link>
+      </Wrapper>
     </motion.div>
   );
 }

@@ -45,33 +45,57 @@ export async function POST(req: Request) {
       return Response.json({ error: "Invalid token: no FID" }, { status: 401 });
     }
 
-    // ─── Resolve Farcaster user's primary Ethereum address ────────────
+    // ─── Resolve Farcaster user via Neynar API ────────────────────────
     let primaryAddress: string | null = null;
     let fcUsername: string | null = null;
 
-    try {
-      const addrRes = await fetch(
-        `https://api.farcaster.xyz/fc/primary-address?fid=${fid}&protocol=ethereum`
-      );
-      if (addrRes.ok) {
-        const data = await addrRes.json();
-        primaryAddress = data?.result?.address?.address ?? null;
+    const neynarKey = process.env.NEYNAR_API_KEY;
+    if (neynarKey) {
+      try {
+        const userRes = await fetch(
+          `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
+          { headers: { accept: "application/json", "x-api-key": neynarKey } }
+        );
+        if (userRes.ok) {
+          const data = await userRes.json();
+          const fcUser = data?.users?.[0];
+          if (fcUser) {
+            fcUsername = fcUser.username ?? null;
+            // Use the first verified Ethereum address
+            const verifiedAddr = fcUser.verified_addresses?.eth_addresses?.[0];
+            if (verifiedAddr) {
+              primaryAddress = verifiedAddr;
+            }
+          }
+        }
+      } catch {
+        // Non-critical — fall through to create user without address
       }
-    } catch {
-      // Non-critical — user may not have a primary address set
-    }
+    } else {
+      // Fallback: use public Farcaster hub API (less reliable)
+      try {
+        const addrRes = await fetch(
+          `https://api.farcaster.xyz/fc/primary-address?fid=${fid}&protocol=ethereum`
+        );
+        if (addrRes.ok) {
+          const data = await addrRes.json();
+          primaryAddress = data?.result?.address?.address ?? null;
+        }
+      } catch {
+        // Non-critical
+      }
 
-    try {
-      // Fetch username from Farcaster API
-      const userRes = await fetch(
-        `https://api.farcaster.xyz/v2/user?fid=${fid}`
-      );
-      if (userRes.ok) {
-        const data = await userRes.json();
-        fcUsername = data?.result?.user?.username ?? null;
+      try {
+        const userRes = await fetch(
+          `https://api.farcaster.xyz/v2/user?fid=${fid}`
+        );
+        if (userRes.ok) {
+          const data = await userRes.json();
+          fcUsername = data?.result?.user?.username ?? null;
+        }
+      } catch {
+        // Non-critical
       }
-    } catch {
-      // Non-critical
     }
 
     // ─── Find or create user in our database ──────────────────────────

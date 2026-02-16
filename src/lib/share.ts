@@ -9,7 +9,7 @@ const APP_NAME = "RealityPicks";
 
 function getBaseUrl(): string {
   if (typeof window !== "undefined") return window.location.origin;
-  return process.env.NEXTAUTH_URL || "http://localhost:3000";
+  return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
 }
 
 function buildRefLink(referralCode?: string | null): string {

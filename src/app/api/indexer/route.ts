@@ -43,7 +43,16 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const fromBlock = BigInt(searchParams.get("fromBlock") || "0");
+  let fromBlock: bigint;
+  try {
+    const raw = searchParams.get("fromBlock") || "0";
+    if (!/^\d+$/.test(raw)) {
+      return Response.json({ error: "Invalid fromBlock parameter" }, { status: 400 });
+    }
+    fromBlock = BigInt(raw);
+  } catch {
+    return Response.json({ error: "Invalid fromBlock parameter" }, { status: 400 });
+  }
 
   try {
     const indexer = new EventIndexer();
@@ -61,6 +70,7 @@ export async function GET(request: Request) {
 
     return Response.json({
       success: true,
+      mode: "audit",
       eventsProcessed: events.length,
       events: events.map(e => ({
         type: e.type,

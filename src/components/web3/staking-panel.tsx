@@ -13,6 +13,8 @@ import {
   useBoostBPS,
   usePendingRewards,
   useTotalStaked,
+  useRewardRate,
+  useRewardEndTime,
   useStake,
   useUnstake,
   useClaimStakingRewards,
@@ -44,6 +46,8 @@ export function StakingPanel() {
   const { data: pending } = usePendingRewards(address);
   const { data: totalStakedData } = useTotalStaked();
 
+  const { data: rewardRate } = useRewardRate();
+  const { data: rewardEndTime } = useRewardEndTime();
   const { approve, isPending: isApproving } = useApprovePicksToken();
   const { stake, isPending: isStaking } = useStake();
   const { unstake, isPending: isUnstaking } = useUnstake();
@@ -54,6 +58,17 @@ export function StakingPanel() {
   const boostBps = Number(boost || 10000n);
   const boostMultiplier = (boostBps / 10000).toFixed(2);
   const pendingRewards = pending as bigint | undefined;
+
+  const rewardsActive = (() => {
+    const rate = rewardRate as bigint | undefined;
+    const endTime = rewardEndTime as bigint | undefined;
+    if (!rate || rate === 0n) return false;
+    if (endTime && endTime > 0n) {
+      const nowSec = BigInt(Math.floor(Date.now() / 1000));
+      if (endTime < nowSec) return false;
+    }
+    return true;
+  })();
 
   const handleStake = () => {
     if (!stakeAmount) return;
@@ -102,6 +117,19 @@ export function StakingPanel() {
         ))}
       </div>
 
+      {/* Rewards Not Active Banner */}
+      {!rewardsActive && (
+        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+          <span className="text-amber-400 text-lg shrink-0">⏳</span>
+          <div>
+            <p className="text-sm font-medium text-amber-300">Rewards Coming Soon</p>
+            <p className="text-xs text-amber-400/70 mt-0.5">
+              Staking rewards are not yet active. You can still stake to lock in your tier, but rewards will begin once the pool is funded.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Tier Info */}
       <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
         <h3 className="text-sm font-display font-semibold mb-3">Staking Tiers</h3>
@@ -123,7 +151,7 @@ export function StakingPanel() {
       </div>
 
       {/* Claim Rewards */}
-      {pendingRewards && pendingRewards > 0n && (
+      {pendingRewards && pendingRewards > 0n && rewardsActive && (
         <PressScale>
           <button
             onClick={() => claimRewards()}

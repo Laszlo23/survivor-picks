@@ -10,24 +10,28 @@ import { AppFooter } from "@/components/layout/app-footer";
  * AppShell conditionally renders the Navbar, Footer, and BottomTabs
  * based on whether the app is running inside a Farcaster Mini App.
  *
- * Inside Farcaster: the host provides its own header, so we hide our chrome.
- * Standalone web: render all navigation elements as normal.
+ * Optimistic rendering: show navigation by default.
+ * Only suppress once the Farcaster SDK has finished initialising AND
+ * confirmed that we are genuinely inside a Mini App (isReady + isInMiniApp).
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { isInMiniApp } = useFarcaster();
+  const { isInMiniApp, isReady } = useFarcaster();
+
+  // Only hide navigation when we're certain we're inside a Mini App
+  const hideChrome = isReady && isInMiniApp;
 
   return (
     <>
-      {!isInMiniApp && <Navbar />}
+      {!hideChrome && <Navbar />}
       <main
         className={`min-h-[calc(100vh-56px)] overflow-x-hidden ${
-          isInMiniApp ? "pb-0" : "pb-20 md:pb-0"
+          hideChrome ? "pb-0" : "pb-20 md:pb-0"
         }`}
       >
         {children}
       </main>
-      {!isInMiniApp && <AppFooter />}
-      {!isInMiniApp && <BottomTabs />}
+      {!hideChrome && <AppFooter />}
+      {!hideChrome && <BottomTabs />}
     </>
   );
 }

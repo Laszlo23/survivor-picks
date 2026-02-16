@@ -48,7 +48,7 @@ export function PredictionFeed({
   return (
     <div className="space-y-4">
       <ShowTabs
-        shows={LIVE_SHOWS}
+        shows={LIVE_SHOWS.filter((s) => s.hasData)}
         activeSlug={activeSlug}
         onSelect={setActiveSlug}
       />

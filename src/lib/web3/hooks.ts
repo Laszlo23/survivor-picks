@@ -208,6 +208,14 @@ export function useTotalStaked() {
   return useSafeRead("StakingVault", "totalStaked");
 }
 
+export function useRewardRate() {
+  return useSafeRead("StakingVault", "rewardRate");
+}
+
+export function useRewardEndTime() {
+  return useSafeRead("StakingVault", "rewardEndTime");
+}
+
 export function useStake() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });

@@ -55,11 +55,26 @@ export async function middleware(request: NextRequest) {
     const origin = request.headers.get("origin");
     const host = request.headers.get("host");
 
-    if (origin && host) {
-      const originHost = new URL(origin).host;
-      if (originHost !== host) {
+    // Reject POSTs without an Origin header (prevents curl/Postman CSRF bypass)
+    if (!origin) {
+      return NextResponse.json(
+        { error: "Missing origin header" },
+        { status: 403 }
+      );
+    }
+
+    if (host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json(
+            { error: "Invalid origin" },
+            { status: 403 }
+          );
+        }
+      } catch {
         return NextResponse.json(
-          { error: "Invalid origin" },
+          { error: "Malformed origin header" },
           { status: 403 }
         );
       }

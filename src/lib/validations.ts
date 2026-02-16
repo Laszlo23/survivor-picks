@@ -95,6 +95,12 @@ export const claimSocialTaskSchema = z.object({
 
 export type ClaimSocialTaskInput = z.infer<typeof claimSocialTaskSchema>;
 
+// ─── Agent ────────────────────────────────────────────────────────────────────
+
+export const agentEpisodeSchema = z.object({
+  episodeId: z.string().min(1).max(100),
+});
+
 // ─── Referral ─────────────────────────────────────────────────────────────────
 
 export const referralCodeSchema = z

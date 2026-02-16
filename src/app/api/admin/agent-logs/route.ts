@@ -1,9 +1,14 @@
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { heavyLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIP(req);
+  const rl = heavyLimiter.check(`admin-logs:${ip}`);
+  if (!rl.success) return rateLimitResponse(rl.resetAt);
+
   try {
     const session = await getSession();
     if (!session?.user?.id) {

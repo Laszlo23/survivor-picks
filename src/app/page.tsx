@@ -13,6 +13,12 @@ import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingShows } from "@/components/landing/shows";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
+import { LandingFeaturedMarkets } from "@/components/landing/featured-markets";
+import { LandingNFTPreview } from "@/components/landing/nft-badges-preview";
+import { LandingCommunity } from "@/components/landing/community";
+import { LandingCommunityVote } from "@/components/landing/community-vote";
+import { LandingEmailCapture } from "@/components/landing/email-capture";
+import { LandingClosingCTA } from "@/components/landing/closing-cta";
 import { LandingFooter } from "@/components/landing/footer";
 import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
@@ -32,6 +38,7 @@ export default async function LandingPage() {
       {/* Everything after the hero gets a solid bg so it scrolls over the fixed hero image */}
       <div className="relative z-10 bg-studio-black">
       <LandingShows />
+      <LandingFeaturedMarkets />
       <LandingHowItWorks />
 
       {/* ── Scoring Scoreboard ──────────────────────────────────────── */}
@@ -172,10 +179,17 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <LandingNFTPreview />
+
       {/* ── Leaderboard Preview (loaded via Suspense) ─────────────────── */}
       <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardPreview seasonId={season?.id} />
       </Suspense>
+
+      <LandingCommunity />
+      <LandingCommunityVote />
+      <LandingEmailCapture />
+      <LandingClosingCTA />
 
       <LandingFooter />
       </div>{/* end solid bg wrapper */}
