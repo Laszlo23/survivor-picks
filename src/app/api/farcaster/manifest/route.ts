@@ -28,7 +28,7 @@ export async function GET() {
       name: "RealityPicks",
       subtitle: "Reality TV Predictions on Base",
       description:
-        "Predict reality TV outcomes across Survivor, The Bachelor, Love Island, and more. Earn points, build streaks, climb the leaderboard, and collect NFT badges. Free to play, powered by $PICKS on Base.",
+        "Predict reality TV outcomes across Survivor, The Bachelor, Love Island and more. Earn points, build streaks, climb the leaderboard. Free to play on Base.",
       tagline: "Predict Reality. Win Glory.",
       iconUrl: `${baseUrl}/logo.png`,
       homeUrl: baseUrl,
@@ -44,9 +44,9 @@ export async function GET() {
       webhookUrl: `${baseUrl}/api/farcaster/webhook`,
       primaryCategory: "entertainment",
       tags: ["realitytv", "predictions", "gaming", "base", "community"],
-      ogTitle: "RealityPicks — Predict Reality TV on Base",
+      ogTitle: "RealityPicks",
       ogDescription:
-        "Free-to-play reality TV prediction game. Pick winners, call eliminations, earn points and NFT badges. Built on Base.",
+        "Free reality TV prediction game. Pick winners, earn points, collect badges. Built on Base.",
       ogImageUrl: `${baseUrl}/og-image.png`,
       noindex: false,
     },
