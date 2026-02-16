@@ -30,6 +30,8 @@ export async function GET() {
       splashImageUrl: `${baseUrl}/logo.png`,
       splashBackgroundColor: "#0a0a0f",
       webhookUrl: `${baseUrl}/api/farcaster/webhook`,
+      primaryCategory: "entertainment",
+      tags: ["realitytv", "predictions", "gaming", "base", "community"],
     },
   };
 
