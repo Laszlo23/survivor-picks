@@ -23,7 +23,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {!hideChrome && <Navbar />}
+      {/* Always show Navbar (hamburger menu) — even inside Farcaster Mini App */}
+      <Navbar />
       <main
         className={`min-h-[calc(100vh-56px)] overflow-x-hidden pb-20 md:pb-0`}
       >

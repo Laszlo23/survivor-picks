@@ -63,16 +63,22 @@ export function PredictionFeed({
             transition={{ duration: 0.3 }}
             className="space-y-3"
           >
-            {/* ── Atmospheric show vibe header ─────────────────────── */}
+            {/* ── Atmospheric show vibe header (clickable to episode) ── */}
             {currentShow && (
-              <div
-                className="flex items-center gap-2.5 px-1 py-2"
+              <Link
+                href={
+                  seasonId && questions[0]
+                    ? `/season/${seasonId}/episode/${questions[0].episodeId}`
+                    : "/dashboard"
+                }
+                className="flex items-center gap-2.5 px-1 py-2 rounded-lg hover:bg-white/[0.03] transition-colors group"
               >
-                <span className="text-lg">{currentShow.emoji}</span>
-                <p className="text-xs text-muted-foreground italic leading-relaxed">
+                <span className="text-lg group-hover:scale-110 transition-transform">{currentShow.emoji}</span>
+                <p className="text-xs text-muted-foreground italic leading-relaxed group-hover:text-foreground transition-colors">
                   {currentShow.vibeText}
                 </p>
-              </div>
+                <ArrowRight className="h-3 w-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
             )}
 
             {questions.map((q) => (

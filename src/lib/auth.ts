@@ -1,10 +1,8 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
-import { claimReferral } from "@/lib/actions/referral";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
@@ -62,12 +60,13 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) return null;
 
-        // Return user object — NextAuth will create the JWT from this
+        // Return user object with role — NextAuth creates the JWT from this
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
+          role: user.role,
         };
       },
     }),
@@ -75,15 +74,11 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // First sign-in: populate token from the user returned by authorize()
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
-          token.name = dbUser.name;
-        }
+        // First sign-in: use the user object returned by authorize() directly
+        token.id = user.id;
+        token.sub = user.id;
+        token.role = (user as any).role || "USER";
+        token.name = user.name;
       }
       return token;
     },

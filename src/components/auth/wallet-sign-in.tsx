@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAccount, useSignMessage, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { createSiweMessage } from "viem/siwe";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { Wallet, Loader2, CheckCircle2 } from "lucide-react";
 
 type Phase = "idle" | "signing" | "verifying" | "success" | "error";
@@ -14,11 +14,19 @@ function WalletSignInInner() {
   const { address, isConnected, chain } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
+  const { status } = useSession();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
 
   // Prevent double-triggers
   const signingRef = useRef(false);
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (status === "authenticated") {
+      window.location.href = "/dashboard";
+    }
+  }, [status]);
 
   const handleSignIn = useCallback(async () => {
     if (!address || !chain) return;
@@ -48,7 +56,7 @@ function WalletSignInInner() {
       // 3. Sign with wallet
       const signature = await signMessageAsync({ message });
 
-      // 4. Verify on server
+      // 4. Verify signature on server
       setPhase("verifying");
       const verifyRes = await fetch("/api/auth/wallet", {
         method: "POST",
@@ -73,8 +81,9 @@ function WalletSignInInner() {
         throw new Error(result.error);
       }
 
-      // 6. Success — hard navigate to dashboard (ensures session cookie is read)
+      // 6. Success — clear guard and hard-navigate
       setPhase("success");
+      sessionStorage.removeItem("wallet-signing");
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 400);
@@ -87,8 +96,25 @@ function WalletSignInInner() {
       }
       setPhase("error");
       signingRef.current = false;
+      sessionStorage.removeItem("wallet-signing");
     }
   }, [address, chain, signMessageAsync]);
+
+  // Auto-trigger sign-in once when wallet connects (guarded by sessionStorage)
+  useEffect(() => {
+    if (
+      isConnected &&
+      address &&
+      chain &&
+      phase === "idle" &&
+      !signingRef.current &&
+      status !== "authenticated" &&
+      !sessionStorage.getItem("wallet-signing")
+    ) {
+      sessionStorage.setItem("wallet-signing", "1");
+      handleSignIn();
+    }
+  }, [isConnected, address, chain, phase, status, handleSignIn]);
 
   // Connected — show sign-in flow
   if (isConnected && address) {
@@ -114,6 +140,7 @@ function WalletSignInInner() {
               setPhase("idle");
               setError(null);
               signingRef.current = false;
+              sessionStorage.removeItem("wallet-signing");
             }}
             className="text-xs text-muted-foreground hover:text-white transition-colors"
           >
@@ -157,6 +184,7 @@ function WalletSignInInner() {
             <button
               onClick={() => {
                 signingRef.current = false;
+                sessionStorage.removeItem("wallet-signing");
                 handleSignIn();
               }}
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-white hover:bg-white/[0.06] transition-colors"
