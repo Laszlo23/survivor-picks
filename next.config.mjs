@@ -28,7 +28,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://api.openai.com https://api.tavily.com https://*.infura.io https://*.alchemy.com https://*.base.org https://app.uniswap.org https://*.uniswap.org https://auth.farcaster.xyz https://api.farcaster.xyz https://api.neynar.com",
               "frame-src 'self' https://*.walletconnect.com https://*.walletconnect.org https://app.uniswap.org https://*.farcaster.xyz https://*.warpcast.com",
-              "frame-ancestors 'self' https://*.farcaster.xyz https://*.warpcast.com https://warpcast.com",
+              "frame-ancestors 'self' https://*.farcaster.xyz https://*.warpcast.com https://warpcast.com https://*.base.org https://base.org https://*.onchainkit.xyz https://*.vercel.app",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
