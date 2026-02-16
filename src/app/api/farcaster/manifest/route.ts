@@ -23,15 +23,29 @@ export async function GET() {
     miniapp: {
       version: "1",
       name: "RealityPicks",
+      subtitle: "Reality TV Predictions on Base",
+      description:
+        "Predict reality TV outcomes across Survivor, The Bachelor, Love Island, and more. Earn points, build streaks, climb the leaderboard, and collect NFT badges. Free to play, powered by $PICKS on Base.",
+      tagline: "Predict Reality. Win Glory.",
       iconUrl: `${baseUrl}/logo.png`,
       homeUrl: baseUrl,
       imageUrl: `${baseUrl}/og-image.png`,
+      heroImageUrl: `${baseUrl}/hero-stage.jpg`,
+      screenshotUrls: [
+        `${baseUrl}/screenshot-1.png`,
+        `${baseUrl}/screenshot-2.png`,
+      ],
       buttonTitle: "Predict Now",
       splashImageUrl: `${baseUrl}/logo.png`,
       splashBackgroundColor: "#0a0a0f",
       webhookUrl: `${baseUrl}/api/farcaster/webhook`,
       primaryCategory: "entertainment",
       tags: ["realitytv", "predictions", "gaming", "base", "community"],
+      ogTitle: "RealityPicks — Predict Reality TV on Base",
+      ogDescription:
+        "Free-to-play reality TV prediction game. Pick winners, call eliminations, earn points and NFT badges. Built on Base.",
+      ogImageUrl: `${baseUrl}/og-image.png`,
+      noindex: false,
     },
   };
 
