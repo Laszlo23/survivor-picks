@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "wagmi";
 import { parseEther, type Address } from "viem";
@@ -223,9 +223,13 @@ export function PredictionCard({
   };
 
   // When on-chain prediction succeeds, save to DB with tx hash
-  if (isPredictSuccess && isStaking && predictionTxHash) {
-    savePredictionToDb(predictionTxHash);
-  }
+  const savedOnChainRef = useRef(false);
+  useEffect(() => {
+    if (isPredictSuccess && isStaking && predictionTxHash && !savedOnChainRef.current) {
+      savedOnChainRef.current = true;
+      savePredictionToDb(predictionTxHash);
+    }
+  }, [isPredictSuccess, isStaking, predictionTxHash]);
 
   // Determine card variant
   const yesNo = isYesNoQuestion(question.options);
