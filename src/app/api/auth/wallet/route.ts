@@ -1,13 +1,27 @@
-import { SiweMessage } from "siwe";
+import { createPublicClient, http } from "viem";
+import { base, baseSepolia, hardhat } from "viem/chains";
+import { parseSiweMessage } from "viem/siwe";
 import { prisma } from "@/lib/prisma";
 import { encode } from "next-auth/jwt";
 import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
+const activeChain =
+  process.env.NEXT_PUBLIC_CHAIN === "mainnet"
+    ? base
+    : process.env.NEXT_PUBLIC_CHAIN === "testnet"
+      ? baseSepolia
+      : hardhat;
+
+const publicClient = createPublicClient({
+  chain: activeChain,
+  transport: http(),
+});
+
 /**
  * POST /api/auth/wallet
  *
- * Verifies a SIWE (Sign In With Ethereum) signature, finds or creates
- * a user by wallet address, and sets a NextAuth-compatible session cookie.
+ * Verifies a SIWE (Sign In With Ethereum) signature using viem,
+ * finds or creates a user by wallet address, and sets a NextAuth session cookie.
  *
  * Body: { message: string, signature: string }
  */
@@ -35,31 +49,46 @@ export async function POST(req: Request) {
       );
     }
 
-    // ─── Parse and verify the SIWE message ──────────────────────────
-    const siweMessage = new SiweMessage(message);
+    // ─── Parse the SIWE message ─────────────────────────────────────
+    const parsed = parseSiweMessage(message);
+
+    if (!parsed || !parsed.address) {
+      return Response.json(
+        { error: "Malformed SIWE message" },
+        { status: 400 }
+      );
+    }
 
     // Validate domain matches our app
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
     const expectedDomain = new URL(appUrl).host;
 
-    if (siweMessage.domain !== expectedDomain) {
+    if (parsed.domain !== expectedDomain) {
+      console.error(
+        `[Wallet Auth] Domain mismatch: got "${parsed.domain}", expected "${expectedDomain}"`
+      );
       return Response.json(
         { error: "Domain mismatch" },
         { status: 401 }
       );
     }
 
-    const result = await siweMessage.verify({ signature });
+    // ─── Verify the signature using viem ────────────────────────────
+    const valid = await publicClient.verifyMessage({
+      address: parsed.address,
+      message,
+      signature: signature as `0x${string}`,
+    });
 
-    if (!result.success) {
+    if (!valid) {
       return Response.json(
         { error: "Invalid signature" },
         { status: 401 }
       );
     }
 
-    const walletAddress = result.data.address.toLowerCase();
+    const walletAddress = parsed.address.toLowerCase();
 
     // ─── Find or create user by wallet address ──────────────────────
     let user = await prisma.user.findFirst({
@@ -125,23 +154,11 @@ export async function POST(req: Request) {
       }
     );
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("[Wallet Auth] Error:", message);
-
-    if (
-      message.includes("Invalid") ||
-      message.includes("Signature") ||
-      message.includes("Malformed")
-    ) {
-      return Response.json(
-        { error: "Invalid signature or message" },
-        { status: 401 }
-      );
-    }
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    console.error("[Wallet Auth] Error:", msg);
 
     return Response.json(
-      { error: "Authentication failed" },
+      { error: "Authentication failed. Please try again." },
       { status: 500 }
     );
   }
