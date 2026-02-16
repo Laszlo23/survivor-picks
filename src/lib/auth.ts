@@ -1,11 +1,10 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import type { Adapter } from "next-auth/adapters";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+  // NO adapter — CredentialsProvider manages users directly via Prisma.
+  // Having PrismaAdapter here silently breaks session cookie creation.
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -74,7 +73,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // First sign-in: use the user object returned by authorize() directly
         token.id = user.id;
         token.sub = user.id;
         token.role = (user as any).role || "USER";
@@ -89,33 +87,6 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name as string;
       }
       return session;
-    },
-  },
-  events: {
-    async createUser({ user }) {
-      // Auto-assign admin role based on env variable
-      const adminEmail = process.env.ADMIN_EMAIL;
-      if (adminEmail && user.email === adminEmail) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { role: "ADMIN" },
-        });
-      }
-
-      // Generate a referral code for every new user
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let code = "";
-      for (let i = 0; i < 8; i++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
-      }
-      try {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { referralCode: code },
-        });
-      } catch {
-        // Collision — rare, will be generated on first profile visit
-      }
     },
   },
 };

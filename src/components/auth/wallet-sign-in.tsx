@@ -14,19 +14,30 @@ function WalletSignInInner() {
   const { address, isConnected, chain } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
-  const { status } = useSession();
+  const { status, update: updateSession } = useSession();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Prevent double-triggers
   const signingRef = useRef(false);
+  const redirectingRef = useRef(false);
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated on mount or after signIn, redirect immediately
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && !redirectingRef.current) {
+      redirectingRef.current = true;
       window.location.href = "/dashboard";
     }
   }, [status]);
+
+  const waitForSession = useCallback(async () => {
+    // Poll useSession via update() until status flips to authenticated
+    for (let i = 0; i < 15; i++) {
+      await updateSession();
+      // Small delay between polls
+      await new Promise((r) => setTimeout(r, 300));
+      // After update, the status change will be picked up by the useEffect above
+    }
+  }, [updateSession]);
 
   const handleSignIn = useCallback(async () => {
     if (!address || !chain) return;
@@ -81,12 +92,18 @@ function WalletSignInInner() {
         throw new Error(result.error);
       }
 
-      // 6. Success — clear guard and hard-navigate
+      // 6. Success — poll for session confirmation, then redirect
       setPhase("success");
       sessionStorage.removeItem("wallet-signing");
-      setTimeout(() => {
+
+      // Force a session update and let the useEffect handle the redirect
+      await waitForSession();
+
+      // Fallback: if polling didn't trigger redirect, hard-navigate anyway
+      if (!redirectingRef.current) {
+        redirectingRef.current = true;
         window.location.href = "/dashboard";
-      }, 400);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sign-in failed";
       if (msg.includes("User rejected") || msg.includes("denied")) {
@@ -98,9 +115,10 @@ function WalletSignInInner() {
       signingRef.current = false;
       sessionStorage.removeItem("wallet-signing");
     }
-  }, [address, chain, signMessageAsync]);
+  }, [address, chain, signMessageAsync, waitForSession]);
 
-  // Auto-trigger sign-in once when wallet connects (guarded by sessionStorage)
+  // Auto-trigger sign-in once when wallet connects
+  // Debounced by 1 second to let session status settle after page load
   useEffect(() => {
     if (
       isConnected &&
@@ -109,10 +127,18 @@ function WalletSignInInner() {
       phase === "idle" &&
       !signingRef.current &&
       status !== "authenticated" &&
+      status !== "loading" &&
       !sessionStorage.getItem("wallet-signing")
     ) {
-      sessionStorage.setItem("wallet-signing", "1");
-      handleSignIn();
+      const timer = setTimeout(() => {
+        // Re-check conditions after debounce
+        if (!signingRef.current && phase === "idle") {
+          sessionStorage.setItem("wallet-signing", "1");
+          handleSignIn();
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
     }
   }, [isConnected, address, chain, phase, status, handleSignIn]);
 
