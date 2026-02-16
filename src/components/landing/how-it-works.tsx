@@ -1,6 +1,6 @@
 "use client";
 
-import { Target, TrendingUp, Shield, Trophy } from "lucide-react";
+import { Wallet, Tv, Target, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { FadeIn } from "@/components/motion";
 import { LowerThird } from "@/components/ui/lower-third";
@@ -14,30 +14,30 @@ const neonBorders = [
 
 const steps = [
   {
-    icon: Target,
-    title: "Make Picks",
-    desc: "Choose a show and predict outcomes — winners, eliminations, twists, and more.",
+    icon: Wallet,
+    title: "Connect Wallet",
+    desc: "Link your Base wallet to get started in seconds.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
   {
-    icon: TrendingUp,
-    title: "Earn Points",
-    desc: "Harder predictions pay more. Use Risk Bets for a 1.5x multiplier.",
+    icon: Tv,
+    title: "Pick a Show",
+    desc: "Browse live and upcoming reality TV prediction markets.",
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
   },
   {
-    icon: Shield,
-    title: "Immunity Joker",
-    desc: "3 per season. Protect a wrong pick and still earn base points.",
+    icon: Target,
+    title: "Cast Your Pick",
+    desc: "Stake $PICKS tokens on who you think wins, stays, or goes.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
   },
   {
     icon: Trophy,
-    title: "Climb Ranks",
-    desc: "Build streaks for bonus points. Unlock badges. Top the leaderboard.",
+    title: "Win Rewards",
+    desc: "Correct predictions earn you a share of the pool.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
@@ -47,9 +47,12 @@ export function LandingHowItWorks() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16">
       <FadeIn>
-        <div className="mb-10">
+        <div className="mb-3">
           <LowerThird label="THE GAME" value="How It Works" />
         </div>
+        <p className="text-sm text-muted-foreground mb-10">
+          Four simple steps to start predicting reality TV outcomes.
+        </p>
       </FadeIn>
 
       <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">

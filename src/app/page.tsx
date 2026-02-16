@@ -1,20 +1,17 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import {
-  Trophy,
-  Zap,
-  Users,
   ArrowRight,
-  Coins,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { LandingHero } from "@/components/landing/hero";
-import { LandingShows } from "@/components/landing/shows";
-import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingFeaturedMarkets } from "@/components/landing/featured-markets";
+import { LandingDiscordCTA } from "@/components/landing/discord-cta";
+import { LandingHowItWorks } from "@/components/landing/how-it-works";
+import { LandingWhyPicks } from "@/components/landing/why-picks";
 import { LandingNFTPreview } from "@/components/landing/nft-badges-preview";
+import { LandingSneakPeek } from "@/components/landing/sneak-peek";
 import { LandingCommunity } from "@/components/landing/community";
 import { LandingCommunityVote } from "@/components/landing/community-vote";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
@@ -25,11 +22,9 @@ import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
 import { ScoreboardRow } from "@/components/ui/scoreboard-row";
 
-// Revalidate every 60 seconds (ISR) — landing page data changes infrequently
 export const revalidate = 60;
 
 export default async function LandingPage() {
-  // Only fetch season title for the hero — lightweight
   const season = await getActiveSeason();
 
   return (
@@ -37,163 +32,47 @@ export default async function LandingPage() {
     <div className="min-h-screen">
       <LandingHero seasonTitle={season?.title} />
 
-      {/* Everything after the hero gets a solid bg so it scrolls over the fixed hero image */}
+      {/* Everything after the hero gets a solid bg so it scrolls over the fixed hero video */}
       <div className="relative z-10 bg-studio-black">
-      <LandingShows />
+
+      {/* 1. Featured Shows / Markets */}
       <LandingFeaturedMarkets />
+
+      {/* 2. Discord CTA banner */}
+      <LandingDiscordCTA />
+
+      {/* 3. How It Works */}
       <LandingHowItWorks />
 
-      {/* ── Scoring Scoreboard ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="mb-10">
-          <LowerThird label="SCORING" value="How Points Work" />
-        </div>
+      {/* 4. Why $PICKS — 6 feature cards + Trust & Safety */}
+      <LandingWhyPicks />
 
-        <div className="rounded-2xl border border-white/[0.06] bg-studio-dark/60 backdrop-blur-xl overflow-hidden">
-          <div className="grid gap-0 lg:grid-cols-2">
-            {/* Left: Scoring rows */}
-            <div className="border-l-[3px] border-l-neon-cyan p-4 sm:p-8">
-              <h3 className="font-headline text-xl font-bold uppercase tracking-wide text-white mb-5 flex items-center gap-2">
-                <Zap className="h-5 w-5 text-neon-cyan" />
-                Point Breakdown
-              </h3>
-              <div className="space-y-1">
-                {[
-                  { label: "Base correct pick", value: "100 pts", accent: "" },
-                  { label: "Odds multiplier (+150)", value: "× 2.5", accent: "" },
-                  { label: "Risk Bet bonus", value: "× 1.5", accent: "text-neon-magenta" },
-                  { label: "Joker save (wrong pick)", value: "100 pts", accent: "text-neon-cyan" },
-                  { label: "Streak bonus (per ep)", value: "+25 pts", accent: "text-neon-gold" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex justify-between items-center border-b border-white/[0.04] py-3 last:border-0"
-                  >
-                    <span className="text-sm text-white/70">{item.label}</span>
-                    <span className={`font-mono text-sm font-bold ${item.accent || "text-neon-cyan"}`}>
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Example Pick */}
-            <div className="relative p-4 sm:p-8 bg-gradient-to-br from-neon-cyan/[0.03] to-neon-magenta/[0.03]">
-              <h3 className="font-headline text-xl font-bold uppercase tracking-wide text-white mb-5 flex items-center gap-2">
-                <Users className="h-5 w-5 text-neon-magenta" />
-                Example Pick
-              </h3>
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 space-y-2 text-sm">
-                <p>
-                  <span className="text-muted-foreground">Question:</span>{" "}
-                  &ldquo;Who wins the immunity challenge?&rdquo;
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Your pick:</span>{" "}
-                  <strong>Jay</strong> at{" "}
-                  <span className="text-neon-cyan font-bold">+200</span>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Risk Bet:</span>{" "}
-                  <span className="text-neon-magenta font-bold">ON</span>
-                </p>
-                <div className="border-t border-white/[0.06] pt-3 mt-3">
-                  <p className="text-xs text-muted-foreground">If correct:</p>
-                  <p className="font-headline text-3xl font-bold text-gradient-cyan">
-                    100 &times; 3.0 &times; 1.5 = 450 pts
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── $PICKS Token Teaser ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-violet-950/40 via-studio-dark/60 to-fuchsia-950/40 backdrop-blur-xl p-4 sm:p-8 md:p-12 relative overflow-hidden">
-          {/* Ambient glow */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[100px]" />
-
-          <div className="relative">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/20 border border-violet-500/30 animate-pulse-neon">
-                <Coins className="h-7 w-7 text-violet-400" />
-              </div>
-              <div>
-                <h2 className="font-headline text-2xl sm:text-3xl font-bold uppercase tracking-wide">
-                  Powered by{" "}
-                  <span className="text-gradient-cyan">$PICKS</span>{" "}
-                  on Base
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Optional on-chain layer for staking, NFT badges, and Season Passes
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                {
-                  title: "Stake & Boost",
-                  desc: "Lock $PICKS to earn up to 1.5x prediction multiplier and staking rewards.",
-                  color: "text-neon-cyan",
-                  border: "border-l-neon-cyan",
-                },
-                {
-                  title: "NFT Badges",
-                  desc: "Collect on-chain achievement badges as you play. Some are tradeable.",
-                  color: "text-neon-magenta",
-                  border: "border-l-neon-magenta",
-                },
-                {
-                  title: "Deflationary",
-                  desc: "3% prediction fees go to buyback & burn. Season Passes burn tokens permanently.",
-                  color: "text-neon-gold",
-                  border: "border-l-neon-gold",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className={`p-5 rounded-xl bg-white/[0.03] border border-white/[0.06] border-l-[3px] ${item.border} hover:bg-white/[0.06] transition-colors`}
-                >
-                  <p className={`text-sm font-headline font-semibold uppercase tracking-wide ${item.color} mb-2`}>
-                    {item.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <NeonButton variant="primary" href="/token" className="gap-2">
-                Learn About $PICKS
-                <ArrowRight className="h-4 w-4" />
-              </NeonButton>
-              <NeonButton variant="ghost" href="/staking" className="gap-2">
-                Start Staking
-                <ArrowRight className="h-4 w-4" />
-              </NeonButton>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* 5. NFT Badges */}
       <LandingNFTPreview />
 
-      {/* ── Leaderboard Preview (loaded via Suspense) ─────────────────── */}
+      {/* 6. Leaderboard Preview */}
       <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardPreview seasonId={season?.id} />
       </Suspense>
 
+      {/* 7. Sneak Peek — App screenshots */}
+      <LandingSneakPeek />
+
+      {/* 8. Community — OG Crew + Social links */}
       <LandingCommunity />
+
+      {/* 9. Community Vote */}
       <LandingCommunityVote />
+
+      {/* 10. Email Capture */}
       <LandingEmailCapture />
+
+      {/* 11. Closing CTA */}
       <LandingClosingCTA />
 
+      {/* 12. Footer */}
       <LandingFooter />
+
       </div>{/* end solid bg wrapper */}
     </div>
     </LandingShell>

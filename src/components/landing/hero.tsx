@@ -9,24 +9,27 @@ import { NeonButton } from "@/components/ui/neon-button";
 export function LandingHero({ seasonTitle }: { seasonTitle?: string }) {
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex items-center">
-      {/* ── Sticky background image — stays pinned while content scrolls over ── */}
+      {/* ── Video background — stays pinned while content scrolls over ── */}
       <div className="fixed inset-0 -z-10" aria-hidden="true">
-        <Image
-          src="/hero-bg.png"
-          alt=""
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-          quality={85}
-        />
-        {/* Heavy dark overlay — image barely visible, just ambient glow */}
-        <div className="absolute inset-0 bg-studio-black/[0.82]" />
-        {/* Subtle radial peek-through in the center top area */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_35%,transparent_0%,hsl(220_15%_4%/0.6)_70%,hsl(220_15%_4%/0.95)_100%)]" />
+        {/* Video with poster fallback */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/hero-stage.jpg"
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+
+        {/* Dark overlays for readability */}
+        <div className="absolute inset-0 bg-studio-black/[0.75]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-studio-black via-studio-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_35%,transparent_0%,hsl(220_15%_4%/0.5)_70%,hsl(220_15%_4%/0.9)_100%)]" />
       </div>
 
-      {/* Floating particles — CSS-only, on top of bg */}
+      {/* Floating particles — CSS-only */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="hero-particle hero-particle--cyan" style={{ left: "12%", animationDuration: "8s", animationDelay: "0s" }} />
         <div className="hero-particle hero-particle--cyan" style={{ left: "32%", animationDuration: "10s", animationDelay: "1.5s" }} />
