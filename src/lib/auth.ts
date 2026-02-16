@@ -10,50 +10,79 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/auth/signin",
   },
   providers: [
-    // Wallet authentication is handled by /api/auth/wallet which creates
-    // JWT sessions directly. This dummy CredentialsProvider satisfies
-    // NextAuth's requirement for at least one provider while keeping
-    // the JWT strategy and adapter functional.
     CredentialsProvider({
       id: "wallet",
       name: "Wallet",
-      credentials: {},
-      async authorize() {
-        // Actual wallet auth is done in /api/auth/wallet route.
-        // This provider exists only so NextAuth initializes properly.
-        return null;
+      credentials: {
+        walletAddress: { label: "Wallet Address", type: "text" },
+      },
+      async authorize(credentials) {
+        const addr = credentials?.walletAddress?.toLowerCase();
+        if (!addr) return null;
+
+        // Find existing user
+        let user = await prisma.user.findFirst({
+          where: { walletAddress: addr },
+        });
+
+        // Create new user if first time
+        if (!user) {
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          let referralCode = "";
+          for (let i = 0; i < 8; i++) {
+            referralCode += chars[Math.floor(Math.random() * chars.length)];
+          }
+
+          const shortAddr = `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+          try {
+            user = await prisma.user.create({
+              data: {
+                email: `wallet-${addr}@wallet.local`,
+                name: shortAddr,
+                walletAddress: addr,
+                referralCode,
+                emailVerified: new Date(),
+                hasOnboarded: true,
+              },
+            });
+          } catch {
+            // Race condition — retry find
+            user = await prisma.user.findFirst({
+              where: { walletAddress: addr },
+            });
+          }
+        }
+
+        if (!user) return null;
+
+        // Return user object — NextAuth will create the JWT from this
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user, isNewUser }) {
+    async jwt({ token, user }) {
       if (user) {
+        // First sign-in: populate token from the user returned by authorize()
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { id: user.id },
         });
         if (dbUser) {
           token.id = dbUser.id;
           token.role = dbUser.role;
           token.name = dbUser.name;
-        }
-
-        // Process referral for new users on first sign-in
-        if (isNewUser && dbUser) {
-          try {
-            const cookieStore = cookies();
-            const refCode = cookieStore.get("ref_code")?.value;
-            if (refCode && refCode.length === 8) {
-              await claimReferral(refCode, dbUser.id);
-            }
-          } catch (err) {
-            // Don't block sign-in if referral claim fails
-            console.error("Referral claim on signup failed:", err);
-          }
         }
       }
       return token;

@@ -1,37 +1,41 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useRef } from "react";
 import { useAccount, useSignMessage, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { createSiweMessage } from "viem/siwe";
+import { signIn } from "next-auth/react";
 import { Wallet, Loader2, CheckCircle2 } from "lucide-react";
 
 type Phase = "idle" | "signing" | "verifying" | "success" | "error";
 
 function WalletSignInInner() {
-  const router = useRouter();
   const { address, isConnected, chain } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Prevent double-triggers
+  const signingRef = useRef(false);
+
   const handleSignIn = useCallback(async () => {
     if (!address || !chain) return;
+    if (signingRef.current) return;
+    signingRef.current = true;
 
     setPhase("signing");
     setError(null);
 
     try {
-      // 1. Get nonce from server
+      // 1. Get nonce
       const nonceRes = await fetch("/api/auth/wallet/nonce");
       if (!nonceRes.ok) throw new Error("Failed to get nonce");
       const { nonce } = await nonceRes.json();
 
-      // 2. Build SIWE message using viem's official EIP-4361 formatter
-      const messageToSign = createSiweMessage({
+      // 2. Build SIWE message
+      const message = createSiweMessage({
         domain: window.location.host,
         address,
         statement: "Sign in to RealityPicks with your wallet.",
@@ -41,31 +45,39 @@ function WalletSignInInner() {
         nonce,
       });
 
-      // 3. Request wallet signature
-      const signature = await signMessageAsync({ message: messageToSign });
+      // 3. Sign with wallet
+      const signature = await signMessageAsync({ message });
 
       // 4. Verify on server
       setPhase("verifying");
-      const authRes = await fetch("/api/auth/wallet", {
+      const verifyRes = await fetch("/api/auth/wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSign, signature }),
+        body: JSON.stringify({ message, signature }),
       });
 
-      if (!authRes.ok) {
-        const data = await authRes.json().catch(() => ({}));
-        const errMsg = data.detail
-          ? `${data.error}: ${data.detail}`
-          : data.error || "Authentication failed";
-        throw new Error(errMsg);
+      if (!verifyRes.ok) {
+        const data = await verifyRes.json().catch(() => ({}));
+        throw new Error(data.error || "Signature verification failed");
       }
 
-      // 5. Success — redirect to dashboard
+      const { address: verifiedAddress } = await verifyRes.json();
+
+      // 5. Create NextAuth session via CredentialsProvider
+      const result = await signIn("wallet", {
+        walletAddress: verifiedAddress,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      // 6. Success — hard navigate to dashboard (ensures session cookie is read)
       setPhase("success");
       setTimeout(() => {
-        router.push("/dashboard");
-        router.refresh();
-      }, 600);
+        window.location.href = "/dashboard";
+      }, 400);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sign-in failed";
       if (msg.includes("User rejected") || msg.includes("denied")) {
@@ -74,18 +86,11 @@ function WalletSignInInner() {
         setError(msg);
       }
       setPhase("error");
+      signingRef.current = false;
     }
-  }, [address, chain, signMessageAsync, router]);
+  }, [address, chain, signMessageAsync]);
 
-  // Auto-trigger sign-in once wallet connects
-  useEffect(() => {
-    if (isConnected && address && chain && phase === "idle") {
-      handleSignIn();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, chain]);
-
-  // If wallet is connected, show the sign-in flow
+  // Connected — show sign-in flow
   if (isConnected && address) {
     return (
       <div className="space-y-3">
@@ -108,12 +113,22 @@ function WalletSignInInner() {
               disconnect();
               setPhase("idle");
               setError(null);
+              signingRef.current = false;
             }}
             className="text-xs text-muted-foreground hover:text-white transition-colors"
           >
             Disconnect
           </button>
         </div>
+
+        {phase === "idle" && (
+          <button
+            onClick={handleSignIn}
+            className="w-full rounded-xl border border-neon-cyan/20 bg-neon-cyan/5 px-4 py-3 text-sm font-semibold text-white hover:bg-neon-cyan/10 transition-all"
+          >
+            Sign Message to Continue
+          </button>
+        )}
 
         {phase === "signing" && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -125,7 +140,7 @@ function WalletSignInInner() {
         {phase === "verifying" && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin text-neon-cyan" />
-            <span>Verifying signature...</span>
+            <span>Verifying...</span>
           </div>
         )}
 
@@ -140,7 +155,10 @@ function WalletSignInInner() {
           <div className="space-y-2">
             <p className="text-sm text-red-400">{error}</p>
             <button
-              onClick={handleSignIn}
+              onClick={() => {
+                signingRef.current = false;
+                handleSignIn();
+              }}
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-white hover:bg-white/[0.06] transition-colors"
             >
               Try Again
