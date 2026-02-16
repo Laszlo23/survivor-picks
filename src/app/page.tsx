@@ -20,6 +20,7 @@ import { LandingCommunityVote } from "@/components/landing/community-vote";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
 import { LandingClosingCTA } from "@/components/landing/closing-cta";
 import { LandingFooter } from "@/components/landing/footer";
+import { LandingShell } from "@/components/landing/landing-shell";
 import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
 import { ScoreboardRow } from "@/components/ui/scoreboard-row";
@@ -32,6 +33,7 @@ export default async function LandingPage() {
   const season = await getActiveSeason();
 
   return (
+    <LandingShell>
     <div className="min-h-screen">
       <LandingHero seasonTitle={season?.title} />
 
@@ -194,6 +196,7 @@ export default async function LandingPage() {
       <LandingFooter />
       </div>{/* end solid bg wrapper */}
     </div>
+    </LandingShell>
   );
 }
 
