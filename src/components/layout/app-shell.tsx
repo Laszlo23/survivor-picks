@@ -17,21 +17,20 @@ import { AppFooter } from "@/components/layout/app-footer";
 export function AppShell({ children }: { children: ReactNode }) {
   const { isInMiniApp, isReady } = useFarcaster();
 
-  // Only hide navigation when we're certain we're inside a Mini App
+  // Only hide top navbar + desktop footer inside a Mini App
+  // (Farcaster provides its own header). Bottom tabs stay visible.
   const hideChrome = isReady && isInMiniApp;
 
   return (
     <>
       {!hideChrome && <Navbar />}
       <main
-        className={`min-h-[calc(100vh-56px)] overflow-x-hidden ${
-          hideChrome ? "pb-0" : "pb-20 md:pb-0"
-        }`}
+        className={`min-h-[calc(100vh-56px)] overflow-x-hidden pb-20 md:pb-0`}
       >
         {children}
       </main>
       {!hideChrome && <AppFooter />}
-      {!hideChrome && <BottomTabs />}
+      <BottomTabs />
     </>
   );
 }

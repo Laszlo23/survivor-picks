@@ -35,6 +35,7 @@ const CSRF_POST_ROUTES = [
 const CSRF_EXEMPT_ROUTES = [
   "/api/farcaster/webhook",
   "/api/auth/farcaster",
+  "/api/auth/wallet",
 ];
 
 // Rate limiting is handled per-route in src/lib/rate-limit.ts (in-memory).

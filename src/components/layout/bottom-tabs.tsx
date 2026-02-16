@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useFarcaster } from "@/lib/farcaster/provider";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -23,10 +24,14 @@ const tabs = [
 export function BottomTabs() {
   const pathname = usePathname();
   const { status } = useSession();
+  const { isInMiniApp } = useFarcaster();
 
-  // Don't show on landing, auth pages, or when not authenticated
-  if (status !== "authenticated") return null;
-  if (pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/admin")) return null;
+  // Inside a Farcaster Mini App: always show tabs (auto-auth will resolve)
+  // Standalone web: require authentication and hide on landing/auth/admin pages
+  if (!isInMiniApp) {
+    if (status !== "authenticated") return null;
+    if (pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/admin")) return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">

@@ -14,8 +14,9 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { Mail, Zap, Shield, Check } from "lucide-react";
+import { Mail, Zap, Shield, Check, Wallet } from "lucide-react";
 import { FadeIn, ScaleIn, PressScale } from "@/components/motion";
+import { WalletSignIn } from "@/components/auth/wallet-sign-in";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -83,11 +84,30 @@ export default function SignInPage() {
               </FadeIn>
               <FadeIn delay={0.25}>
                 <CardDescription>
-                  Enter your email to receive a magic sign-in link
+                  Connect your wallet or use a magic email link
                 </CardDescription>
               </FadeIn>
             </CardHeader>
             <CardContent>
+              {/* ── Wallet Sign-In ── */}
+              <FadeIn delay={0.3}>
+                <WalletSignIn />
+              </FadeIn>
+
+              {/* ── Divider ── */}
+              <FadeIn delay={0.35}>
+                <div className="relative my-5">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/[0.06]" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-card px-3 text-muted-foreground">
+                      or continue with email
+                    </span>
+                  </div>
+                </div>
+              </FadeIn>
+
               <AnimatePresence mode="wait">
                 {sent ? (
                   <motion.div
@@ -123,7 +143,7 @@ export default function SignInPage() {
                     animate={{ opacity: 1 }}
                   >
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <FadeIn delay={0.3}>
+                      <FadeIn delay={0.4}>
                         <div className="space-y-2">
                           <Label htmlFor="email">Email address</Label>
                           <Input
@@ -137,12 +157,13 @@ export default function SignInPage() {
                           />
                         </div>
                       </FadeIn>
-                      <FadeIn delay={0.4}>
+                      <FadeIn delay={0.45}>
                         <PressScale>
                           <Button
                             type="submit"
                             className="w-full shadow-glow"
                             disabled={loading}
+                            variant="outline"
                           >
                             <Mail className="h-4 w-4 mr-2" />
                             {loading ? "Sending..." : "Send Magic Link"}
