@@ -53,6 +53,9 @@ export function AppFooter() {
             <Link href="/contracts" className="hover:text-neon-cyan transition-colors">
               Contracts
             </Link>
+            <Link href="/blog" className="hover:text-neon-cyan transition-colors">
+              Blog
+            </Link>
             <span className="w-px h-3 bg-white/10" />
             <a href="https://discord.gg/Km7Tw6jHhk" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">
               Discord

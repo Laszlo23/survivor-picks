@@ -16,6 +16,7 @@ const footerLinks = {
     { label: "Whitepaper", href: "/whitepaper" },
     { label: "Tokenomics", href: "/tokenomics" },
     { label: "Contracts", href: "/contracts" },
+    { label: "Blog", href: "/blog" },
   ],
   Community: [
     { label: "Discord", href: "https://discord.gg/Km7Tw6jHhk", external: true },

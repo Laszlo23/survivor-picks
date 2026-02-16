@@ -42,6 +42,7 @@ const learnItems = [
   { href: "/whitepaper", label: "Whitepaper" },
   { href: "/tokenomics", label: "Tokenomics" },
   { href: "/contracts", label: "Contracts" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function Navbar() {
