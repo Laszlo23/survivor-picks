@@ -198,6 +198,8 @@ model Prediction {
   chosenOption String
   isRisk       Boolean  @default(false)
   usedJoker    Boolean  @default(false)
+  stakeAmount  String?  // $PICKS staked (stored as string for bigint precision)
+  txHash       String?  // on-chain transaction hash
   pointsAwarded Int?    // null until resolved
   isCorrect    Boolean? // null until resolved
   createdAt    DateTime @default(now())

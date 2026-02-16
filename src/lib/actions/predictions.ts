@@ -10,6 +10,8 @@ export async function createPrediction(input: {
   chosenOption: string;
   isRisk: boolean;
   useJoker: boolean;
+  stakeAmount?: string;
+  txHash?: string;
 }) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -21,7 +23,7 @@ export async function createPrediction(input: {
     return { error: validated.error.message };
   }
 
-  const { questionId, chosenOption, isRisk, useJoker } = validated.data;
+  const { questionId, chosenOption, isRisk, useJoker, stakeAmount, txHash } = validated.data;
 
   // Fetch question with episode
   const question = await prisma.question.findUnique({
@@ -86,6 +88,8 @@ export async function createPrediction(input: {
           chosenOption,
           isRisk,
           usedJoker: useJoker,
+          ...(stakeAmount && { stakeAmount }),
+          ...(txHash && { txHash }),
         },
       });
     } else {
@@ -96,6 +100,8 @@ export async function createPrediction(input: {
           chosenOption,
           isRisk,
           usedJoker: useJoker,
+          stakeAmount: stakeAmount || null,
+          txHash: txHash || null,
         },
       });
     }

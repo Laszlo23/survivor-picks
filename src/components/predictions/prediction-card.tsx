@@ -2,9 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAccount } from "wagmi";
+import { parseEther, type Address } from "viem";
 import { createPrediction } from "@/lib/actions/predictions";
 import { convertOddsToMultiplier } from "@/lib/scoring";
 import { type ShowInfo } from "@/lib/shows";
+import {
+  usePicksBalance,
+  usePicksAllowance,
+  useApprovePicksToken,
+  useMakePrediction,
+  toBytes32,
+  formatPicks,
+  useIsContractsReady,
+} from "@/lib/web3/hooks";
+import { getContractAddress, isContractDeployed } from "@/lib/web3/contracts";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -22,6 +34,8 @@ import {
   Clock,
   Lock,
   Share2,
+  Coins,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFarcaster } from "@/lib/farcaster/provider";
@@ -82,6 +96,8 @@ function isYesNoQuestion(options: string[]): boolean {
   );
 }
 
+const QUICK_AMOUNTS = ["10", "50", "100", "500"];
+
 // ─── Main Component ──────────────────────────────────────────────────
 
 export function PredictionCard({
@@ -97,8 +113,43 @@ export function PredictionCard({
   const [useJoker, setUseJoker] = useState(
     question.userPick?.usedJoker || false
   );
+  const [stakeInput, setStakeInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(!!question.userPick);
+  const [isStaking, setIsStaking] = useState(false);
+
+  // Web3 hooks
+  const { address } = useAccount();
+  const contractsReady = useIsContractsReady();
+  const predictionEngineDeployed = isContractDeployed("PredictionEngine");
+
+  let engineAddress: Address = "0x0" as Address;
+  try {
+    if (predictionEngineDeployed) engineAddress = getContractAddress("PredictionEngine");
+  } catch {}
+
+  const { data: balance } = usePicksBalance(address);
+  const { data: allowance } = usePicksAllowance(address, engineAddress);
+  const {
+    approve,
+    isPending: isApproving,
+    isConfirming: isApproveConfirming,
+  } = useApprovePicksToken();
+  const {
+    predict,
+    hash: predictionTxHash,
+    isPending: isPredicting,
+    isConfirming: isPredictConfirming,
+    isSuccess: isPredictSuccess,
+  } = useMakePrediction();
+
+  const stakeAmount = stakeInput ? parseEther(stakeInput) : 0n;
+  const needsApproval =
+    allowance !== undefined &&
+    stakeAmount > 0n &&
+    (allowance as bigint) < stakeAmount;
+  const isOnChainProcessing =
+    isApproving || isApproveConfirming || isPredicting || isPredictConfirming;
 
   const isLocked =
     question.status === "LOCKED" ||
@@ -109,55 +160,72 @@ export function PredictionCard({
   const potentialPts = Math.round(100 * multiplier * (isRisk ? 1.5 : 1));
 
   const handleSelect = (option: string) => {
-    if (isLocked || isPending) return;
+    if (isLocked || isPending || isOnChainProcessing) return;
     setSelected(option);
-    // Auto-save on selection
-    startTransition(async () => {
-      const result = await createPrediction({
-        questionId: question.id,
-        chosenOption: option,
-        isRisk,
-        useJoker,
-      });
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        setSaved(true);
-        toast.success("Pick saved!", { duration: 1500 });
-      }
-    });
   };
 
   const handleToggleRisk = (v: boolean) => {
     setIsRisk(v);
     if (v) setUseJoker(false);
-    // Re-save if already saved
-    if (saved && selected) {
-      startTransition(async () => {
-        await createPrediction({
-          questionId: question.id,
-          chosenOption: selected,
-          isRisk: v,
-          useJoker: v ? false : useJoker,
-        });
-      });
-    }
   };
 
   const handleToggleJoker = (v: boolean) => {
     setUseJoker(v);
     if (v) setIsRisk(false);
-    if (saved && selected) {
-      startTransition(async () => {
-        await createPrediction({
-          questionId: question.id,
-          chosenOption: selected,
-          isRisk: v ? false : isRisk,
-          useJoker: v,
-        });
-      });
-    }
   };
+
+  const handlePick = () => {
+    if (!selected || isLocked || isPending || isOnChainProcessing) return;
+
+    // If user has stakeAmount and contracts are ready, do on-chain first
+    if (stakeAmount > 0n && contractsReady && predictionEngineDeployed && address) {
+      setIsStaking(true);
+
+      if (needsApproval) {
+        approve(engineAddress, stakeAmount);
+        toast.info("Approve $PICKS spending in your wallet...");
+        return;
+      }
+
+      // Get option index (1-based for contract)
+      const optionIndex = question.options.indexOf(selected) + 1;
+      const qId = toBytes32(question.id);
+      predict(qId, optionIndex, stakeAmount, isRisk);
+      toast.info("Confirm prediction in your wallet...");
+      return;
+    }
+
+    // Save to database (free pick or no wallet connected)
+    savePredictionToDb();
+  };
+
+  const savePredictionToDb = (txHash?: string) => {
+    startTransition(async () => {
+      const result = await createPrediction({
+        questionId: question.id,
+        chosenOption: selected,
+        isRisk,
+        useJoker,
+        stakeAmount: stakeAmount > 0n ? stakeInput : undefined,
+        txHash,
+      });
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setSaved(true);
+        setIsStaking(false);
+        const msg = stakeAmount > 0n
+          ? `Pick locked with ${stakeInput} $PICKS!`
+          : "Pick saved!";
+        toast.success(msg, { duration: 2000 });
+      }
+    });
+  };
+
+  // When on-chain prediction succeeds, save to DB with tx hash
+  if (isPredictSuccess && isStaking && predictionTxHash) {
+    savePredictionToDb(predictionTxHash);
+  }
 
   // Determine card variant
   const yesNo = isYesNoQuestion(question.options);
@@ -187,12 +255,14 @@ export function PredictionCard({
     );
   };
 
+  const canPick = selected && !isLocked && !isPending && !isOnChainProcessing && !saved;
+  const hasStake = stakeAmount > 0n;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
-      whileTap={!isLocked ? { scale: 0.99 } : undefined}
       className={`rounded-xl border bg-card/60 backdrop-blur-sm overflow-hidden transition-shadow duration-300 ${resolvedBorder || "border-white/[0.06]"} ${
         isResolved && question.userPick?.isCorrect
           ? "shadow-[0_0_20px_hsl(185_100%_55%/0.15)]"
@@ -221,7 +291,7 @@ export function PredictionCard({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {isPending && (
+          {(isPending || isOnChainProcessing) && (
             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
           )}
           {saved && !isPending && !isResolved && (
@@ -287,7 +357,76 @@ export function PredictionCard({
         />
       )}
 
-      {/* ── Footer: Points + Risk/Joker ───────────────────────────── */}
+      {/* ── Staking Section (only when not locked/resolved and option selected) ── */}
+      {!isLocked && !isResolved && !saved && selected && (
+        <div className="px-4 pb-3">
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-2"
+            >
+              {/* Stake Amount Input */}
+              {address && contractsReady && (
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Coins className="h-3 w-3" />
+                      Stake $PICKS
+                    </span>
+                    <span className="font-mono text-muted-foreground">
+                      Bal: {formatPicks(balance as bigint | undefined)}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={stakeInput}
+                      onChange={(e) => setStakeInput(e.target.value)}
+                      placeholder="0"
+                      min="0"
+                      className="w-full px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-neon-cyan/40 focus:border-neon-cyan/30 transition-all font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        const bal = formatPicks(balance as bigint | undefined);
+                        if (bal !== "0") setStakeInput(bal.replace(/,/g, ""));
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neon-cyan/70 hover:text-neon-cyan transition-colors"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                  {/* Quick amount buttons */}
+                  <div className="flex gap-1.5">
+                    {QUICK_AMOUNTS.map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => setStakeInput(amt)}
+                        className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
+                          stakeInput === amt
+                            ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30"
+                            : "bg-white/[0.03] text-muted-foreground border border-white/[0.06] hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {amt}
+                      </button>
+                    ))}
+                  </div>
+                  {!stakeInput && (
+                    <p className="text-[10px] text-muted-foreground/60 text-center">
+                      Optional — pick for free or stake $PICKS for on-chain rewards
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── Footer: Risk/Joker toggles + PICK button ──────────────── */}
       <div className="px-4 py-3 border-t border-white/[0.04]">
         {isResolved && question.userPick ? (
           /* Resolved footer */
@@ -341,80 +480,38 @@ export function PredictionCard({
               )}
             </div>
           </motion.div>
-        ) : (
-          /* Active footer */
+        ) : saved ? (
+          /* Already picked footer */
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Risk toggle */}
-              {!isLocked && (
-                <>
-                  <div className="flex items-center gap-1.5">
-                    <Switch
-                      id={`risk-${question.id}`}
-                      checked={isRisk}
-                      onCheckedChange={handleToggleRisk}
-                      className="scale-75 origin-left"
-                    />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Label
-                          htmlFor={`risk-${question.id}`}
-                          className="flex items-center gap-1 cursor-pointer text-xs"
-                        >
-                          <AlertTriangle className="h-3 w-3 text-accent" />
-                          Risk
-                        </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs max-w-[180px]">
-                          1.5x if correct, 0 if wrong. No joker save.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-
-                  {/* Joker toggle */}
-                  <div className="flex items-center gap-1.5">
-                    <Switch
-                      id={`joker-${question.id}`}
-                      checked={useJoker}
-                      onCheckedChange={handleToggleJoker}
-                      disabled={jokersRemaining <= 0 || isRisk}
-                      className="scale-75 origin-left"
-                    />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Label
-                          htmlFor={`joker-${question.id}`}
-                          className="flex items-center gap-1 cursor-pointer text-xs"
-                        >
-                          <Shield className="h-3 w-3 text-primary" />
-                          <span>{jokersRemaining}</span>
-                        </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs max-w-[180px]">
-                          Wrong pick still earns 100 pts. {jokersRemaining} left.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 text-xs">
+                <Check className="h-3 w-3 mr-1" />
+                Picked
+              </Badge>
+              {isRisk && (
+                <Badge variant="outline" className="text-accent border-accent/30 text-xs">
+                  Risk
+                </Badge>
+              )}
+              {useJoker && (
+                <Badge variant="outline" className="text-primary border-primary/30 text-xs">
+                  Joker
+                </Badge>
               )}
             </div>
-
-            {/* Points potential + share */}
             <div className="flex items-center gap-2">
-              <div className="text-right">
-                <span className="text-xs text-muted-foreground">
-                  {question.odds >= 0 ? "+" : ""}
-                  {question.odds}
-                </span>
-                <span className="ml-2 font-mono text-xs font-bold" style={{ color: accentColor }}>
-                  {potentialPts} pts
-                </span>
-              </div>
-              {isInMiniApp && saved && (
+              <span className="font-mono text-xs font-bold" style={{ color: accentColor }}>
+                {potentialPts} pts
+              </span>
+              {!isLocked && (
+                <button
+                  onClick={() => setSaved(false)}
+                  className="text-[10px] text-muted-foreground hover:text-white transition-colors underline"
+                >
+                  Change
+                </button>
+              )}
+              {isInMiniApp && (
                 <button
                   onClick={handleShareOnFarcaster}
                   className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
@@ -424,6 +521,130 @@ export function PredictionCard({
                 </button>
               )}
             </div>
+          </div>
+        ) : (
+          /* Active footer — PICK button */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Risk toggle */}
+                {!isLocked && (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        id={`risk-${question.id}`}
+                        checked={isRisk}
+                        onCheckedChange={handleToggleRisk}
+                        className="scale-75 origin-left"
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Label
+                            htmlFor={`risk-${question.id}`}
+                            className="flex items-center gap-1 cursor-pointer text-xs"
+                          >
+                            <AlertTriangle className="h-3 w-3 text-accent" />
+                            Risk
+                          </Label>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-[180px]">
+                            1.5x if correct, 0 if wrong. No joker save.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+
+                    {/* Joker toggle */}
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        id={`joker-${question.id}`}
+                        checked={useJoker}
+                        onCheckedChange={handleToggleJoker}
+                        disabled={jokersRemaining <= 0 || isRisk}
+                        className="scale-75 origin-left"
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Label
+                            htmlFor={`joker-${question.id}`}
+                            className="flex items-center gap-1 cursor-pointer text-xs"
+                          >
+                            <Shield className="h-3 w-3 text-primary" />
+                            <span>{jokersRemaining}</span>
+                          </Label>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-[180px]">
+                            Wrong pick still earns 100 pts. {jokersRemaining} left.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Points potential */}
+              <div className="text-right">
+                <span className="text-xs text-muted-foreground">
+                  {question.odds >= 0 ? "+" : ""}
+                  {question.odds}
+                </span>
+                <span className="ml-2 font-mono text-xs font-bold" style={{ color: accentColor }}>
+                  {potentialPts} pts
+                </span>
+              </div>
+            </div>
+
+            {/* ── PICK Button ─────────────────────────────────── */}
+            <motion.button
+              onClick={handlePick}
+              disabled={!canPick}
+              whileTap={canPick ? { scale: 0.97 } : undefined}
+              className={`w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                !selected
+                  ? "bg-white/[0.03] text-muted-foreground/40 border border-white/[0.04] cursor-not-allowed"
+                  : isOnChainProcessing || isPending
+                  ? "bg-white/[0.06] text-muted-foreground cursor-wait border border-white/[0.08]"
+                  : needsApproval && hasStake
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 active:bg-amber-500/40"
+                  : hasStake
+                  ? "bg-gradient-to-r from-neon-cyan/20 to-violet-500/20 text-white border border-neon-cyan/30 hover:from-neon-cyan/30 hover:to-violet-500/30 shadow-[0_0_20px_hsl(185_100%_55%/0.15)]"
+                  : "bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 hover:bg-neon-cyan/20 hover:border-neon-cyan/30"
+              }`}
+            >
+              {isOnChainProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {isApproving || isApproveConfirming
+                    ? "Approving..."
+                    : "Confirming on-chain..."}
+                </>
+              ) : isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : !selected ? (
+                "Select an option above"
+              ) : needsApproval && hasStake ? (
+                <>
+                  <Coins className="h-4 w-4" />
+                  Approve {stakeInput} $PICKS
+                </>
+              ) : hasStake ? (
+                <>
+                  <Zap className="h-4 w-4" />
+                  PICK &middot; Stake {stakeInput} $PICKS
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4" />
+                  PICK
+                </>
+              )}
+            </motion.button>
           </div>
         )}
       </div>

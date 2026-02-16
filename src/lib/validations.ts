@@ -7,6 +7,8 @@ export const createPredictionSchema = z.object({
   chosenOption: z.string().min(1),
   isRisk: z.boolean().default(false),
   useJoker: z.boolean().default(false),
+  stakeAmount: z.string().optional(), // $PICKS amount as string (bigint)
+  txHash: z.string().optional(), // on-chain tx hash
 });
 
 export type CreatePredictionInput = z.infer<typeof createPredictionSchema>;
