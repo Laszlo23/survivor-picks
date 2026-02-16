@@ -1,6 +1,6 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { Adapter } from "next-auth/adapters";
@@ -13,20 +13,21 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth/signin",
-    verifyRequest: "/auth/verify",
   },
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: Number(process.env.EMAIL_SERVER_PORT || "465"),
-        secure: Number(process.env.EMAIL_SERVER_PORT || "465") === 465,
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
+    // Wallet authentication is handled by /api/auth/wallet which creates
+    // JWT sessions directly. This dummy CredentialsProvider satisfies
+    // NextAuth's requirement for at least one provider while keeping
+    // the JWT strategy and adapter functional.
+    CredentialsProvider({
+      id: "wallet",
+      name: "Wallet",
+      credentials: {},
+      async authorize() {
+        // Actual wallet auth is done in /api/auth/wallet route.
+        // This provider exists only so NextAuth initializes properly.
+        return null;
       },
-      from: process.env.EMAIL_FROM || "winning@realitypicks.net",
     }),
   ],
   callbacks: {

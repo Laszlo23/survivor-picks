@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -48,6 +49,7 @@ const learnItems = [
 export function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Close mobile menu on route change
@@ -112,7 +114,7 @@ export function Navbar() {
               {status === "unauthenticated" && (
                 <div className="mb-4">
                   <Button
-                    onClick={() => signIn("email")}
+                    onClick={() => router.push("/auth/signin")}
                     className="w-full shadow-glow"
                   >
                     Sign In
@@ -325,7 +327,7 @@ export function Navbar() {
 
             {status === "unauthenticated" && (
               <Button
-                onClick={() => signIn("email")}
+                onClick={() => router.push("/auth/signin")}
                 size="sm"
                 className="hidden md:inline-flex shadow-glow"
               >
