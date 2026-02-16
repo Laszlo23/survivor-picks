@@ -5,32 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAccount, useSignMessage, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { createSiweMessage } from "viem/siwe";
 import { Wallet, Loader2, CheckCircle2 } from "lucide-react";
-
-/** Build a SIWE-compliant message string (EIP-4361) without the siwe package */
-function buildSiweMessage(params: {
-  domain: string;
-  address: string;
-  statement: string;
-  uri: string;
-  version: string;
-  chainId: number;
-  nonce: string;
-  issuedAt: string;
-}): string {
-  return [
-    `${params.domain} wants you to sign in with your Ethereum account:`,
-    params.address,
-    "",
-    params.statement,
-    "",
-    `URI: ${params.uri}`,
-    `Version: ${params.version}`,
-    `Chain ID: ${params.chainId}`,
-    `Nonce: ${params.nonce}`,
-    `Issued At: ${params.issuedAt}`,
-  ].join("\n");
-}
 
 type Phase = "idle" | "signing" | "verifying" | "success" | "error";
 
@@ -54,8 +30,8 @@ function WalletSignInInner() {
       if (!nonceRes.ok) throw new Error("Failed to get nonce");
       const { nonce } = await nonceRes.json();
 
-      // 2. Build SIWE message (EIP-4361 plain text)
-      const messageToSign = buildSiweMessage({
+      // 2. Build SIWE message using viem's official EIP-4361 formatter
+      const messageToSign = createSiweMessage({
         domain: window.location.host,
         address,
         statement: "Sign in to RealityPicks with your wallet.",
@@ -63,7 +39,6 @@ function WalletSignInInner() {
         version: "1",
         chainId: chain.id,
         nonce,
-        issuedAt: new Date().toISOString(),
       });
 
       // 3. Request wallet signature

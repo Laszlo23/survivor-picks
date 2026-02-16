@@ -1,20 +1,39 @@
 import { createPublicClient, http } from "viem";
 import { base, baseSepolia, hardhat } from "viem/chains";
-import { parseSiweMessage } from "viem/siwe";
+import { parseSiweMessage, verifySiweMessage } from "viem/siwe";
 import { prisma } from "@/lib/prisma";
 import { encode } from "next-auth/jwt";
 import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
-const activeChain =
-  process.env.NEXT_PUBLIC_CHAIN === "mainnet"
-    ? base
-    : process.env.NEXT_PUBLIC_CHAIN === "testnet"
-      ? baseSepolia
-      : hardhat;
+/**
+ * Get the active chain and RPC transport for server-side verification.
+ * Uses the same RPC URLs as the wagmi client config.
+ */
+function getChainConfig() {
+  if (process.env.NEXT_PUBLIC_CHAIN === "mainnet") {
+    return {
+      chain: base,
+      transport: http(
+        process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
+      ),
+    };
+  }
+  if (process.env.NEXT_PUBLIC_CHAIN === "testnet") {
+    return {
+      chain: baseSepolia,
+      transport: http(
+        process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || "https://sepolia.base.org"
+      ),
+    };
+  }
+  return { chain: hardhat, transport: http("http://127.0.0.1:8545") };
+}
+
+const { chain: activeChain, transport } = getChainConfig();
 
 const publicClient = createPublicClient({
   chain: activeChain,
-  transport: http(),
+  transport,
 });
 
 /**
@@ -53,6 +72,7 @@ export async function POST(req: Request) {
     const parsed = parseSiweMessage(message);
 
     if (!parsed || !parsed.address) {
+      console.error("[Wallet Auth] Could not parse SIWE message");
       return Response.json(
         { error: "Malformed SIWE message" },
         { status: 400 }
@@ -69,19 +89,41 @@ export async function POST(req: Request) {
         `[Wallet Auth] Domain mismatch: got "${parsed.domain}", expected "${expectedDomain}"`
       );
       return Response.json(
-        { error: "Domain mismatch" },
+        { error: `Domain mismatch: expected ${expectedDomain}` },
         { status: 401 }
       );
     }
 
-    // ─── Verify the signature using viem ────────────────────────────
-    const valid = await publicClient.verifyMessage({
-      address: parsed.address,
-      message,
-      signature: signature as `0x${string}`,
-    });
+    // ─── Verify the signature (supports both EOA and smart contract wallets) ──
+    let valid = false;
+    try {
+      valid = await verifySiweMessage(publicClient, {
+        message,
+        signature: signature as `0x${string}`,
+      });
+    } catch (verifyErr) {
+      // If verifySiweMessage fails (e.g. EIP-1271 call reverts), fall back
+      // to raw ecrecover for EOA wallets
+      console.warn(
+        "[Wallet Auth] verifySiweMessage failed, trying raw verifyMessage:",
+        verifyErr instanceof Error ? verifyErr.message : verifyErr
+      );
+      try {
+        valid = await publicClient.verifyMessage({
+          address: parsed.address,
+          message,
+          signature: signature as `0x${string}`,
+        });
+      } catch (fallbackErr) {
+        console.error(
+          "[Wallet Auth] verifyMessage fallback also failed:",
+          fallbackErr instanceof Error ? fallbackErr.message : fallbackErr
+        );
+      }
+    }
 
     if (!valid) {
+      console.error("[Wallet Auth] Signature verification returned false");
       return Response.json(
         { error: "Invalid signature" },
         { status: 401 }
@@ -96,7 +138,6 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      // Generate referral code
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let referralCode = "";
       for (let i = 0; i < 8; i++) {
@@ -155,7 +196,8 @@ export async function POST(req: Request) {
     );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("[Wallet Auth] Error:", msg);
+    const stack = error instanceof Error ? error.stack : "";
+    console.error("[Wallet Auth] Unhandled error:", msg, stack);
 
     return Response.json(
       { error: "Authentication failed. Please try again." },
