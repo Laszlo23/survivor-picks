@@ -5,11 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Radio,
   Sparkles,
-  Play,
   Bell,
   TrendingUp,
-  Tv,
-  ChevronRight,
   Zap,
   Eye,
 } from "lucide-react";
@@ -78,35 +75,28 @@ export function LandingLiveBettingTeaser() {
           transition={{ duration: 0.6 }}
           className="lg:col-span-3 relative rounded-2xl border border-white/[0.08] bg-studio-dark/80 backdrop-blur-sm overflow-hidden"
         >
-          {/* Mock Video Area */}
-          <div className="relative aspect-video bg-gradient-to-br from-studio-black via-studio-dark to-studio-black flex items-center justify-center">
-            <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
-
-            {/* Play icon */}
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-              <Play className="h-7 w-7 text-white/70 ml-1" />
+          {/* Live Survivor Video Example */}
+          <div className="relative">
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src="https://www.youtube.com/embed/dRTdhQjpuBU?si=lfPlBa4IvBrTn-of&rel=0"
+                title="Survivor Live — Example of Live Betting"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
             </div>
-
-            {/* Live badge overlay */}
-            <div className="absolute top-3 left-3 flex items-center gap-2">
-              <span className="flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            {/* Overlay badges */}
+            <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
+              <span className="flex items-center gap-1 rounded bg-red-600/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                 <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                Live
+                Live Example
               </span>
-              <span className="flex items-center gap-1 rounded bg-white/10 px-2 py-0.5 text-[10px] text-white/60">
+              <span className="flex items-center gap-1 rounded bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] text-white/80">
                 <Eye className="h-3 w-3" />
-                2.4K
+                Survivor Australia
               </span>
-            </div>
-
-            {/* Bottom ticker overlay */}
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-studio-black/90 to-transparent px-3 pb-3 pt-8">
-              <div className="flex items-center gap-2">
-                <Tv className="h-3.5 w-3.5 text-neon-cyan" />
-                <span className="text-xs text-white/70">
-                  Survivor 2026 - Episode 7
-                </span>
-              </div>
             </div>
           </div>
 

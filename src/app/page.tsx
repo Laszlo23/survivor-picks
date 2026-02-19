@@ -6,7 +6,6 @@ import {
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { LandingHero } from "@/components/landing/hero";
-import { LandingVideoExplainer } from "@/components/landing/video-explainer";
 import { LandingDailyChallenge } from "@/components/landing/daily-challenge";
 import { LandingFeaturedMarkets } from "@/components/landing/featured-markets";
 import { LandingLiveBettingTeaser } from "@/components/landing/live-betting-teaser";
@@ -38,8 +37,6 @@ export default async function LandingPage() {
 
       {/* Everything after the hero gets a solid bg so it scrolls over the fixed hero video */}
       <div className="relative z-10 bg-studio-black">
-
-      <LandingVideoExplainer />
 
       <LandingDailyChallenge />
 
