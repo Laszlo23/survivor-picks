@@ -22,20 +22,21 @@ async function main() {
 
   // Create admin user
   const adminEmail = process.env.ADMIN_EMAIL || "admin@realitypicks.xyz";
+  const adminRef = "ADM" + Date.now().toString(36).slice(-5).toUpperCase();
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { role: "ADMIN", referralCode: "ADMN2026" },
+    update: { role: "ADMIN" },
     create: {
       email: adminEmail,
       name: "Admin",
       role: "ADMIN",
       emailVerified: new Date(),
-      referralCode: "ADMN2026",
+      referralCode: adminRef,
     },
   });
-  console.log(`  ✅ Admin user: ${admin.email} (ref: ADMN2026)`);
+  console.log(`  ✅ Admin user: ${admin.email} (ref: ${admin.referralCode})`);
 
-  // Create dev test player — generate unique ref code to avoid conflicts
+  // Create dev test player
   const playerRef = "PLAY" + Date.now().toString(36).slice(-4).toUpperCase();
   const player = await prisma.user.upsert({
     where: { email: "player@realitypicks.xyz" },
@@ -122,12 +123,9 @@ async function main() {
   const allNames = [...allUnluler, ...allGonulluler];
 
   // ─── Episodes ───────────────────────────────────────────────────────────────
-  // Show premiered Jan 1 2026, airs daily on TV8.
-  // Today: ~Feb 11 2026, so about 42 days / 6 weeks in.
-  // We model key weekly "recap" episodes (not all 32 daily episodes).
-  // Past episodes are RESOLVED, current week is OPEN, future is DRAFT.
+  // Dates are calculated relative to today so predictions are always available.
+  // Past episodes → RESOLVED, yesterday → LOCKED, future → OPEN or DRAFT.
 
-  // Eliminated contestants (fictional but realistic progression)
   const eliminated = ["Başak Cücü", "Deniz Çatalbaş", "Erkan Bilben", "Selen Görgüzel"];
   const remaining = allNames.filter((n) => !eliminated.includes(n));
 
@@ -142,307 +140,140 @@ async function main() {
   interface EpisodeDef {
     number: number;
     title: string;
-    airDate: string; // ISO date YYYY-MM-DD
+    daysFromNow: number; // negative = past, positive = future
     status: "DRAFT" | "OPEN" | "LOCKED" | "RESOLVED";
     questions: QuestionDef[];
   }
 
+  function daysFrom(offset: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().split("T")[0];
+  }
+
   const episodes: EpisodeDef[] = [
-    // ── Week 1: Jan 1-4 (RESOLVED) ──────────────────────
+    // ── Past episodes (RESOLVED) ─────────────────────────
     {
       number: 1,
       title: "Adaya İlk Adım",
-      airDate: "2026-01-01",
+      daysFromNow: -42,
       status: "RESOLVED",
       questions: [
-        {
-          type: "CHALLENGE_WINNER",
-          prompt: "Which tribe wins the first reward challenge?",
-          odds: 100,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Ünlüler",
-        },
-        {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins the first immunity?",
-          odds: -110,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Gönüllüler",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who is the first contestant eliminated?",
-          odds: 400,
-          options: allNames,
-          correctOption: "Başak Cücü",
-        },
+        { type: "CHALLENGE_WINNER", prompt: "Which tribe wins the first reward challenge?", odds: 100, options: ["Ünlüler", "Gönüllüler"], correctOption: "Ünlüler" },
+        { type: "IMMUNITY", prompt: "Which tribe wins the first immunity?", odds: -110, options: ["Ünlüler", "Gönüllüler"], correctOption: "Gönüllüler" },
+        { type: "ELIMINATION", prompt: "Who is the first contestant eliminated?", odds: 400, options: allNames, correctOption: "Başak Cücü" },
       ],
     },
-    // ── Week 2: Jan 8-11 (RESOLVED) ─────────────────────
     {
       number: 2,
       title: "İttifaklar Kuruluyor",
-      airDate: "2026-01-08",
+      daysFromNow: -35,
       status: "RESOLVED",
       questions: [
-        {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins immunity this week?",
-          odds: -110,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Ünlüler",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated this week?",
-          odds: 350,
-          options: allGonulluler.filter((n) => n !== "Başak Cücü"),
-          correctOption: "Erkan Bilben",
-        },
-        {
-          type: "TWIST",
-          prompt: "Is a hidden immunity idol found this week?",
-          odds: 200,
-          options: ["Yes", "No"],
-          correctOption: "No",
-        },
+        { type: "IMMUNITY", prompt: "Which tribe wins immunity this week?", odds: -110, options: ["Ünlüler", "Gönüllüler"], correctOption: "Ünlüler" },
+        { type: "ELIMINATION", prompt: "Who gets eliminated this week?", odds: 350, options: allGonulluler.filter((n) => n !== "Başak Cücü"), correctOption: "Erkan Bilben" },
+        { type: "TWIST", prompt: "Is a hidden immunity idol found this week?", odds: 200, options: ["Yes", "No"], correctOption: "No" },
       ],
     },
-    // ── Week 3: Jan 15-18 (RESOLVED) ────────────────────
     {
       number: 3,
       title: "Ada Konseyi Sürprizi",
-      airDate: "2026-01-15",
+      daysFromNow: -28,
       status: "RESOLVED",
       questions: [
-        {
-          type: "CHALLENGE_WINNER",
-          prompt: "Which tribe wins the reward challenge?",
-          odds: 100,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Gönüllüler",
-        },
-        {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins immunity?",
-          odds: 120,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Gönüllüler",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated in Week 3?",
-          odds: 350,
-          options: allUnluler,
-          correctOption: "Deniz Çatalbaş",
-        },
+        { type: "CHALLENGE_WINNER", prompt: "Which tribe wins the reward challenge?", odds: 100, options: ["Ünlüler", "Gönüllüler"], correctOption: "Gönüllüler" },
+        { type: "IMMUNITY", prompt: "Which tribe wins immunity?", odds: 120, options: ["Ünlüler", "Gönüllüler"], correctOption: "Gönüllüler" },
+        { type: "ELIMINATION", prompt: "Who gets eliminated in Week 3?", odds: 350, options: allUnluler, correctOption: "Deniz Çatalbaş" },
       ],
     },
-    // ── Week 4: Jan 22-25 (RESOLVED) ────────────────────
     {
       number: 4,
       title: "Büyük Ödül",
-      airDate: "2026-01-22",
+      daysFromNow: -21,
       status: "RESOLVED",
       questions: [
-        {
-          type: "REWARD",
-          prompt: "Which tribe wins the big reward (food & comfort)?",
-          odds: 100,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Ünlüler",
-        },
-        {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins immunity?",
-          odds: -105,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Ünlüler",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated in Week 4?",
-          odds: 300,
-          options: allGonulluler.filter((n) => !["Başak Cücü", "Erkan Bilben"].includes(n)),
-          correctOption: "Selen Görgüzel",
-        },
-        {
-          type: "TWIST",
-          prompt: "Does someone play an immunity idol at council?",
-          odds: 250,
-          options: ["Yes", "No"],
-          correctOption: "No",
-        },
+        { type: "REWARD", prompt: "Which tribe wins the big reward (food & comfort)?", odds: 100, options: ["Ünlüler", "Gönüllüler"], correctOption: "Ünlüler" },
+        { type: "IMMUNITY", prompt: "Which tribe wins immunity?", odds: -105, options: ["Ünlüler", "Gönüllüler"], correctOption: "Ünlüler" },
+        { type: "ELIMINATION", prompt: "Who gets eliminated in Week 4?", odds: 300, options: allGonulluler.filter((n) => !["Başak Cücü", "Erkan Bilben"].includes(n)), correctOption: "Selen Görgüzel" },
+        { type: "TWIST", prompt: "Does someone play an immunity idol at council?", odds: 250, options: ["Yes", "No"], correctOption: "No" },
       ],
     },
-    // ── Week 5: Jan 29 - Feb 1 (RESOLVED) ───────────────
     {
       number: 5,
       title: "Takım Değişikliği",
-      airDate: "2026-01-29",
+      daysFromNow: -14,
       status: "RESOLVED",
       questions: [
-        {
-          type: "TWIST",
-          prompt: "Is there a tribe swap this week?",
-          odds: 150,
-          options: ["Yes", "No"],
-          correctOption: "Yes",
-        },
-        {
-          type: "IMMUNITY",
-          prompt: "Which tribe wins immunity after the swap?",
-          odds: 110,
-          options: ["Ünlüler", "Gönüllüler"],
-          correctOption: "Ünlüler",
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who is eliminated after the tribe swap?",
-          odds: 400,
-          options: remaining,
-        },
+        { type: "TWIST", prompt: "Is there a tribe swap this week?", odds: 150, options: ["Yes", "No"], correctOption: "Yes" },
+        { type: "IMMUNITY", prompt: "Which tribe wins immunity after the swap?", odds: 110, options: ["Ünlüler", "Gönüllüler"], correctOption: "Ünlüler" },
+        { type: "ELIMINATION", prompt: "Who is eliminated after the tribe swap?", odds: 400, options: remaining },
       ],
     },
-    // ── Week 6: Feb 5-8 (LOCKED — just aired, awaiting resolution) ──
+    // ── Yesterday (LOCKED — just aired, awaiting resolution) ──────
     {
       number: 6,
       title: "Bireysel Dokunulmazlık",
-      airDate: "2026-02-05",
+      daysFromNow: -1,
       status: "LOCKED",
       questions: [
-        {
-          type: "IMMUNITY",
-          prompt: "Who wins individual immunity this week?",
-          odds: 500,
-          options: remaining,
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated in Week 6?",
-          odds: 400,
-          options: remaining,
-        },
-        {
-          type: "TRIBAL_COUNCIL",
-          prompt: "How many votes does the eliminated player receive?",
-          odds: 200,
-          options: ["3 or fewer", "4-6", "7 or more", "Unanimous"],
-        },
+        { type: "IMMUNITY", prompt: "Who wins individual immunity this week?", odds: 500, options: remaining },
+        { type: "ELIMINATION", prompt: "Who gets eliminated in Week 6?", odds: 400, options: remaining },
+        { type: "TRIBAL_COUNCIL", prompt: "How many votes does the eliminated player receive?", odds: 200, options: ["3 or fewer", "4-6", "7 or more", "Unanimous"] },
       ],
     },
-    // ── Week 7: Feb 12-15 (OPEN — upcoming, predictions open!) ──────
+    // ── 3 days from now (OPEN — predictions open!) ───────────────
     {
       number: 7,
       title: "Hayatta Kalma Savaşı",
-      airDate: "2026-02-12",
+      daysFromNow: 3,
       status: "OPEN",
       questions: [
-        {
-          type: "IMMUNITY",
-          prompt: "Who wins individual immunity this week?",
-          odds: 450,
-          options: remaining,
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who will be eliminated this week?",
-          odds: 400,
-          options: remaining,
-        },
-        {
-          type: "TWIST",
-          prompt: "Will a hidden immunity idol be played at council?",
-          odds: 200,
-          options: ["Yes", "No"],
-        },
-        {
-          type: "REWARD",
-          prompt: "Who wins the reward challenge?",
-          odds: 450,
-          options: remaining,
-        },
+        { type: "IMMUNITY", prompt: "Who wins individual immunity this week?", odds: 450, options: remaining },
+        { type: "ELIMINATION", prompt: "Who will be eliminated this week?", odds: 400, options: remaining },
+        { type: "TWIST", prompt: "Will a hidden immunity idol be played at council?", odds: 200, options: ["Yes", "No"] },
+        { type: "REWARD", prompt: "Who wins the reward challenge?", odds: 450, options: remaining },
       ],
     },
-    // ── Week 8: Feb 19-22 (OPEN — next week) ────────────────────────
+    // ── 10 days from now (OPEN — next week) ──────────────────────
     {
       number: 8,
       title: "Çift Eleme Gecesi",
-      airDate: "2026-02-19",
+      daysFromNow: 10,
       status: "OPEN",
       questions: [
-        {
-          type: "TWIST",
-          prompt: "Will there be a double elimination this week?",
-          odds: 175,
-          options: ["Yes", "No"],
-        },
-        {
-          type: "IMMUNITY",
-          prompt: "Who wins individual immunity?",
-          odds: 500,
-          options: remaining,
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Name someone who gets eliminated this episode",
-          odds: 350,
-          options: remaining,
-        },
+        { type: "TWIST", prompt: "Will there be a double elimination this week?", odds: 175, options: ["Yes", "No"] },
+        { type: "IMMUNITY", prompt: "Who wins individual immunity?", odds: 500, options: remaining },
+        { type: "ELIMINATION", prompt: "Name someone who gets eliminated this episode", odds: 350, options: remaining },
       ],
     },
-    // ── Week 9: Feb 26 - Mar 1 (DRAFT — future) ────────────────────
+    // ── 17 days from now (DRAFT — future) ────────────────────────
     {
       number: 9,
       title: "Aile Ziyareti",
-      airDate: "2026-02-26",
+      daysFromNow: 17,
       status: "DRAFT",
       questions: [
-        {
-          type: "REWARD",
-          prompt: "Who wins the family visit reward?",
-          odds: 500,
-          options: remaining,
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated in Week 9?",
-          odds: 400,
-          options: remaining,
-        },
+        { type: "REWARD", prompt: "Who wins the family visit reward?", odds: 500, options: remaining },
+        { type: "ELIMINATION", prompt: "Who gets eliminated in Week 9?", odds: 400, options: remaining },
       ],
     },
-    // ── Week 10: Mar 5-8 (DRAFT — future) ───────────────────────────
+    // ── 24 days from now (DRAFT — future) ────────────────────────
     {
       number: 10,
       title: "Final Yolu",
-      airDate: "2026-03-05",
+      daysFromNow: 24,
       status: "DRAFT",
       questions: [
-        {
-          type: "IMMUNITY",
-          prompt: "Who wins individual immunity heading into the finale stretch?",
-          odds: 500,
-          options: remaining,
-        },
-        {
-          type: "ELIMINATION",
-          prompt: "Who gets eliminated in Week 10?",
-          odds: 450,
-          options: remaining,
-        },
-        {
-          type: "CUSTOM",
-          prompt: "Will the eliminated contestant cry during their farewell speech?",
-          odds: -130,
-          options: ["Yes", "No"],
-        },
+        { type: "IMMUNITY", prompt: "Who wins individual immunity heading into the finale stretch?", odds: 500, options: remaining },
+        { type: "ELIMINATION", prompt: "Who gets eliminated in Week 10?", odds: 450, options: remaining },
+        { type: "CUSTOM", prompt: "Will the eliminated contestant cry during their farewell speech?", odds: -130, options: ["Yes", "No"] },
       ],
     },
   ];
 
   for (const ep of episodes) {
-    const airDate = new Date(ep.airDate + "T20:00:00+03:00"); // 20:00 Turkey time
+    const airDateStr = daysFrom(ep.daysFromNow);
+    const airDate = new Date(airDateStr + "T20:00:00+03:00"); // 20:00 Turkey time
     const lockDate = new Date(airDate);
     lockDate.setMinutes(lockDate.getMinutes() - 5); // Lock 5 min before air
 

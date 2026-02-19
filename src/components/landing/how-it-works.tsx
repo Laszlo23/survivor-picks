@@ -1,6 +1,6 @@
 "use client";
 
-import { Wallet, Tv, Target, Trophy } from "lucide-react";
+import { Tv, Target, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { FadeIn } from "@/components/motion";
 import { LowerThird } from "@/components/ui/lower-third";
@@ -9,37 +9,29 @@ const neonBorders = [
   "border-l-neon-cyan",
   "border-l-neon-magenta",
   "border-l-neon-gold",
-  "border-l-neon-cyan",
 ];
 
 const steps = [
   {
-    icon: Wallet,
-    title: "Connect Wallet",
-    desc: "Link your Base wallet to get started in seconds.",
+    icon: Tv,
+    title: "Pick Your Show",
+    desc: "Browse live and upcoming reality TV prediction markets — no wallet needed to start.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
   {
-    icon: Tv,
-    title: "Pick a Show",
-    desc: "Browse live and upcoming reality TV prediction markets.",
+    icon: Target,
+    title: "Make Your Prediction",
+    desc: "Choose your pick for who wins, who stays, and who goes home.",
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
   },
   {
-    icon: Target,
-    title: "Cast Your Pick",
-    desc: "Stake $PICKS tokens on who you think wins, stays, or goes.",
+    icon: Trophy,
+    title: "Win and Earn More",
+    desc: "Correct predictions earn you a share of the pool and climb the leaderboard.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
-  },
-  {
-    icon: Trophy,
-    title: "Win Rewards",
-    desc: "Correct predictions earn you a share of the pool.",
-    color: "text-neon-cyan",
-    accent: "hsl(185 100% 55%)",
   },
 ];
 
@@ -51,11 +43,11 @@ export function LandingHowItWorks() {
           <LowerThird label="THE GAME" value="How It Works" />
         </div>
         <p className="text-sm text-muted-foreground mb-10">
-          Four simple steps to start predicting reality TV outcomes.
+          Three simple steps to start predicting reality TV outcomes.
         </p>
       </FadeIn>
 
-      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-5 sm:grid-cols-3">
         {steps.map((item, i) => (
           <motion.div
             key={item.title}

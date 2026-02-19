@@ -83,8 +83,9 @@ model User {
   seasonStats    UserSeasonStats[]
   badges         UserBadge[]
   socialClaims   SocialTaskClaim[]
-  referralsMade  Referral[]        @relation("ReferralReferrer")
-  referralUsed   Referral?         @relation("ReferralReferee")
+  referralsMade     Referral[]           @relation("ReferralReferrer")
+  referralUsed      Referral?            @relation("ReferralReferee")
+  liveBetPlacements LiveBetPlacement[]
 }
 
 model Season {
@@ -147,9 +148,10 @@ model Episode {
   lockAt   DateTime
   status   EpisodeStatus @default(DRAFT)
 
-  season      Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  questions   Question[]
-  scoreEvents ScoreEvent[]
+  season       Season        @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  questions    Question[]
+  scoreEvents  ScoreEvent[]
+  liveSessions LiveSession[]
 
   @@unique([seasonId, number])
   @@index([seasonId])
@@ -363,4 +365,84 @@ model AgentLog {
   @@index([status])
   @@index([createdAt])
   @@index([episodeId])
+}
+
+// ─── Live Betting Models ──────────────────────────────────────────────────────
+
+model LiveSession {
+  id          String    @id @default(cuid())
+  episodeId   String
+  streamUrl   String
+  streamType  String    // "youtube" | "twitch" | "custom"
+  status      String    @default("scheduled") // scheduled | live | paused | ended
+  startedAt   DateTime?
+  endedAt     DateTime?
+  viewerCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  episode  Episode    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  bets     LiveBet[]
+  aiFrames AIFrame[]
+
+  @@index([episodeId])
+  @@index([status])
+}
+
+model LiveBet {
+  id            String    @id @default(cuid())
+  sessionId     String
+  prompt        String    @db.Text
+  category      String    // "elimination" | "challenge" | "drama" | "flash" | "prop"
+  options       Json      // string[] — e.g. ["Yes","No"] or contestant names
+  odds          Json      // dynamic odds — e.g. { "Yes": 1.8, "No": 2.2 }
+  status        String    @default("pending") // pending | open | locked | resolved | cancelled
+  correctOption String?
+  opensAt       DateTime
+  locksAt       DateTime
+  resolvedAt    DateTime?
+  aiConfidence  Float?
+  multiplier    Float     @default(1.0)
+  totalPool     String    @default("0") // stored as string for bigint precision
+  createdAt     DateTime  @default(now())
+
+  session    LiveSession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  placements LiveBetPlacement[]
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([locksAt])
+}
+
+model LiveBetPlacement {
+  id           String   @id @default(cuid())
+  userId       String
+  liveBetId    String
+  chosenOption String
+  stakeAmount  String   @default("0")
+  txHash       String?
+  payout       String?
+  isCorrect    Boolean?
+  createdAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  liveBet LiveBet @relation(fields: [liveBetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, liveBetId])
+  @@index([userId])
+  @@index([liveBetId])
+}
+
+model AIFrame {
+  id        String   @id @default(cuid())
+  sessionId String
+  frameUrl  String?
+  analysis  Json     // Gemini structured output
+  events    Json?    // detected events
+  timestamp DateTime @default(now())
+
+  session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([timestamp])
 }

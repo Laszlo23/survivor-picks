@@ -6,7 +6,9 @@ import {
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { LandingHero } from "@/components/landing/hero";
+import { LandingDailyChallenge } from "@/components/landing/daily-challenge";
 import { LandingFeaturedMarkets } from "@/components/landing/featured-markets";
+import { LandingLiveBettingTeaser } from "@/components/landing/live-betting-teaser";
 import { LandingDiscordCTA } from "@/components/landing/discord-cta";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingWhyPicks } from "@/components/landing/why-picks";
@@ -14,6 +16,7 @@ import { LandingNFTPreview } from "@/components/landing/nft-badges-preview";
 import { LandingSneakPeek } from "@/components/landing/sneak-peek";
 import { LandingCommunity } from "@/components/landing/community";
 import { LandingCommunityVote } from "@/components/landing/community-vote";
+import { LandingStatsCounter } from "@/components/landing/stats-counter";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
 import { LandingClosingCTA } from "@/components/landing/closing-cta";
 import { LandingFooter } from "@/components/landing/footer";
@@ -35,42 +38,36 @@ export default async function LandingPage() {
       {/* Everything after the hero gets a solid bg so it scrolls over the fixed hero video */}
       <div className="relative z-10 bg-studio-black">
 
-      {/* 1. Featured Shows / Markets */}
+      <LandingDailyChallenge />
+
       <LandingFeaturedMarkets />
 
-      {/* 2. Discord CTA banner */}
+      <LandingLiveBettingTeaser />
+
       <LandingDiscordCTA />
 
-      {/* 3. How It Works */}
       <LandingHowItWorks />
 
-      {/* 4. Why $PICKS — 6 feature cards + Trust & Safety */}
       <LandingWhyPicks />
 
-      {/* 5. NFT Badges */}
       <LandingNFTPreview />
 
-      {/* 6. Leaderboard Preview */}
       <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardPreview seasonId={season?.id} />
       </Suspense>
 
-      {/* 7. Sneak Peek — App screenshots */}
       <LandingSneakPeek />
 
-      {/* 8. Community — OG Crew + Social links */}
       <LandingCommunity />
 
-      {/* 9. Community Vote */}
       <LandingCommunityVote />
 
-      {/* 10. Email Capture */}
+      <LandingStatsCounter />
+
       <LandingEmailCapture />
 
-      {/* 11. Closing CTA */}
       <LandingClosingCTA />
 
-      {/* 12. Footer */}
       <LandingFooter />
 
       </div>{/* end solid bg wrapper */}

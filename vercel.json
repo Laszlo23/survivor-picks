@@ -11,6 +11,10 @@
     {
       "path": "/api/agent/generate",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/live/analyze",
+      "schedule": "*/1 * * * *"
     }
   ],
   "headers": [

@@ -16,6 +16,7 @@ const footerLinks = {
     { label: "Whitepaper", href: "/whitepaper" },
     { label: "Tokenomics", href: "/tokenomics" },
     { label: "Contracts", href: "/contracts" },
+    { label: "Investors & Partners", href: "/invest" },
     { label: "Blog", href: "/blog" },
   ],
   Community: [

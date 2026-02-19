@@ -53,6 +53,9 @@ export function AppFooter() {
             <Link href="/contracts" className="hover:text-neon-cyan transition-colors">
               Contracts
             </Link>
+            <Link href="/invest" className="hover:text-neon-cyan transition-colors">
+              Investors
+            </Link>
             <Link href="/blog" className="hover:text-neon-cyan transition-colors">
               Blog
             </Link>

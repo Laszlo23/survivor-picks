@@ -37,7 +37,7 @@ export function LandingClosingCTA() {
               href="/dashboard"
               className="gap-2 text-base px-10 py-3 shadow-[0_0_40px_hsl(185_100%_55%/0.3)]"
             >
-              Enter the Arena <ArrowRight className="h-4 w-4" />
+              Start Predicting Now <ArrowRight className="h-4 w-4" />
             </NeonButton>
             <NeonButton variant="ghost" href="/whitepaper" className="gap-2 text-base px-8 py-3">
               Read the Whitepaper

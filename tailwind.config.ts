@@ -118,6 +118,16 @@ const config: Config = {
           "0%": { transform: "translateX(-100%)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
+        "siren-pulse": {
+          "0%, 100%": { boxShadow: "0 0 10px hsl(45 100% 55% / 0.2), 0 0 30px hsl(45 100% 55% / 0.05)" },
+          "50%": { boxShadow: "0 0 25px hsl(45 100% 55% / 0.5), 0 0 60px hsl(45 100% 55% / 0.2)" },
+        },
+        "neon-border-cycle": {
+          "0%": { borderColor: "hsl(45 100% 55% / 0.4)" },
+          "33%": { borderColor: "hsl(320 100% 60% / 0.4)" },
+          "66%": { borderColor: "hsl(185 100% 55% / 0.4)" },
+          "100%": { borderColor: "hsl(45 100% 55% / 0.4)" },
+        },
       },
       animation: {
         torch: "torch-flicker 3s ease-in-out infinite",
@@ -130,6 +140,8 @@ const config: Config = {
         "gradient-x": "gradient-x 6s ease infinite",
         "pulse-neon": "pulse-neon 2.5s ease-in-out infinite",
         "broadcast-slide": "broadcast-slide 0.6s cubic-bezier(0.25,0.46,0.45,0.94)",
+        "siren-pulse": "siren-pulse 1.5s ease-in-out infinite",
+        "neon-border": "neon-border-cycle 4s ease-in-out infinite",
       },
       boxShadow: {
         glow: "0 0 20px hsl(185 100% 55% / 0.3), 0 0 60px hsl(185 100% 55% / 0.1)",
