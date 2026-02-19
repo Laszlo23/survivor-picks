@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FadeIn } from "@/components/motion";
 import { NeonButton } from "@/components/ui/neon-button";
 import {
@@ -13,12 +12,14 @@ import {
   TrendingUp,
   Lock,
   BarChart3,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 
 const ALLOCATION = [
-  { label: "Uniswap V4 LP", pct: 45, amount: "~450M", color: "bg-neon-cyan", textColor: "text-neon-cyan" },
-  { label: "Vaulted Team + Community", pct: 50, amount: "~500M", color: "bg-violet-500", textColor: "text-violet-400" },
-  { label: "Airdrop (Early Supporters)", pct: 5, amount: "~50M", color: "bg-neon-gold", textColor: "text-neon-gold" },
+  { label: "Liquidity Pool", pct: 33.3, amount: "~333M", color: "bg-neon-cyan", textColor: "text-neon-cyan" },
+  { label: "Community & Rewards", pct: 33.3, amount: "~333M", color: "bg-violet-500", textColor: "text-violet-400" },
+  { label: "Ecosystem & Team", pct: 33.3, amount: "~333M", color: "bg-neon-gold", textColor: "text-neon-gold" },
 ];
 
 const UTILITIES = [
@@ -31,15 +32,15 @@ const UTILITIES = [
   },
   {
     icon: BarChart3,
-    title: "Governance",
-    desc: "Vote on platform decisions, new show additions, and protocol upgrades.",
+    title: "Governance (at 3,333 members)",
+    desc: "Vote on new shows, platform fees, partnerships, and Stripe payment method priorities.",
     color: "text-violet-400",
     bg: "bg-violet-500/10",
   },
   {
     icon: Zap,
     title: "Boost Multipliers",
-    desc: "Stake $PICKS to earn enhanced prediction multipliers up to 1.5x.",
+    desc: "Stake $PICKS to earn enhanced prediction multipliers up to 3.33x.",
     color: "text-neon-magenta",
     bg: "bg-neon-magenta/10",
   },
@@ -50,27 +51,41 @@ const UTILITIES = [
     color: "text-neon-gold",
     bg: "bg-neon-gold/10",
   },
+  {
+    icon: CreditCard,
+    title: "Stripe On-Ramp",
+    desc: "Buy $PICKS directly with credit card, Apple Pay, or Google Pay. No exchange needed.",
+    color: "text-white",
+    bg: "bg-white/10",
+  },
+  {
+    icon: Shield,
+    title: "Stripe NFT Perks",
+    desc: "Stripe NFT holders enjoy 2% platform fee (vs 3%) and early access to new show markets.",
+    color: "text-neon-cyan",
+    bg: "bg-neon-cyan/10",
+  },
 ];
 
 const MECHANICS = [
   {
     icon: Flame,
     title: "Buyback & Burn",
-    desc: "A portion of the 3% platform fee is used to buy back and permanently burn $PICKS, reducing supply over time.",
+    desc: "A portion of the 3% platform fee (2% for Stripe NFT holders) is used to buy back and permanently burn $PICKS.",
     color: "text-red-400",
     borderColor: "border-l-red-500/50",
   },
   {
     icon: Lock,
     title: "Staking Vault",
-    desc: "Stake $PICKS to earn boosted prediction multipliers (up to 1.5x) and passive yield from platform fees.",
+    desc: "Stake $PICKS to earn boosted prediction multipliers (up to 3.33x) and passive yield from platform fees.",
     color: "text-neon-cyan",
     borderColor: "border-l-neon-cyan/50",
   },
   {
     icon: Shield,
     title: "Season Pass Burns",
-    desc: "Purchasing Season Passes burns tokens permanently, adding deflationary pressure each season.",
+    desc: "Purchasing Season Passes burns tokens permanently — payable in $PICKS or fiat via Stripe.",
     color: "text-violet-400",
     borderColor: "border-l-violet-500/50",
   },
@@ -83,6 +98,13 @@ const MECHANICS = [
   },
 ];
 
+const THRESHOLDS = [
+  { threshold: "1,333.33", unit: "Seed Capital", event: "Smart contract redeployment triggers", color: "text-neon-cyan" },
+  { threshold: "3,333", unit: "Members", event: "Full governance unlocks", color: "text-neon-magenta" },
+  { threshold: "33,333", unit: "$PICKS Staked", event: "Highest multiplier tier (3.33x)", color: "text-neon-gold" },
+  { threshold: "333,333", unit: "Predictions", event: "First community airdrop triggers", color: "text-violet-400" },
+];
+
 export default function TokenomicsPage() {
   return (
     <div className="min-h-screen bg-studio-black pb-24">
@@ -93,13 +115,13 @@ export default function TokenomicsPage() {
         <div className="relative mx-auto max-w-5xl px-4 pt-20 pb-12 text-center">
           <FadeIn>
             <p className="text-xs font-mono uppercase tracking-[0.3em] text-neon-cyan/70 mb-4">
-              ERC-20 on Base
+              ERC-20 on Base — The 333 Architecture
             </p>
             <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tight mb-4">
               <span className="text-gradient-cyan">$PICKS</span> Tokenomics
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-              Total supply of 1,000,000,000 tokens. Fair launched via Clanker on Base.
+              Total supply of 999,999,999 tokens. Three equal allocations. Every threshold follows the 333 pattern.
             </p>
           </FadeIn>
         </div>
@@ -110,10 +132,10 @@ export default function TokenomicsPage() {
         <FadeIn>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-10">
             {[
-              { label: "Total Supply", value: "1B" },
+              { label: "Total Supply", value: "~1B" },
               { label: "Platform Fee", value: "3%" },
+              { label: "Allocation Split", value: "33/33/33" },
               { label: "Chain", value: "Base" },
-              { label: "Standard", value: "ERC-20" },
             ].map((stat) => (
               <div key={stat.label} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center">
                 <p className="text-xl sm:text-2xl font-bold font-mono text-white">{stat.value}</p>
@@ -127,10 +149,9 @@ export default function TokenomicsPage() {
         <FadeIn>
           <section className="mt-16">
             <h2 className="font-headline text-2xl font-bold uppercase tracking-wide text-white mb-6">
-              Token Allocation
+              Token Allocation — The 333 Split
             </h2>
 
-            {/* Visual bar */}
             <div className="flex h-8 rounded-full overflow-hidden mb-6 border border-white/[0.06]">
               {ALLOCATION.map((a) => (
                 <div
@@ -146,7 +167,6 @@ export default function TokenomicsPage() {
               ))}
             </div>
 
-            {/* Legend */}
             <div className="grid gap-3 sm:grid-cols-3">
               {ALLOCATION.map((a) => (
                 <div key={a.label} className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
@@ -163,13 +183,33 @@ export default function TokenomicsPage() {
           </section>
         </FadeIn>
 
+        {/* 333 Thresholds */}
+        <FadeIn>
+          <section className="mt-16">
+            <h2 className="font-headline text-2xl font-bold uppercase tracking-wide text-white mb-6">
+              333 Milestones
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {THRESHOLDS.map((t) => (
+                <div key={t.threshold} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className={`font-mono text-xl font-bold ${t.color}`}>{t.threshold}</span>
+                    <span className="text-xs text-muted-foreground">{t.unit}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t.event}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </FadeIn>
+
         {/* Utilities */}
         <FadeIn>
           <section className="mt-16">
             <h2 className="font-headline text-2xl font-bold uppercase tracking-wide text-white mb-6">
               Token Utilities
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {UTILITIES.map((u) => {
                 const Icon = u.icon;
                 return (
@@ -212,18 +252,19 @@ export default function TokenomicsPage() {
         {/* CTA */}
         <FadeIn>
           <div className="mt-16 text-center p-8 rounded-2xl bg-gradient-to-br from-cyan-950/30 to-violet-950/30 border border-neon-cyan/20">
+            <p className="font-mono text-4xl font-black text-neon-gold/15 mb-2">333</p>
             <h3 className="font-headline text-xl font-bold uppercase mb-2">
               Ready to Get <span className="text-gradient-cyan">$PICKS</span>?
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              View live token data, buy on Uniswap, or start staking.
+              Buy with crypto on Uniswap or with your credit card via Stripe.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <NeonButton variant="primary" href="/token" className="gap-2">
-                Live Token Dashboard <ArrowRight className="h-4 w-4" />
+                Token Dashboard <ArrowRight className="h-4 w-4" />
               </NeonButton>
-              <NeonButton variant="ghost" href="/contracts" className="gap-2">
-                View Contracts
+              <NeonButton variant="ghost" href="/whitepaper" className="gap-2">
+                Read Whitepaper <ExternalLink className="h-4 w-4" />
               </NeonButton>
             </div>
           </div>
