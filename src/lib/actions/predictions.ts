@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createPredictionSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
+import { debitBalance } from "@/lib/actions/token-balance";
 
 export async function createPrediction(input: {
   questionId: string;
@@ -12,6 +13,7 @@ export async function createPrediction(input: {
   useJoker: boolean;
   stakeAmount?: string;
   txHash?: string;
+  useInternalBalance?: boolean;
 }) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -24,6 +26,7 @@ export async function createPrediction(input: {
   }
 
   const { questionId, chosenOption, isRisk, useJoker, stakeAmount, txHash } = validated.data;
+  const useInternalBalance = input.useInternalBalance ?? false;
 
   // Fetch question with episode
   const question = await prisma.question.findUnique({
@@ -81,6 +84,16 @@ export async function createPrediction(input: {
   });
 
   try {
+    if (useInternalBalance && stakeAmount && parseFloat(stakeAmount) > 0) {
+      const amount = BigInt(Math.floor(parseFloat(stakeAmount)));
+      await debitBalance(
+        session.user.id,
+        amount,
+        "staking",
+        `Staked ${stakeAmount} $PICKS on prediction`
+      );
+    }
+
     if (existing) {
       await prisma.prediction.update({
         where: { id: existing.id },

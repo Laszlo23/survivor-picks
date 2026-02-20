@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useAccount } from "wagmi";
 import { Badge } from "@/components/ui/badge";
 import { StatusChip } from "@/components/ui/status-chip";
 import { Countdown } from "@/components/ui/countdown";
-import { ConnectWallet } from "@/components/web3/connect-wallet";
 import { PredictionCard, type PredictionCardQuestion } from "@/components/predictions/prediction-card";
 import type { CommunityPicks } from "@/lib/actions/predictions";
 import {
@@ -108,7 +106,6 @@ export function EpisodeClient({
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <ConnectWallet />
             <StatusChip status={episode.status as any} />
           </div>
         </div>

@@ -10,11 +10,12 @@ import { getUserProfile, getUserRecentPredictions, getUserRank } from "@/lib/act
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getReferralStats } from "@/lib/actions/referral";
 import { getSocialStats } from "@/lib/actions/social";
+import { getBalance, getTransactions } from "@/lib/actions/token-balance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralCard } from "@/components/social/referral-card";
-import { ProfileWeb3Section } from "./profile-web3";
+import { PicksWalletCard } from "@/components/wallet/picks-wallet-card";
 import {
   User,
   Trophy,
@@ -28,7 +29,6 @@ import {
   Award,
   Users,
   Share2,
-  Coins,
 } from "lucide-react";
 
 export default async function ProfilePage() {
@@ -47,10 +47,12 @@ export default async function ProfilePage() {
     ? profile.seasonStats.find((s) => s.seasonId === season.id)
     : profile.seasonStats[0];
 
-  const [rank, referralStats, socialStats] = await Promise.all([
+  const [rank, referralStats, socialStats, picksBalance, tokenTxs] = await Promise.all([
     season ? getUserRank(season.id) : null,
     getReferralStats(),
     season ? getSocialStats(season.id) : null,
+    getBalance(session.user.id),
+    getTransactions(session.user.id, 10),
   ]);
 
   return (
@@ -246,65 +248,25 @@ export default async function ProfilePage() {
         )}
       </div>
 
-      {/* Demo Token Wallet — visible to all users for investor preview */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="text-lg font-display flex items-center gap-2">
-            <Coins className="h-5 w-5 text-neon-cyan" />
-            $PICKS Wallet
-            <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-neon-gold bg-neon-gold/10 border border-neon-gold/20 rounded-full px-2.5 py-0.5">
-              Demo
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            {[
-              { label: "Balance", value: "33,333", sub: "$PICKS", color: "text-neon-cyan" },
-              { label: "Staked", value: "10,000", sub: "$PICKS", color: "text-violet-400" },
-              { label: "Tier", value: "Gold", sub: "3.33x boost", color: "text-neon-gold" },
-              { label: "Earnings", value: "+4,280", sub: "this season", color: "text-emerald-400" },
-            ].map((item) => (
-              <div key={item.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.label}</p>
-                <p className={`text-lg sm:text-xl font-bold font-mono ${item.color}`}>{item.value}</p>
-                <p className="text-[10px] text-muted-foreground">{item.sub}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
-            <p className="text-xs font-bold text-white mb-2">Recent Token Activity</p>
-            <div className="space-y-2">
-              {[
-                { action: "Prediction Reward", amount: "+333", time: "2 hours ago", color: "text-emerald-400" },
-                { action: "Staked $PICKS", amount: "-5,000", time: "1 day ago", color: "text-violet-400" },
-                { action: "Daily Streak Bonus", amount: "+33", time: "1 day ago", color: "text-neon-gold" },
-                { action: "Prediction Reward", amount: "+150", time: "3 days ago", color: "text-emerald-400" },
-                { action: "Season Pass Purchase", amount: "-1,333", time: "5 days ago", color: "text-neon-magenta" },
-              ].map((tx, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">{tx.action}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`font-mono font-bold ${tx.color}`}>{tx.amount}</span>
-                    <span className="text-[10px] text-muted-foreground w-16 text-right">{tx.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-[10px] text-muted-foreground mt-3 text-center">
-            This is a demo wallet preview. Connect your wallet or buy $PICKS via Stripe to start for real.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Web3 / On-Chain Section */}
+      {/* $PICKS Wallet — Internal + On-Chain */}
       <div className="mt-8">
-        <ProfileWeb3Section />
+        <PicksWalletCard
+          offChainBalance={String(picksBalance)}
+          tokenTxs={tokenTxs.map((tx) => ({
+            id: tx.id,
+            amount: String(tx.amount),
+            type: tx.type,
+            createdAt: tx.createdAt.toISOString(),
+          }))}
+        />
+      </div>
+
+      {/* On-Chain — Coming at launch */}
+      <div className="mt-8 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
+        <p className="text-xs text-muted-foreground">
+          On-chain features (staking, NFTs, wallet linking) activate at the <span className="text-neon-gold font-bold">333 Fair Launch</span>.
+          Your internal $PICKS convert 1:1.
+        </p>
       </div>
 
       {/* Recent Predictions */}
@@ -377,3 +339,4 @@ export default async function ProfilePage() {
     </div>
   );
 }
+

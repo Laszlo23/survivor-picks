@@ -25,13 +25,14 @@ async function main() {
   const adminRef = "ADM" + Date.now().toString(36).slice(-5).toUpperCase();
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { role: "ADMIN" },
+    update: { role: "ADMIN", picksBalance: BigInt(33_333) },
     create: {
       email: adminEmail,
       name: "Admin",
       role: "ADMIN",
       emailVerified: new Date(),
       referralCode: adminRef,
+      picksBalance: BigInt(33_333),
     },
   });
   console.log(`  ✅ Admin user: ${admin.email} (ref: ${admin.referralCode})`);
@@ -40,13 +41,14 @@ async function main() {
   const playerRef = "PLAY" + Date.now().toString(36).slice(-4).toUpperCase();
   const player = await prisma.user.upsert({
     where: { email: "player@realitypicks.xyz" },
-    update: {},
+    update: { picksBalance: BigInt(33_333) },
     create: {
       email: "player@realitypicks.xyz",
       name: "Test Player",
       role: "USER",
       emailVerified: new Date(),
       referralCode: playerRef,
+      picksBalance: BigInt(33_333),
     },
   });
   console.log(`  ✅ Test player: ${player.email} (ref: ${player.referralCode})`);

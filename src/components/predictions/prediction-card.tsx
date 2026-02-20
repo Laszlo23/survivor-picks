@@ -1,22 +1,10 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount } from "wagmi";
-import { parseEther, type Address } from "viem";
 import { createPrediction } from "@/lib/actions/predictions";
 import { convertOddsToMultiplier } from "@/lib/scoring";
 import { type ShowInfo } from "@/lib/shows";
-import {
-  usePicksBalance,
-  usePicksAllowance,
-  useApprovePicksToken,
-  useMakePrediction,
-  toBytes32,
-  formatPicks,
-  useIsContractsReady,
-} from "@/lib/web3/hooks";
-import { getContractAddress, isContractDeployed } from "@/lib/web3/contracts";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -72,6 +60,7 @@ interface PredictionCardProps {
   show?: ShowInfo;
   jokersRemaining: number;
   contestantImages?: Record<string, string>;
+  internalBalance?: bigint;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -108,6 +97,7 @@ export function PredictionCard({
   show,
   jokersRemaining,
   contestantImages = {},
+  internalBalance,
 }: PredictionCardProps) {
   const [selected, setSelected] = useState<string>(
     question.userPick?.chosenOption || ""
@@ -119,41 +109,8 @@ export function PredictionCard({
   const [stakeInput, setStakeInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(!!question.userPick);
-  const [isStaking, setIsStaking] = useState(false);
 
-  // Web3 hooks
-  const { address } = useAccount();
-  const contractsReady = useIsContractsReady();
-  const predictionEngineDeployed = isContractDeployed("PredictionEngine");
-
-  let engineAddress: Address = "0x0" as Address;
-  try {
-    if (predictionEngineDeployed)
-      engineAddress = getContractAddress("PredictionEngine");
-  } catch {}
-
-  const { data: balance } = usePicksBalance(address);
-  const { data: allowance } = usePicksAllowance(address, engineAddress);
-  const {
-    approve,
-    isPending: isApproving,
-    isConfirming: isApproveConfirming,
-  } = useApprovePicksToken();
-  const {
-    predict,
-    hash: predictionTxHash,
-    isPending: isPredicting,
-    isConfirming: isPredictConfirming,
-    isSuccess: isPredictSuccess,
-  } = useMakePrediction();
-
-  const stakeAmount = stakeInput ? parseEther(stakeInput) : 0n;
-  const needsApproval =
-    allowance !== undefined &&
-    stakeAmount > 0n &&
-    (allowance as bigint) < stakeAmount;
-  const isOnChainProcessing =
-    isApproving || isApproveConfirming || isPredicting || isPredictConfirming;
+  const stakeAmount = stakeInput ? BigInt(Math.floor(parseFloat(stakeInput) || 0)) : 0n;
 
   const isLocked =
     question.status === "LOCKED" ||
@@ -164,7 +121,7 @@ export function PredictionCard({
   const potentialPts = Math.round(100 * multiplier * (isRisk ? 1.5 : 1));
 
   const handleSelect = (option: string) => {
-    if (isLocked || isPending || isOnChainProcessing) return;
+    if (isLocked || isPending) return;
     setSelected(option);
   };
 
@@ -178,34 +135,13 @@ export function PredictionCard({
     if (v) setIsRisk(false);
   };
 
+  const useInternalStaking =
+    internalBalance !== undefined && internalBalance > 0n;
+
   const handlePick = () => {
-    if (!selected || isLocked || isPending || isOnChainProcessing) return;
-
-    if (
-      stakeAmount > 0n &&
-      contractsReady &&
-      predictionEngineDeployed &&
-      address
-    ) {
-      setIsStaking(true);
-
-      if (needsApproval) {
-        approve(engineAddress, stakeAmount);
-        toast.info("Approve $PICKS spending in your wallet...");
-        return;
-      }
-
-      const optionIndex = question.options.indexOf(selected) + 1;
-      const qId = toBytes32(question.id);
-      predict(qId, optionIndex, stakeAmount, isRisk);
-      toast.info("Confirm prediction in your wallet...");
-      return;
-    }
-
+    if (!selected || isLocked || isPending) return;
     savePredictionToDb();
-  };
-
-  const savePredictionToDb = (txHash?: string) => {
+  };  const savePredictionToDb = () => {
     startTransition(async () => {
       const result = await createPrediction({
         questionId: question.id,
@@ -213,13 +149,12 @@ export function PredictionCard({
         isRisk,
         useJoker,
         stakeAmount: stakeAmount > 0n ? stakeInput : undefined,
-        txHash,
+        useInternalBalance: useInternalStaking && stakeAmount > 0n,
       });
       if (result.error) {
         toast.error(result.error);
       } else {
         setSaved(true);
-        setIsStaking(false);
         const msg =
           stakeAmount > 0n
             ? `Pick locked with ${stakeInput} $PICKS!`
@@ -228,19 +163,6 @@ export function PredictionCard({
       }
     });
   };
-
-  const savedOnChainRef = useRef(false);
-  useEffect(() => {
-    if (
-      isPredictSuccess &&
-      isStaking &&
-      predictionTxHash &&
-      !savedOnChainRef.current
-    ) {
-      savedOnChainRef.current = true;
-      savePredictionToDb(predictionTxHash);
-    }
-  }, [isPredictSuccess, isStaking, predictionTxHash]);
 
   const yesNo = isYesNoQuestion(question.options);
   const binary = isBinaryQuestion(question.options);
@@ -271,8 +193,11 @@ export function PredictionCard({
   };
 
   const canPick =
-    selected && !isLocked && !isPending && !isOnChainProcessing && !saved;
+    selected && !isLocked && !isPending && !saved;
   const hasStake = stakeAmount > 0n;
+
+  const showStaking = useInternalStaking;
+  const displayBalance = Number(internalBalance ?? 0).toLocaleString();
 
   // ─── Shared staking section (rendered inline after selected tile) ──
   const stakingSection =
@@ -284,7 +209,7 @@ export function PredictionCard({
           exit={{ opacity: 0, height: 0 }}
           className="mt-3"
         >
-          {address && contractsReady && (
+          {showStaking && (
             <div className="rounded-xl border border-white/[0.08] bg-studio-dark/60 backdrop-blur-sm p-3 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground flex items-center gap-1.5 font-headline uppercase tracking-wider text-[10px]">
@@ -292,7 +217,7 @@ export function PredictionCard({
                   Stake $PICKS
                 </span>
                 <span className="font-mono text-muted-foreground text-[10px]">
-                  Bal: {formatPicks(balance as bigint | undefined)}
+                  Bal: {displayBalance}
                 </span>
               </div>
               <div className="relative">
@@ -306,8 +231,8 @@ export function PredictionCard({
                 />
                 <button
                   onClick={() => {
-                    const bal = formatPicks(balance as bigint | undefined);
-                    if (bal !== "0") setStakeInput(bal.replace(/,/g, ""));
+                    const bal = Number(internalBalance ?? 0).toString();
+                    if (bal !== "0") setStakeInput(bal);
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neon-gold/70 hover:text-neon-gold transition-colors uppercase tracking-wider"
                 >
@@ -331,7 +256,7 @@ export function PredictionCard({
               </div>
               {!stakeInput && (
                 <p className="text-[10px] text-muted-foreground/50 text-center">
-                  Optional -- pick for free or stake $PICKS for on-chain rewards
+                  Optional — pick for free or stake $PICKS for extra rewards
                 </p>
               )}
             </div>
@@ -395,7 +320,7 @@ export function PredictionCard({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {(isPending || isOnChainProcessing) && (
+            {isPending && (
               <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
             )}
             {saved && !isPending && !isResolved && (
@@ -665,34 +590,20 @@ export function PredictionCard({
               className={`w-full py-3.5 rounded-xl font-headline font-bold text-sm uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2 ${
                 !selected
                   ? "bg-white/[0.03] text-muted-foreground/40 border border-white/[0.04] cursor-not-allowed"
-                  : isOnChainProcessing || isPending
+                  : isPending
                     ? "bg-white/[0.06] text-muted-foreground cursor-wait border border-white/[0.08]"
-                    : needsApproval && hasStake
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 shadow-[0_0_15px_hsl(45_100%_55%/0.15)]"
-                      : hasStake
+                    : hasStake
                         ? "bg-gradient-to-r from-neon-gold/20 via-amber-500/20 to-neon-gold/20 text-white border border-neon-gold/40 hover:from-neon-gold/30 hover:to-neon-gold/30 shadow-[0_0_25px_hsl(45_100%_55%/0.2)]"
                         : "bg-gradient-to-r from-neon-cyan/15 to-neon-cyan/10 text-neon-cyan border border-neon-cyan/25 hover:from-neon-cyan/25 hover:to-neon-cyan/20 hover:border-neon-cyan/40 shadow-[0_0_15px_hsl(185_100%_55%/0.1)]"
               }`}
             >
-              {isOnChainProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {isApproving || isApproveConfirming
-                    ? "Approving..."
-                    : "Confirming on-chain..."}
-                </>
-              ) : isPending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : !selected ? (
                 "Select a contestant"
-              ) : needsApproval && hasStake ? (
-                <>
-                  <Coins className="h-4 w-4" />
-                  Approve {stakeInput} $PICKS
-                </>
               ) : hasStake ? (
                 <>
                   <Zap className="h-4 w-4" />

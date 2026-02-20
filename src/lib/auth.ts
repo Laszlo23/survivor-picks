@@ -1,18 +1,36 @@
 import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { creditSignupBonus } from "@/lib/actions/token-balance";
+
+const SIGNUP_BONUS = BigInt(33_333);
 
 export const authOptions: NextAuthOptions = {
-  // NO adapter — CredentialsProvider manages users directly via Prisma.
-  // Having PrismaAdapter here silently breaks session cookie creation.
+  adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: "/auth/signin",
+    verifyRequest: "/auth/verify-request",
   },
   providers: [
+    EmailProvider({
+      server: {
+        host: process.env.EMAIL_SERVER_HOST!,
+        port: Number(process.env.EMAIL_SERVER_PORT || 465),
+        auth: {
+          user: process.env.EMAIL_SERVER_USER!,
+          pass: process.env.EMAIL_SERVER_PASSWORD!,
+        },
+        secure: true,
+      },
+      from: process.env.EMAIL_FROM || "winning@realitypicks.net",
+    }),
+
     CredentialsProvider({
       id: "wallet",
       name: "Wallet",
@@ -23,12 +41,10 @@ export const authOptions: NextAuthOptions = {
         const addr = credentials?.walletAddress?.toLowerCase();
         if (!addr) return null;
 
-        // Find existing user
         let user = await prisma.user.findFirst({
           where: { walletAddress: addr },
         });
 
-        // Create new user if first time
         if (!user) {
           const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
           let referralCode = "";
@@ -47,10 +63,12 @@ export const authOptions: NextAuthOptions = {
                 referralCode,
                 emailVerified: new Date(),
                 hasOnboarded: true,
+                picksBalance: SIGNUP_BONUS,
               },
             });
+
+            await creditSignupBonus(user.id);
           } catch {
-            // Race condition — retry find
             user = await prisma.user.findFirst({
               where: { walletAddress: addr },
             });
@@ -59,7 +77,6 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) return null;
 
-        // Return user object with role — NextAuth creates the JWT from this
         return {
           id: user.id,
           email: user.email,
@@ -71,13 +88,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.sub = user.id;
         token.role = (user as any).role || "USER";
         token.name = user.name;
       }
+
+      if (trigger === "signIn" && token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -87,6 +115,28 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name as string;
       }
       return session;
+    },
+  },
+  events: {
+    async createUser({ user }) {
+      if (!user.id) return;
+
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let referralCode = "";
+      for (let i = 0; i < 8; i++) {
+        referralCode += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          referralCode,
+          hasOnboarded: true,
+          picksBalance: SIGNUP_BONUS,
+        },
+      });
+
+      await creditSignupBonus(user.id);
     },
   },
 };

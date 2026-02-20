@@ -16,6 +16,7 @@ import { getUserRank } from "@/lib/actions/profile";
 import { getShowPredictions } from "@/lib/actions/predictions";
 import { getSocialTasks } from "@/lib/actions/social";
 import { getReferralStats } from "@/lib/actions/referral";
+import { getBalance } from "@/lib/actions/token-balance";
 import { Button } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/status-chip";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,6 +25,7 @@ import { ReferralCard } from "@/components/social/referral-card";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import { PredictionFeed } from "@/components/predictions/prediction-feed";
 import { DashboardStats } from "@/components/dashboard/stats";
+import { BalanceBar } from "@/components/wallet/balance-bar";
 import {
   Trophy,
   Calendar,
@@ -53,7 +55,7 @@ export default async function DashboardPage() {
   const primarySeason = seasons[0];
 
   // Load predictions for ALL active seasons in parallel
-  const [allPredictions, episodes, rankData, socialTasks, referralStats] =
+  const [allPredictions, episodes, rankData, socialTasks, referralStats, picksBalance] =
     await Promise.all([
       Promise.all(
         seasons.map(async (s) => ({
@@ -66,6 +68,7 @@ export default async function DashboardPage() {
       getUserRank(primarySeason.id),
       getSocialTasks(primarySeason.id),
       getReferralStats(),
+      getBalance(session.user.id),
     ]);
 
   // Build contestant images from all seasons
@@ -132,12 +135,16 @@ export default async function DashboardPage() {
         streak={rankData?.currentStreak || 0}
       />
 
+      {/* ── Balance + Buy $PICKS ──────────────────────────────── */}
+      <BalanceBar balance={picksBalance.toString()} />
+
       {/* ── Prediction Feed (per-show tabs + per-show predictions) ── */}
       <PredictionFeed
         feeds={feeds}
         jokersRemaining={rankData?.jokersRemaining ?? 3}
         contestantImages={contestantImages}
         seasonId={primarySeason.id}
+        internalBalance={picksBalance.toString()}
       />
 
       {/* ── All Episodes ─────────────────────────────────────────── */}

@@ -61,8 +61,8 @@ export function LandingLiveBettingTeaser() {
           </span>
         </div>
         <p className="text-sm text-muted-foreground mb-10 max-w-xl">
-          YouTube Live + AI-Powered Real-Time Predictions. Watch live, bet in
-          real-time, and let AI create dynamic odds as the show unfolds.
+          YouTube Live + AI-Powered Real-Time Predictions. Watch live, stake your $PICKS
+          in real-time, and let AI create dynamic odds as the show unfolds. Minimum bet: <span className="text-neon-gold font-bold font-mono">333 $PICKS</span>.
         </p>
       </FadeIn>
 
@@ -80,8 +80,8 @@ export function LandingLiveBettingTeaser() {
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src="https://www.youtube.com/embed/dRTdhQjpuBU?si=lfPlBa4IvBrTn-of&rel=0"
-                title="Survivor Live — Example of Live Betting"
+                src="https://www.youtube.com/embed/s3PE3dl6v7g?rel=0&list=PL7cJ8ZW86m2ju1HQ4TbEQos_uxpoZWReT"
+                title="Survivor Türkiye 2026 — Live Betting Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
@@ -95,7 +95,7 @@ export function LandingLiveBettingTeaser() {
               </span>
               <span className="flex items-center gap-1 rounded bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] text-white/80">
                 <Eye className="h-3 w-3" />
-                Survivor Australia
+                Survivor Türkiye
               </span>
             </div>
           </div>

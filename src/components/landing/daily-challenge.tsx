@@ -71,7 +71,7 @@ export function LandingDailyChallenge() {
                 <div className="flex items-center gap-1.5 rounded-full bg-neon-gold/10 border border-neon-gold/20 px-3 py-1">
                   <Zap className="h-3.5 w-3.5 text-neon-gold" />
                   <span className="text-xs font-bold text-neon-gold">
-                    +50 XP Streak Bonus
+                    +333 $PICKS Streak Bonus
                   </span>
                 </div>
               </div>

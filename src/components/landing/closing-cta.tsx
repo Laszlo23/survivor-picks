@@ -26,9 +26,13 @@ export function LandingClosingCTA() {
             <span className="block sm:inline text-gradient-cyan">Are You Ready?</span>
           </h2>
 
-          <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto mb-8">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto mb-4">
             Every episode is a market. Every prediction is a position.
             Every viewer becomes a player. The game starts now.
+          </p>
+
+          <p className="text-xs text-neon-gold/70 font-mono mb-8">
+            33,333 $PICKS free &bull; $0.00333 per token &bull; The power of 333
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

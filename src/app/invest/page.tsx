@@ -27,10 +27,10 @@ import {
 } from "lucide-react";
 
 const TRACTION = [
-  { label: "Community Members", value: 3200, suffix: "+", icon: Users, color: "text-neon-cyan", accent: "hsl(185 100% 55%)" },
-  { label: "Predictions Made", value: 18400, suffix: "+", icon: Target, color: "text-neon-magenta", accent: "hsl(320 100% 60%)" },
-  { label: "Shows Covered", value: 12, suffix: "", icon: Tv, color: "text-neon-gold", accent: "hsl(45 100% 55%)" },
-  { label: "Countries Reached", value: 47, suffix: "+", icon: Globe, color: "text-violet-400", accent: "hsl(270 80% 65%)" },
+  { label: "Community Members", value: 3333, suffix: "+", icon: Users, color: "text-neon-cyan", accent: "hsl(185 100% 55%)" },
+  { label: "Predictions Made", value: 33333, suffix: "+", icon: Target, color: "text-neon-magenta", accent: "hsl(320 100% 60%)" },
+  { label: "Shows & Markets", value: 33, suffix: "", icon: Tv, color: "text-neon-gold", accent: "hsl(45 100% 55%)" },
+  { label: "Countries Reached", value: 33, suffix: "+", icon: Globe, color: "text-violet-400", accent: "hsl(270 80% 65%)" },
 ];
 
 const MARKET_POINTS = [

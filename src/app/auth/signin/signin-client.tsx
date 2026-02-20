@@ -1,7 +1,17 @@
 "use client";
 
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { Wallet } from "lucide-react";
+import {
+  Mail,
+  Coins,
+  Loader2,
+  CreditCard,
+  Shield,
+  Zap,
+  Gift,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,18 +20,29 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { FadeIn, ScaleIn } from "@/components/motion";
-import { WalletSignIn } from "@/components/auth/wallet-sign-in";
 
 export function SignInClient() {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    await signIn("email", { email: email.trim(), callbackUrl: "/dashboard" });
+    setSending(false);
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center px-4 relative">
-      {/* Ambient background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,hsl(185_80%_12%/0.3)_0%,transparent_60%)]" />
 
       <div className="w-full max-w-md space-y-4 relative z-10">
         <ScaleIn>
-          <Card className="border-white/[0.08]">
-            <CardHeader className="text-center">
+          <Card className="border-white/[0.08] overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-gold" />
+
+            <CardHeader className="text-center pb-2">
               <FadeIn delay={0.1}>
                 <div className="mx-auto mb-4 relative">
                   <Image
@@ -37,31 +58,91 @@ export function SignInClient() {
               </FadeIn>
               <FadeIn delay={0.2}>
                 <CardTitle className="text-2xl font-display">
-                  Sign In
+                  Welcome to RealityPicks
                 </CardTitle>
               </FadeIn>
               <FadeIn delay={0.25}>
                 <CardDescription>
-                  Connect your wallet to get started
+                  Join the 333 community — get your $PICKS wallet instantly
                 </CardDescription>
               </FadeIn>
             </CardHeader>
-            <CardContent>
-              <FadeIn delay={0.3}>
-                <WalletSignIn />
+
+            <CardContent className="space-y-5">
+              {/* Signup perks */}
+              <FadeIn delay={0.28}>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: Gift, label: "33,333 $PICKS", sub: "Free bonus" },
+                    { icon: CreditCard, label: "Buy with Card", sub: "Stripe powered" },
+                    { icon: Shield, label: "No Wallet", sub: "Required" },
+                  ].map(({ icon: Icon, label, sub }) => (
+                    <div
+                      key={label}
+                      className="flex flex-col items-center gap-1 p-2 rounded-lg bg-white/[0.02] border border-white/[0.06]"
+                    >
+                      <Icon className="h-4 w-4 text-neon-cyan" />
+                      <p className="text-[10px] font-bold text-white text-center leading-tight">
+                        {label}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">{sub}</p>
+                    </div>
+                  ))}
+                </div>
               </FadeIn>
 
-              {/* Trust badges */}
-              <FadeIn delay={0.4}>
-                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Wallet className="h-3 w-3" />
-                    Non-custodial
+              {/* Email magic link */}
+              <FadeIn delay={0.3}>
+                <form onSubmit={handleEmailSubmit} className="space-y-3">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/30 transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={sending || !email.trim()}
+                    className="w-full rounded-lg bg-neon-cyan text-studio-black font-bold text-sm py-3 hover:bg-neon-cyan/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    {sending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Sending link…
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4" />
+                        Get Started — Free
+                      </>
+                    )}
+                  </button>
+                </form>
+              </FadeIn>
+
+              {/* Value prop */}
+              <FadeIn delay={0.35}>
+                <div className="flex items-center justify-center gap-2 rounded-lg border border-neon-gold/20 bg-neon-gold/5 px-3 py-2">
+                  <Coins className="h-4 w-4 text-neon-gold" />
+                  <span className="text-xs text-neon-gold font-semibold">
+                    The 333 Launch &bull; 1 $PICKS = $0.00333
                   </span>
+                </div>
+              </FadeIn>
+
+              {/* Trust line */}
+              <FadeIn delay={0.4}>
+                <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-1">
+                  <span>No password</span>
                   <span className="text-white/10">|</span>
-                  <span>No email needed</span>
+                  <span>Instant wallet</span>
                   <span className="text-white/10">|</span>
-                  <span>Base network</span>
+                  <span>Buy with Stripe</span>
                 </div>
               </FadeIn>
             </CardContent>

@@ -23,12 +23,9 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@farcaster/miniapp-sdk": "^0.2.3",
-    "@farcaster/miniapp-wagmi-connector": "^1.1.1",
     "@farcaster/quick-auth": "^0.0.8",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
-    "@rainbow-me/rainbowkit": "^2.2.10",
-    "@tanstack/react-query": "^5.90.21",
     "ably": "^2.17.1",
     "autoprefixer": "^10.4.24",
     "class-variance-authority": "^0.7.1",
@@ -46,10 +43,10 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "sonner": "^2.0.7",
+    "stripe": "^20.3.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.45.3",
-    "wagmi": "^2.19.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

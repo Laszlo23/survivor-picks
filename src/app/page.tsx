@@ -19,6 +19,9 @@ import { LandingCommunityVote } from "@/components/landing/community-vote";
 import { LandingStatsCounter } from "@/components/landing/stats-counter";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
 import { LandingClosingCTA } from "@/components/landing/closing-cta";
+import { LandingTokenSale } from "@/components/landing/token-sale";
+import { LandingSoccerBetting } from "@/components/landing/soccer-betting";
+import { LandingAICompanion } from "@/components/landing/ai-companion";
 import { LandingFooter } from "@/components/landing/footer";
 import { LandingShell } from "@/components/landing/landing-shell";
 import { NeonButton } from "@/components/ui/neon-button";
@@ -44,6 +47,10 @@ export default async function LandingPage() {
 
       <LandingLiveBettingTeaser />
 
+      <LandingSoccerBetting />
+
+      <LandingAICompanion />
+
       <LandingDiscordCTA />
 
       <LandingHowItWorks />
@@ -61,6 +68,8 @@ export default async function LandingPage() {
       <LandingCommunity />
 
       <LandingCommunityVote />
+
+      <LandingTokenSale />
 
       <LandingStatsCounter />
 

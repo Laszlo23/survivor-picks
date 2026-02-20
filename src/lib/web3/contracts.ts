@@ -1,6 +1,9 @@
 import { ABIS } from "./abis";
-import { getChainId } from "./config";
 import { type Address } from "viem";
+
+function getChainId(): number {
+  return Number(process.env.NEXT_PUBLIC_CHAIN_ID || 8453);
+}
 
 /**
  * Contract addresses per chain.

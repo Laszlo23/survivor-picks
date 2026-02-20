@@ -76,8 +76,21 @@ export function LandingHero({ seasonTitle }: { seasonTitle?: string }) {
             </h1>
           </FadeIn>
 
-          <FadeIn delay={0.4}>
-            <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base md:text-lg text-white/80 leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.6)]">
+          {/* 333 tagline */}
+          <FadeIn delay={0.35}>
+            <div className="mt-5 flex justify-center">
+              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-neon-gold/[0.08] border border-neon-gold/20 backdrop-blur-sm">
+                <span className="font-mono text-lg sm:text-xl font-bold text-neon-gold tracking-wider">333</span>
+                <span className="h-4 w-px bg-neon-gold/30" />
+                <span className="text-xs sm:text-sm text-white/70">
+                  33,333 free $PICKS &bull; $0.00333 fair launch &bull; 333 supply model
+                </span>
+              </div>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.45}>
+            <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base md:text-lg text-white/80 leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.6)]">
               Pick winners, call eliminations, spot twists before they happen
               across Survivor, The Traitors, The Bachelor, and more. Earn
               points, build streaks, and climb the leaderboard.{" "}
@@ -86,7 +99,7 @@ export function LandingHero({ seasonTitle }: { seasonTitle?: string }) {
           </FadeIn>
 
           {/* CTAs */}
-          <FadeIn delay={0.55}>
+          <FadeIn delay={0.6}>
             <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4 sm:flex-row sm:justify-center">
               <NeonButton variant="primary" href="/dashboard" className="gap-2 text-base px-8 shadow-[0_0_30px_hsl(185_100%_55%/0.4)]">
                 Cast Your Picks

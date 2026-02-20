@@ -26,6 +26,7 @@ interface PredictionFeedProps {
   jokersRemaining: number;
   contestantImages?: Record<string, string>;
   seasonId?: string;
+  internalBalance?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -35,7 +36,9 @@ export function PredictionFeed({
   jokersRemaining,
   contestantImages = {},
   seasonId,
+  internalBalance,
 }: PredictionFeedProps) {
+  const parsedBalance = internalBalance ? BigInt(internalBalance) : undefined;
   const feedSlugs = new Set(feeds.map((f) => f.showSlug));
   const availableShows = LIVE_SHOWS.filter((s) => feedSlugs.has(s.slug));
   const defaultSlug = availableShows[0]?.slug || getDefaultShow().slug;
@@ -88,6 +91,7 @@ export function PredictionFeed({
                 show={currentShow}
                 jokersRemaining={jokersRemaining}
                 contestantImages={contestantImages}
+                internalBalance={parsedBalance}
               />
             ))}
 

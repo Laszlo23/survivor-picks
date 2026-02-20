@@ -1,24 +1,21 @@
 import Link from "next/link";
-import { Tv, Home, ArrowRight } from "lucide-react";
+import { Home, ArrowRight } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
-      {/* Spotlight gradient */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-neon-cyan/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-neon-gold/5 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative">
-        {/* Icon */}
         <div className="relative mb-8">
-          <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-neon-cyan/20 bg-neon-cyan/5">
-            <Tv className="h-12 w-12 text-neon-cyan/60" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-neon-gold/20 bg-neon-gold/5">
+            <span className="font-mono text-4xl font-bold text-neon-gold">333</span>
           </div>
-          <div className="absolute inset-0 rounded-2xl bg-neon-cyan/10 blur-xl" />
+          <div className="absolute inset-0 rounded-2xl bg-neon-gold/10 blur-xl" />
         </div>
 
-        {/* Status code */}
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-neon-cyan/60 mb-3">
           ERROR 404
         </p>
@@ -27,12 +24,13 @@ export default function NotFound() {
           Channel Not Found
         </h1>
 
-        <p className="text-sm text-muted-foreground max-w-md mb-8">
+        <p className="text-sm text-muted-foreground max-w-md mb-2">
           This broadcast doesn&apos;t exist or has been taken off the air.
-          Check the URL or head back to the main stage.
+        </p>
+        <p className="text-xs text-neon-gold/50 font-mono mb-8">
+          Head back to the main stage &bull; Your $PICKS are waiting
         </p>
 
-        {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/"

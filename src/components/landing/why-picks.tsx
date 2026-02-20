@@ -75,11 +75,11 @@ const features = [
   },
   {
     icon: Flame,
-    title: "Deflation Engine",
+    title: "The 333 Engine",
     items: [
-      "Designed to reward long-term participation",
-      "Season Passes can burn tokens permanently",
-      "3% prediction fees support buyback & burn",
+      "33.3% of fees go to buyback & burn",
+      "33.3% fund the community reward pool",
+      "33.3% to treasury — full transparency",
     ],
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
@@ -94,8 +94,9 @@ export function LandingWhyPicks() {
         <div className="text-center mb-10">
           <LowerThird label="ECOSYSTEM" value="Why $PICKS" />
           <p className="text-sm text-muted-foreground mt-4 max-w-xl mx-auto">
-            $PICKS powers the RealityPicks ecosystem — points, streaks,
-            rewards, and optional on-chain perks for the fans who show up early.
+            $PICKS powers the RealityPicks ecosystem — built on the{" "}
+            <span className="text-neon-gold font-bold">333 model</span>. Points, streaks,
+            rewards, and on-chain perks for the fans who show up early.
           </p>
         </div>
       </FadeIn>

@@ -14,22 +14,22 @@ const neonBorders = [
 const steps = [
   {
     icon: Tv,
-    title: "Pick Your Show",
-    desc: "Browse live and upcoming reality TV prediction markets — no wallet needed to start.",
+    title: "Sign Up — Get 33,333 $PICKS",
+    desc: "Email sign-up, no wallet needed. Start with 33,333 $PICKS at the $0.00333 fair launch price.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
   {
     icon: Target,
-    title: "Make Your Prediction",
-    desc: "Choose your pick for who wins, who stays, and who goes home.",
+    title: "Predict & Stake",
+    desc: "Pick winners, call eliminations, and stake $PICKS on your predictions for bigger rewards.",
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
   },
   {
     icon: Trophy,
-    title: "Win and Earn More",
-    desc: "Correct predictions earn you a share of the pool and climb the leaderboard.",
+    title: "Win & Grow Your Stack",
+    desc: "Correct picks earn pool shares. Build streaks, climb the leaderboard, and cash out at launch.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
   },
@@ -43,7 +43,7 @@ export function LandingHowItWorks() {
           <LowerThird label="THE GAME" value="How It Works" />
         </div>
         <p className="text-sm text-muted-foreground mb-10">
-          Three simple steps to start predicting reality TV outcomes.
+          3 steps. 33,333 tokens. $0.00333 per $PICKS. The power of <span className="text-neon-gold font-bold">333</span>.
         </p>
       </FadeIn>
 

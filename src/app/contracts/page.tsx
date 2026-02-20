@@ -18,8 +18,8 @@ export default function ContractsPage() {
               <span className="text-gradient-cyan">Contracts</span>
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
-              Our smart contracts are being redesigned and will be redeployed
-              on Base. Stay tuned for the new architecture.
+              Our smart contracts are being redesigned for the <span className="text-neon-gold font-bold">333 Fair Launch</span>.
+              Deploying on Base with full audit.
             </p>
           </FadeIn>
         </div>
@@ -42,13 +42,13 @@ export default function ContractsPage() {
               </div>
 
               <h2 className="font-headline text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-3 text-white">
-                New Contracts Coming Soon
+                The 333 Contract Suite
               </h2>
 
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto mb-4">
-                We&apos;re rebuilding our entire smart contract suite from the
-                ground up — optimized for gas efficiency, security, and the
-                full RealityPicks prediction engine.
+                Rebuilt from the ground up — optimized for the 333 model.
+                33.3% community rewards, 33.3% buyback &amp; burn, 33.3% treasury.
+                All on Base L2.
               </p>
 
               <div className="grid gap-3 sm:grid-cols-3 mt-8 mb-8">

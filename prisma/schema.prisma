@@ -66,6 +66,7 @@ model User {
   walletAddress  String?   @unique  // Ethereum/Base wallet address
   referralCode   String?   @unique  // auto-generated 8-char code
   referredById   String?             // userId of who referred this user
+  picksBalance   BigInt   @default(0) // internal $PICKS ledger, migrated on-chain after deploy
 
   // Farcaster Mini App fields
   farcasterFid         Int?      @unique  // Farcaster user ID
@@ -86,6 +87,7 @@ model User {
   referralsMade     Referral[]           @relation("ReferralReferrer")
   referralUsed      Referral?            @relation("ReferralReferee")
   liveBetPlacements LiveBetPlacement[]
+  tokenTransactions TokenTransaction[]
 }
 
 model Season {
@@ -445,4 +447,16 @@ model AIFrame {
 
   @@index([sessionId])
   @@index([timestamp])
+}
+
+model TokenTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    BigInt
+  type      String   // "signup_bonus" | "prediction_reward" | "daily_streak" | "season_pass" | "staking" | "admin_credit" | "stripe_purchase"
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
