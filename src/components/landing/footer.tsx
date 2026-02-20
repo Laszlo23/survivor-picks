@@ -6,17 +6,17 @@ import { FadeIn } from "@/components/motion";
 
 const footerLinks = {
   Product: [
-    { label: "Dashboard", href: "/dashboard" },
+    { label: "Play", href: "/play" },
+    { label: "Live", href: "/live" },
+    { label: "AI Predictions", href: "/ai" },
     { label: "Leaderboard", href: "/leaderboard" },
-    { label: "NFTs", href: "/nfts" },
+    { label: "Collectibles", href: "/collectibles" },
     { label: "$PICKS Token", href: "/token" },
-    { label: "Staking", href: "/staking" },
   ],
   Learn: [
     { label: "Whitepaper", href: "/whitepaper" },
     { label: "Tokenomics", href: "/tokenomics" },
     { label: "Contracts", href: "/contracts" },
-    { label: "Investors & Partners", href: "/invest" },
     { label: "Blog", href: "/blog" },
   ],
   Community: [

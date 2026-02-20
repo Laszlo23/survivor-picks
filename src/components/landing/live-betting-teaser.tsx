@@ -145,7 +145,7 @@ export function LandingLiveBettingTeaser() {
             <div className="absolute top-3 right-3 flex items-center gap-2 pointer-events-none">
               <span className="flex items-center gap-1 rounded bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] text-white/60">
                 <Users className="h-3 w-3" />
-                {SCENARIO.viewers.toLocaleString()}
+                {SCENARIO.viewers.toLocaleString("en-US")}
               </span>
             </div>
             {/* Fullscreen link */}
@@ -170,7 +170,7 @@ export function LandingLiveBettingTeaser() {
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-neon-gold">
                 <Coins className="h-3 w-3" />
-                <span className="font-mono font-bold">{BALANCE.toLocaleString()}</span>
+                <span className="font-mono font-bold">{BALANCE.toLocaleString("en-US")}</span>
                 <span className="text-white/30">$PICKS</span>
               </div>
             </div>
@@ -225,7 +225,7 @@ export function LandingLiveBettingTeaser() {
                 {side === "A" && !confirmed && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 pt-2 border-t border-white/[0.06]">
                     <p className="text-xs text-neon-gold">
-                      {betAmount.toLocaleString()} $PICKS → Win {potentialWin.toLocaleString()}
+                      {betAmount.toLocaleString("en-US")} $PICKS → Win {potentialWin.toLocaleString("en-US")}
                     </p>
                   </motion.div>
                 )}
@@ -276,7 +276,7 @@ export function LandingLiveBettingTeaser() {
                 {side === "B" && !confirmed && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 pt-2 border-t border-white/[0.06]">
                     <p className="text-xs text-neon-gold">
-                      {betAmount.toLocaleString()} $PICKS → Win {potentialWin.toLocaleString()}
+                      {betAmount.toLocaleString("en-US")} $PICKS → Win {potentialWin.toLocaleString("en-US")}
                     </p>
                   </motion.div>
                 )}
@@ -296,7 +296,7 @@ export function LandingLiveBettingTeaser() {
                   >
                     <Trophy className="h-6 w-6 text-neon-gold" />
                     <p className="text-sm font-bold text-neon-gold">
-                      You Won {potentialWin.toLocaleString()} $PICKS!
+                      You Won {potentialWin.toLocaleString("en-US")} $PICKS!
                     </p>
                     <button
                       onClick={handleReset}
@@ -323,7 +323,7 @@ export function LandingLiveBettingTeaser() {
                     {/* Instruction */}
                     <p className="text-[10px] text-white/30 text-center mb-2 uppercase tracking-wider">
                       {side
-                        ? `${betAmount.toLocaleString()} $PICKS on ${chosenOutcome?.label}`
+                        ? `${betAmount.toLocaleString("en-US")} $PICKS on ${chosenOutcome?.label}`
                         : "← Drag to pick a side →"}
                     </p>
 
@@ -401,7 +401,7 @@ export function LandingLiveBettingTeaser() {
                       }`}
                     >
                       <Zap className="h-3.5 w-3.5" />
-                      {side ? `Lock ${betAmount.toLocaleString()} $PICKS` : "Pick a Side"}
+                      {side ? `Lock ${betAmount.toLocaleString("en-US")} $PICKS` : "Pick a Side"}
                     </button>
                   </motion.div>
                 )}

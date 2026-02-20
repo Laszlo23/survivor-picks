@@ -6,19 +6,19 @@ import { useSession } from "next-auth/react";
 import { useFarcaster } from "@/lib/farcaster/provider";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard,
+  Play,
+  Radio,
+  Brain,
   Trophy,
-  Coins,
   Sparkles,
-  User,
 } from "lucide-react";
 
 const tabs = [
-  { href: "/dashboard", label: "Picks", icon: LayoutDashboard },
+  { href: "/play", label: "Play", icon: Play },
+  { href: "/live", label: "Live", icon: Radio },
+  { href: "/ai", label: "AI", icon: Brain },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
-  { href: "/nfts", label: "NFTs", icon: Sparkles },
-  { href: "/token", label: "$PICKS", icon: Coins },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/collectibles", label: "NFTs", icon: Sparkles },
 ];
 
 export function BottomTabs() {
@@ -26,8 +26,6 @@ export function BottomTabs() {
   const { status } = useSession();
   const { isInMiniApp } = useFarcaster();
 
-  // Inside a Farcaster Mini App: always show tabs (auto-auth will resolve)
-  // Standalone web: require authentication and hide on landing/auth/admin pages
   if (!isInMiniApp) {
     if (status !== "authenticated") return null;
     if (pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/admin")) return null;

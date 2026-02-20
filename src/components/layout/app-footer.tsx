@@ -35,26 +35,23 @@ export function AppFooter() {
             </span>
           </div>
           <div className="flex items-center gap-5 flex-wrap">
-            <Link href="/token" className="hover:text-neon-cyan transition-colors">
-              $PICKS
+            <Link href="/play" className="hover:text-neon-cyan transition-colors">
+              Play
             </Link>
-            <Link href="/nfts" className="hover:text-neon-cyan transition-colors">
-              NFTs
+            <Link href="/ai" className="hover:text-neon-cyan transition-colors">
+              AI
+            </Link>
+            <Link href="/collectibles" className="hover:text-neon-cyan transition-colors">
+              Collectibles
+            </Link>
+            <Link href="/token" className="hover:text-neon-cyan transition-colors">
+              Token
             </Link>
             <Link href="/leaderboard" className="hover:text-neon-cyan transition-colors">
               Leaderboard
             </Link>
             <Link href="/whitepaper" className="hover:text-neon-cyan transition-colors">
               Whitepaper
-            </Link>
-            <Link href="/tokenomics" className="hover:text-neon-cyan transition-colors">
-              Tokenomics
-            </Link>
-            <Link href="/contracts" className="hover:text-neon-cyan transition-colors">
-              Contracts
-            </Link>
-            <Link href="/invest" className="hover:text-neon-cyan transition-colors">
-              Investors
             </Link>
             <Link href="/blog" className="hover:text-neon-cyan transition-colors">
               Blog

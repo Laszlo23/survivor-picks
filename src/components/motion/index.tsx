@@ -210,7 +210,7 @@ export function AnimatedCounter({
   }, [value, duration]);
 
   const formatted =
-    decimals > 0 ? displayed.toFixed(decimals) : Math.round(displayed).toLocaleString();
+    decimals > 0 ? displayed.toFixed(decimals) : Math.round(displayed).toLocaleString("en-US");
 
   return (
     <span className={className}>

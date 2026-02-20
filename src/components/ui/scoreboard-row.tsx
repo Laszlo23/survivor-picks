@@ -45,7 +45,7 @@ export function ScoreboardRow({ rank, name, value, avatar, index = 0 }: Scoreboa
 
       {/* Points */}
       <span className={`font-mono text-sm font-bold tabular-nums ${rank <= 3 ? style.text : "text-neon-cyan"}`}>
-        {typeof value === "number" ? value.toLocaleString() : value}
+        {typeof value === "number" ? value.toLocaleString("en-US") : value}
       </span>
     </motion.div>
   );

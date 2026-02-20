@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import {
 import {
   User,
   Trophy,
-  LayoutDashboard,
   Shield,
   LogOut,
   Coins,
@@ -28,15 +27,20 @@ import {
   BookOpen,
   ExternalLink,
   MessageCircle,
+  Play,
+  Radio,
+  Brain,
+  ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/play", label: "Play", icon: Play },
+  { href: "/live", label: "Live", icon: Radio },
+  { href: "/ai", label: "AI", icon: Brain },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/nfts", label: "NFTs", icon: Sparkles },
-  { href: "/token", label: "$PICKS", icon: Coins },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/collectibles", label: "Collectibles", icon: Sparkles },
+  { href: "/token", label: "Token", icon: Coins },
 ];
 
 const learnItems = [
@@ -52,12 +56,10 @@ export function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -73,7 +75,6 @@ export function Navbar() {
     <AnimatePresence>
       {mobileOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -83,7 +84,6 @@ export function Navbar() {
             onClick={() => setMobileOpen(false)}
           />
 
-          {/* Menu panel */}
           <motion.nav
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -92,7 +92,6 @@ export function Navbar() {
             className="fixed top-14 right-0 bottom-0 w-72 bg-studio-dark border-l border-white/[0.06] z-[9999] md:hidden overflow-y-auto"
           >
             <div className="px-4 py-6 space-y-1">
-              {/* User info (authenticated) */}
               {status === "authenticated" && session?.user && (
                 <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-sm font-bold ring-1 ring-neon-cyan/30">
@@ -110,41 +109,51 @@ export function Navbar() {
                 </div>
               )}
 
-              {/* Sign In CTA (unauthenticated) */}
               {status === "unauthenticated" && (
                 <div className="mb-4">
                   <Button
                     onClick={() => router.push("/auth/signin")}
                     className="w-full shadow-glow"
                   >
-                    Sign In
+                    Start Predicting Free
                   </Button>
                 </div>
               )}
 
-              {/* Nav items (authenticated only) */}
-              {status === "authenticated" &&
-                navItems.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    pathname.startsWith(item.href + "/");
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
-                        isActive
-                          ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
-                          : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                      }`}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
 
-              {/* Admin link (mobile) */}
+              {status === "authenticated" && (
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                    pathname === "/dashboard"
+                      ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <User className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              )}
+
               {status === "authenticated" &&
                 session?.user?.role === "ADMIN" && (
                   <Link
@@ -160,7 +169,6 @@ export function Navbar() {
                   </Link>
                 )}
 
-              {/* Divider — Learn links */}
               <div className="my-4 border-t border-white/[0.06]" />
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                 Learn
@@ -180,7 +188,6 @@ export function Navbar() {
                 </Link>
               ))}
 
-              {/* Divider — Social */}
               <div className="my-4 border-t border-white/[0.06]" />
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                 Community
@@ -216,7 +223,6 @@ export function Navbar() {
                 <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
               </a>
 
-              {/* Sign out (authenticated only) */}
               {status === "authenticated" && (
                 <>
                   <div className="my-4 border-t border-white/[0.06]" />
@@ -240,8 +246,7 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 border-b border-white/[0.06] glass-strong">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -256,56 +261,53 @@ export function Navbar() {
                 style={{ mixBlendMode: "screen" }}
               />
             </motion.div>
-            <span className="text-lg font-display font-bold tracking-tight">
+            <span className="text-lg font-display font-bold tracking-tight hidden sm:inline">
               Reality<span className="text-neon-cyan">Picks</span>
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-0.5">
-            {status === "authenticated" &&
-              navItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  pathname.startsWith(item.href + "/");
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`relative flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
-                      isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                    {isActive && (
-                      <motion.div
-                        layoutId="navbar-active"
-                        className="absolute inset-0 rounded-lg bg-neon-cyan/[0.08] border border-neon-cyan/10 -z-10"
-                        transition={{
-                          type: "spring",
-                          stiffness: 350,
-                          damping: 30,
-                        }}
-                      />
-                    )}
-                  </Link>
-                );
-              })}
+            {navItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <item.icon className="h-3.5 w-3.5" />
+                  {item.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-active"
+                      className="absolute inset-0 rounded-lg bg-neon-cyan/[0.08] border border-neon-cyan/10 -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
 
-            {/* Learn dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
                     learnItems.some((i) => pathname === i.href)
                       ? "text-foreground bg-neon-cyan/[0.08] border border-neon-cyan/10"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
                   }`}
                 >
-                  <BookOpen className="h-4 w-4" />
+                  <BookOpen className="h-3.5 w-3.5" />
                   Learn
                 </button>
               </DropdownMenuTrigger>
@@ -319,25 +321,23 @@ export function Navbar() {
             </DropdownMenu>
           </nav>
 
-          {/* Right side */}
           <div className="flex items-center gap-2">
             {status === "loading" && (
               <div className="h-8 w-20 rounded-md bg-secondary shimmer" />
             )}
 
-            {status === "unauthenticated" && (
-              <Button
-                onClick={() => router.push("/auth/signin")}
-                size="sm"
-                className="hidden md:inline-flex shadow-glow"
+            {status !== "loading" && (
+              <Link
+                href="/auth/signin"
+                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neon-cyan text-studio-black text-sm font-bold uppercase tracking-wider shadow-neon-cyan hover:shadow-neon-cyan-lg hover:brightness-110 transition-all"
               >
-                Sign In
-              </Button>
+                Start Predicting Free
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             )}
 
             {status === "authenticated" && session?.user && (
               <>
-                {/* Admin link */}
                 {session.user.role === "ADMIN" && (
                   <Link href="/admin" className="hidden md:block">
                     <Button variant="outline" size="sm" className="gap-1">
@@ -347,7 +347,6 @@ export function Navbar() {
                   </Link>
                 )}
 
-                {/* User menu (desktop) */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild className="hidden md:flex">
                     <Button
@@ -359,12 +358,12 @@ export function Navbar() {
                         {session.user.name?.[0]?.toUpperCase() ||
                           session.user.email?.[0]?.toUpperCase()}
                       </div>
-                      <span className="max-w-[120px] truncate">
-                        {session.user.name || session.user.email}
-                      </span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
@@ -378,7 +377,6 @@ export function Navbar() {
               </>
             )}
 
-            {/* Mobile hamburger button — always visible on mobile */}
             {status !== "loading" && (
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -396,7 +394,6 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Portal the mobile menu to document.body so backdrop-filter on header doesn't trap fixed positioning */}
       {typeof document !== "undefined" && createPortal(mobileMenu, document.body)}
     </>
   );

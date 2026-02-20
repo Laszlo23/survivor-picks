@@ -258,6 +258,39 @@
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
+/* Hero CSS animated background — red/blue tension gradients */
+.hero-gradient-red {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 25% 40%, hsl(0 80% 35% / 0.35) 0%, transparent 70%);
+  animation: hero-drift-red 10s ease-in-out infinite alternate;
+}
+.hero-gradient-blue {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 75% 60%, hsl(220 80% 40% / 0.35) 0%, transparent 70%);
+  animation: hero-drift-blue 12s ease-in-out infinite alternate;
+}
+
+@keyframes hero-drift-red {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(3%, -4%) scale(1.08); }
+}
+@keyframes hero-drift-blue {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-4%, 3%) scale(1.06); }
+}
+
+/* Hero live ticker marquee — pure CSS */
+.hero-ticker {
+  animation: hero-ticker-scroll 40s linear infinite;
+  width: max-content;
+}
+@keyframes hero-ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 /* Hero floating particles — pure CSS, GPU-accelerated */
 .hero-particle {
   position: absolute;

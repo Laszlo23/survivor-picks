@@ -45,11 +45,10 @@ export function LandingEmailCapture() {
             </div>
           </div>
           <h3 className="font-headline text-xl font-bold uppercase text-white mb-2">
-            Join the 333 Community
+            Stay in the loop
           </h3>
           <p className="text-sm text-muted-foreground mb-6">
-            Get notified for new shows, prediction markets, and community drops.
-            Every subscriber gets <span className="text-neon-gold font-bold">33,333 $PICKS</span> at sign-up.
+            Get notified when new shows drop, markets open, and community events go live.
           </p>
 
           {status === "success" ? (
