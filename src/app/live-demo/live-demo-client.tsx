@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
   Timer,
   Users,
-  TrendingUp,
   Trophy,
   Bot,
   ChevronLeft,
   Volume2,
   VolumeX,
-  Maximize,
   Coins,
+  LayoutGrid,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -55,6 +56,8 @@ export function LiveDemoClient() {
   const [confirmed, setConfirmed] = useState(false);
   const [muted, setMuted] = useState(true);
   const [showResult, setShowResult] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const side: "A" | "B" | null = sliderPos < 0.45 ? "A" : sliderPos > 0.55 ? "B" : null;
@@ -83,16 +86,26 @@ export function LiveDemoClient() {
   const handleConfirm = () => {
     if (!side) return;
     setConfirmed(true);
-    setTimeout(() => setShowResult(true), 3_333);
+    setTimeout(() => {
+      setShowResult(true);
+      setNotificationCount((n) => n + 1);
+    }, 3_333);
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setConfirmed(false);
     setShowResult(false);
     setSliderPos(0.5);
     setBetAmount(3_333);
     setScenarioIdx((i) => (i + 1) % SCENARIOS.length);
-  };
+  }, []);
+
+  const togglePanel = useCallback(() => {
+    setPanelOpen((o) => {
+      if (!o) setNotificationCount(0);
+      return !o;
+    });
+  }, []);
 
   const communityB = 100 - scenario.communityA;
   const oddsA = (100 / scenario.communityA).toFixed(2);
@@ -104,16 +117,23 @@ export function LiveDemoClient() {
         ? Math.round(betAmount * parseFloat(oddsB))
         : 0;
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleReset();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (panelOpen) setPanelOpen(false);
+        else handleReset();
+      }
+    },
+    [handleReset, panelOpen]
+  );
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col select-none overflow-hidden">
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  const content = (
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col select-none overflow-hidden">
       {/* ── Video Background ──────────────────────────────────────── */}
       <div className="absolute inset-0">
         <iframe
@@ -126,7 +146,7 @@ export function LiveDemoClient() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/60" />
       </div>
 
-      {/* ── Top Bar ───────────────────────────────────────────────── */}
+      {/* ── Minimal Top Bar (always visible) ──────────────────────── */}
       <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-3">
         <div className="flex items-center gap-3">
           <Link
@@ -148,16 +168,7 @@ export function LiveDemoClient() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-xs text-white/50">
-            <Users className="h-3.5 w-3.5" />
-            <span className="font-mono">{scenario.viewers.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-neon-gold">
-            <Coins className="h-3.5 w-3.5" />
-            <span className="font-mono font-bold">{PICKS_BALANCE.toLocaleString()}</span>
-            <span className="text-white/30">$PICKS</span>
-          </div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setMuted(!muted)}
             className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white"
@@ -167,8 +178,57 @@ export function LiveDemoClient() {
         </div>
       </div>
 
-      {/* ── Center Content ────────────────────────────────────────── */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
+      {/* ── Pixel Icon (bottom right) ──────────────────────────────── */}
+      <button
+        onClick={togglePanel}
+        className="absolute bottom-6 right-6 z-20 flex items-center justify-center w-12 h-12 rounded-xl bg-black/70 backdrop-blur-md border border-white/[0.12] hover:bg-black/80 hover:border-neon-cyan/40 transition-all shadow-lg"
+        aria-label={panelOpen ? "Close betting panel" : "Open betting panel"}
+      >
+        <LayoutGrid className="h-5 w-5 text-white" strokeWidth={2.5} />
+        {notificationCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-neon-gold text-[10px] font-bold text-studio-black animate-pulse">
+            {notificationCount > 9 ? "9+" : notificationCount}
+          </span>
+        )}
+      </button>
+
+      {/* ── Betting Panel Overlay (when pixel icon clicked) ────────── */}
+      <AnimatePresence>
+        {panelOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-[15] flex flex-col bg-black/60 backdrop-blur-sm"
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-4 sm:px-8 py-3">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 text-xs text-white/50">
+                  <Users className="h-3.5 w-3.5" />
+                  <span className="font-mono">{scenario.viewers.toLocaleString()}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] uppercase tracking-wider text-white/40">Your $PICKS</span>
+                  <div className="flex items-center gap-1.5 text-xs text-neon-gold">
+                    <Coins className="h-3.5 w-3.5" />
+                    <span className="font-mono font-bold">{PICKS_BALANCE.toLocaleString()}</span>
+                    <span className="text-white/30">$PICKS</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPanelOpen(false)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white"
+                aria-label="Close panel"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* ── Center Content ────────────────────────────────────────── */}
+      <div className="relative flex-1 flex flex-col items-center justify-center px-4">
         {/* AI Companion Pill */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -507,18 +567,25 @@ export function LiveDemoClient() {
         </AnimatePresence>
       </div>
 
-      {/* ── Bottom Info Strip ─────────────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-2 border-t border-white/[0.04] bg-black/40 backdrop-blur-sm">
-        <div className="flex items-center gap-4 text-[10px] text-white/30 font-mono uppercase tracking-wider">
-          <span>RealityPicks</span>
-          <span className="text-neon-gold">The 333 Model</span>
-          <span>$0.00333/token</span>
-        </div>
-        <div className="flex items-center gap-4 text-[10px] text-white/30 font-mono">
-          <span>33.3% to community pool</span>
-          <span className="hidden sm:inline">ESC to exit</span>
-        </div>
-      </div>
+      {/* ── Bottom Info Strip (inside panel) ───────────────────────── */}
+            <div className="flex items-center justify-between px-4 sm:px-8 py-2 border-t border-white/[0.04] bg-black/40 backdrop-blur-sm">
+              <div className="flex items-center gap-4 text-[10px] text-white/30 font-mono uppercase tracking-wider">
+                <span>RealityPicks</span>
+                <span className="text-neon-gold">The 333 Model</span>
+                <span>$0.00333/token</span>
+              </div>
+              <div className="flex items-center gap-4 text-[10px] text-white/30 font-mono">
+                <span>33.3% to community pool</span>
+                <span className="hidden sm:inline">ESC to close</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(content, document.body)
+    : content;
 }

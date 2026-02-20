@@ -8,6 +8,8 @@ import { LandingHero } from "@/components/landing/hero";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
 import { LandingFooter } from "@/components/landing/footer";
+import { LandingLiveBettingTeaser } from "@/components/landing/live-betting-teaser";
+import { LandingWalletExplainer } from "@/components/landing/wallet-explainer";
 import { LandingShell } from "@/components/landing/landing-shell";
 import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
@@ -17,78 +19,91 @@ import { Section, SectionLabel, SectionTitle, StatPill } from "@/components/ui/p
 export const revalidate = 60;
 
 export default async function LandingPage() {
-  const season = await getActiveSeason();
-
-  const nextEpisode = season?.episodes
-    ?.filter((ep) => ep.status === "OPEN" || (ep.status === "DRAFT" && new Date(ep.airAt) > new Date()))
-    ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0];
-
-  const nextEpisodeAt = nextEpisode?.airAt?.toISOString() ?? null;
-
-  const featuredEpisode = season?.episodes?.find((ep) => ep.status === "OPEN");
+  let season = null;
+  let featuredEpisode: { id: string; number: number; title: string; lockAt: Date; airAt: Date; status: string } | null = null;
   let featuredQuestions = 0;
   let featuredPlayers = 0;
   let featuredPredictions = 0;
   let topTwoPicks: { name: string; pct: number }[] = [];
+  let totalPlayers = 0;
+  let totalPredictions = 0;
+  let openQuestions = 0;
+  let seasonId: string | undefined;
 
-  if (featuredEpisode) {
-    featuredQuestions = await prisma.question.count({
-      where: { episodeId: featuredEpisode.id, status: "OPEN" },
-    });
-    const players = await prisma.prediction.groupBy({
-      by: ["userId"],
-      where: { question: { episodeId: featuredEpisode.id } },
-    });
-    featuredPlayers = players.length;
-    featuredPredictions = await prisma.prediction.count({
-      where: { question: { episodeId: featuredEpisode.id } },
-    });
+  try {
+    season = await getActiveSeason();
+    seasonId = season?.id;
 
-    // Fetch the elimination question to show a two-outcome preview
-    const elimQuestion = await prisma.question.findFirst({
-      where: {
-        episodeId: featuredEpisode.id,
-        status: "OPEN",
-        type: "ELIMINATION",
-      },
-    });
-    if (elimQuestion) {
-      const pickCounts = await prisma.prediction.groupBy({
-        by: ["chosenOption"],
-        where: { questionId: elimQuestion.id },
-        _count: { id: true },
-        orderBy: { _count: { id: "desc" } },
-        take: 2,
+    const nextEpisode = season?.episodes
+      ?.filter((ep) => ep.status === "OPEN" || (ep.status === "DRAFT" && new Date(ep.airAt) > new Date()))
+      ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0];
+
+    featuredEpisode = season?.episodes?.find((ep) => ep.status === "OPEN") ?? null;
+
+    if (featuredEpisode) {
+      featuredQuestions = await prisma.question.count({
+        where: { episodeId: featuredEpisode.id, status: "OPEN" },
       });
-      const total = pickCounts.reduce((s, p) => s + p._count.id, 0);
-      if (total > 0) {
-        topTwoPicks = pickCounts.map((p) => ({
-          name: p.chosenOption,
-          pct: Math.round((p._count.id / total) * 100),
-        }));
+      const players = await prisma.prediction.groupBy({
+        by: ["userId"],
+        where: { question: { episodeId: featuredEpisode.id } },
+      });
+      featuredPlayers = players.length;
+      featuredPredictions = await prisma.prediction.count({
+        where: { question: { episodeId: featuredEpisode.id } },
+      });
+
+      const elimQuestion = await prisma.question.findFirst({
+        where: {
+          episodeId: featuredEpisode.id,
+          status: "OPEN",
+          type: "ELIMINATION",
+        },
+      });
+      if (elimQuestion) {
+        const pickCounts = await prisma.prediction.groupBy({
+          by: ["chosenOption"],
+          where: { questionId: elimQuestion.id },
+          _count: { id: true },
+          orderBy: { _count: { id: "desc" } },
+          take: 2,
+        });
+        const total = pickCounts.reduce((s, p) => s + p._count.id, 0);
+        if (total > 0) {
+          topTwoPicks = pickCounts.map((p) => ({
+            name: p.chosenOption,
+            pct: Math.round((p._count.id / total) * 100),
+          }));
+        }
+      }
+
+      if (topTwoPicks.length === 0) {
+        const options = (
+          await prisma.question.findFirst({
+            where: { episodeId: featuredEpisode.id, status: "OPEN", type: "ELIMINATION" },
+            select: { options: true },
+          })
+        )?.options as string[] | undefined;
+        if (options && options.length >= 2) {
+          topTwoPicks = [
+            { name: options[0], pct: 62 },
+            { name: options[1], pct: 38 },
+          ];
+        }
       }
     }
 
-    // If no real picks yet, show mocked community tension
-    if (topTwoPicks.length === 0) {
-      const options = (
-        await prisma.question.findFirst({
-          where: { episodeId: featuredEpisode.id, status: "OPEN", type: "ELIMINATION" },
-          select: { options: true },
-        })
-      )?.options as string[] | undefined;
-      if (options && options.length >= 2) {
-        topTwoPicks = [
-          { name: options[0], pct: 62 },
-          { name: options[1], pct: 38 },
-        ];
-      }
-    }
+    totalPlayers = await prisma.user.count({ where: { role: { not: "ADMIN" } } });
+    totalPredictions = await prisma.prediction.count();
+    openQuestions = await prisma.question.count({ where: { status: "OPEN" } });
+  } catch (err) {
+    console.error("[Landing] Database unreachable:", err);
   }
 
-  const totalPlayers = await prisma.user.count({ where: { role: { not: "ADMIN" } } });
-  const totalPredictions = await prisma.prediction.count();
-  const openQuestions = await prisma.question.count({ where: { status: "OPEN" } });
+  const nextEpisode = season?.episodes
+    ?.filter((ep) => ep.status === "OPEN" || (ep.status === "DRAFT" && new Date(ep.airAt) > new Date()))
+    ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0];
+  const nextEpisodeAt = nextEpisode?.airAt?.toISOString() ?? null;
 
   return (
     <LandingShell>
@@ -112,6 +127,10 @@ export default async function LandingPage() {
         predictions={featuredPredictions}
         topTwoPicks={topTwoPicks}
       />
+
+      <LandingLiveBettingTeaser />
+
+      <LandingWalletExplainer />
 
       <Suspense fallback={<SocialProofSkeleton />}>
         <SocialProof

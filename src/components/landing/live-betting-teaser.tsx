@@ -160,7 +160,7 @@ export function LandingLiveBettingTeaser() {
 
           {/* ── RIGHT: Betting Panel ─────────────────────────────── */}
           <div className="lg:col-span-2 flex flex-col border-t lg:border-t-0 lg:border-l border-white/[0.06]">
-            {/* Header */}
+            {/* Header: Internal wallet */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
                 <Radio className="h-3.5 w-3.5 text-neon-cyan animate-pulse" />
@@ -168,10 +168,13 @@ export function LandingLiveBettingTeaser() {
                   Live Bet
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-neon-gold">
-                <Coins className="h-3 w-3" />
-                <span className="font-mono font-bold">{BALANCE.toLocaleString("en-US")}</span>
-                <span className="text-white/30">$PICKS</span>
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] uppercase tracking-wider text-white/40">Your $PICKS</span>
+                <div className="flex items-center gap-1.5 text-[10px] text-neon-gold">
+                  <Coins className="h-3 w-3" />
+                  <span className="font-mono font-bold">{BALANCE.toLocaleString("en-US")}</span>
+                  <span className="text-white/30">$PICKS</span>
+                </div>
               </div>
             </div>
 

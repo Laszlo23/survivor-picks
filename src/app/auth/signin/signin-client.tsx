@@ -33,20 +33,32 @@ export function SignInClient() {
     if (!email.trim()) return;
     setLoading(true);
     setError(null);
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
-      },
-    });
-    if (signInError) {
-      setError(signInError.message);
+    try {
+      const supabase = createClient();
+      const redirectTo =
+        typeof window !== "undefined"
+          ? new URL("/auth/callback", window.location.origin).href
+          : "";
+      const { error: signInError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: redirectTo },
+      });
+      if (signInError) {
+        setError(signInError.message);
+        setLoading(false);
+        return;
+      }
+      setSent(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(
+        msg.includes("fetch") || msg.includes("network")
+          ? "Network error. If on Vercel: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to env vars, then redeploy."
+          : msg
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-    setSent(true);
-    setLoading(false);
   }
 
   return (

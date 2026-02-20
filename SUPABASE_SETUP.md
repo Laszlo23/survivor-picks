@@ -68,10 +68,13 @@ Then add the same `DATABASE_URL` and `DIRECT_URL` to `.env.local` so the Next.js
 
 In **Authentication → URL Configuration**:
 
-- **Site URL**: `http://localhost:3000` (dev) or `https://yourdomain.com` (prod)
-- **Redirect URLs**: Add
+- **Site URL**: `http://localhost:3000` (dev) or `https://yourdomain.com` (prod) — **no trailing slash**
+- **Redirect URLs**: Add (no trailing slashes)
   - `http://localhost:3000/auth/callback`
   - `https://yourdomain.com/auth/callback`
+  - `https://*.vercel.app/auth/callback` (if using Vercel preview deployments)
+
+**"Failed to fetch" fix:** Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to Vercel env vars, then redeploy. If Supabase project is paused (free tier), restore it from the Dashboard.
 
 ## 7. Enable Email Auth (Magic Link)
 
