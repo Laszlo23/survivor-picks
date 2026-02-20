@@ -68,6 +68,7 @@ model User {
   referredById   String?             // userId of who referred this user
   picksBalance   BigInt   @default(0) // internal $PICKS ledger, migrated on-chain after deploy
 
+  supabaseAuthId       String?   @unique  // Supabase auth.users.id (uuid)
   // Farcaster Mini App fields
   farcasterFid         Int?      @unique  // Farcaster user ID
   farcasterUsername    String?             // Farcaster display username

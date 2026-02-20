@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, type ReactNode } from "react";
-import { SessionProvider } from "next-auth/react";
+import { AuthProvider } from "@/lib/auth-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ReferralCapture } from "@/components/social/referral-capture";
@@ -9,7 +9,7 @@ import { FarcasterProvider } from "@/lib/farcaster/provider";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider>
+    <AuthProvider>
       <FarcasterProvider>
         <TooltipProvider>
           <Suspense fallback={null}>
@@ -19,6 +19,6 @@ export function Providers({ children }: { children: ReactNode }) {
           <Toaster richColors position="top-right" />
         </TooltipProvider>
       </FarcasterProvider>
-    </SessionProvider>
+    </AuthProvider>
   );
 }

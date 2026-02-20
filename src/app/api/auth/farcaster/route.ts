@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { encode } from "next-auth/jwt";
 import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
 
 /**
@@ -7,20 +6,13 @@ import { authLimiter, getClientIP, rateLimitResponse } from "@/lib/rate-limit";
  *
  * Receives a Quick Auth JWT from the Farcaster Mini App SDK,
  * verifies it server-side, finds or creates a user by FID,
- * and sets a NextAuth-compatible session cookie.
+ * and sets a session cookie (rp-auth-user-id).
  */
 export async function POST(req: Request) {
   // Rate limit: 10 auth attempts per minute per IP
   const ip = getClientIP(req);
   const rl = authLimiter.check(ip);
   if (!rl.success) return rateLimitResponse(rl.resetAt);
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    return Response.json(
-      { error: "NEXTAUTH_SECRET not configured" },
-      { status: 500 }
-    );
-  }
 
   try {
     const body = await req.json();
@@ -154,27 +146,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // ─── Create NextAuth-compatible JWT session ───────────────────────
-    const sessionToken = await encode({
-      token: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        sub: user.id,
-      },
-      secret,
-    });
-
-    // Build Set-Cookie header
-    const cookieName =
-      process.env.NEXTAUTH_URL?.startsWith("https://")
-        ? "__Secure-next-auth.session-token"
-        : "next-auth.session-token";
-
     const maxAge = 30 * 24 * 60 * 60; // 30 days
-    const isSecure = process.env.NEXTAUTH_URL?.startsWith("https://");
-    const cookieValue = `${cookieName}=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${isSecure ? "; Secure" : ""}`;
+    const cookie = `rp-auth-user-id=${user.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
 
     return new Response(
       JSON.stringify({
@@ -190,7 +163,7 @@ export async function POST(req: Request) {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Set-Cookie": cookieValue,
+          "Set-Cookie": cookie,
         },
       }
     );

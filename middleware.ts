@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
-
-/**
- * Route protection middleware for RealityPicks.
- *
- * - Protected routes require authentication → redirect to /auth/signin
- * - Admin routes additionally require ADMIN role → 403
- * - API routes under /api/admin require ADMIN role → 401
- * - Custom POST endpoints validate Origin header for CSRF
- */
+import { createServerClient } from "@supabase/ssr";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -21,30 +12,60 @@ const PROTECTED_ROUTES = [
 
 const ADMIN_ROUTES = ["/admin"];
 
-// CSRF: Validate Origin header on all POST mutation routes.
-// Agent endpoints (/api/agent/*) use their own x-agent-key header auth so they are excluded.
-// Auth routes (/api/auth/*) are handled by NextAuth's built-in CSRF.
-// Farcaster routes are excluded: webhook uses JFS signatures, auth bridge is called from iframe.
 const CSRF_POST_ROUTES = [
   "/api/referral/capture",
   "/api/nft",
   "/api/admin",
 ];
 
-// Routes that bypass CSRF origin checks (called from cross-origin contexts)
 const CSRF_EXEMPT_ROUTES = [
   "/api/farcaster/webhook",
   "/api/auth/farcaster",
   "/api/auth/wallet",
 ];
 
-// Rate limiting is handled per-route in src/lib/rate-limit.ts (in-memory).
-// For multi-instance scaling, replace with @upstash/ratelimit + Redis.
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ─── CSRF: Origin validation on custom POST endpoints ───────────
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  let supabaseResponse = NextResponse.next({ request });
+
+  if (!supabaseUrl || !supabaseKey) {
+    return supabaseResponse;
+  }
+
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  // Also allow rp-auth-user-id (Farcaster, dev-login)
+  const hasDirectAuth = request.cookies.get("rp-auth-user-id")?.value;
+  const isAuthenticated = !!authUser || !!hasDirectAuth;
+
+  // ─── CSRF ───────────────────────────────────────────────────────
   const isCsrfExempt = CSRF_EXEMPT_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
@@ -56,7 +77,6 @@ export async function middleware(request: NextRequest) {
     const origin = request.headers.get("origin");
     const host = request.headers.get("host");
 
-    // Reject POSTs without an Origin header (prevents curl/Postman CSRF bypass)
     if (!origin) {
       return NextResponse.json(
         { error: "Missing origin header" },
@@ -82,13 +102,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ─── Get the session token ──────────────────────────────────────
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
-
-  // ─── Protected page routes ─────────────────────────────────────
+  // ─── Protected routes ───────────────────────────────────────────
   const isProtected = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
@@ -97,41 +111,20 @@ export async function middleware(request: NextRequest) {
   );
   const isAdminApi = pathname.startsWith("/api/admin");
 
-  if ((isProtected || isAdminPage) && !token) {
+  if ((isProtected || isAdminPage) && !isAuthenticated) {
     const signInUrl = new URL("/auth/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  // ─── Admin role check for pages ─────────────────────────────────
-  if (isAdminPage && token && token.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
+  // ─── Admin role check (role stored in app DB, checked in page/API) ─
+  // Middleware only checks auth; admin redirect happens in layout/route
 
-  // ─── Admin role check for API routes ────────────────────────────
-  if (isAdminApi && (!token || token.role !== "ADMIN")) {
-    return NextResponse.json(
-      { error: "Unauthorized: admin access required" },
-      { status: 401 }
-    );
-  }
-
-  return NextResponse.next();
+  return supabaseResponse;
 }
 
-// Only run middleware on matched routes (skip static files, images, etc.)
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/profile/:path*",
-    "/leaderboard/:path*",
-    "/staking/:path*",
-    "/token/:path*",
-    "/admin/:path*",
-    "/api/admin/:path*",
-    "/api/referral/:path*",
-    "/api/nft/:path*",
-    "/api/farcaster/:path*",
-    "/api/auth/farcaster/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

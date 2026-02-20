@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -52,7 +52,8 @@ const investorItems = [
 ];
 
 export function Navbar() {
-  const { data: session, status } = useSession();
+  const { data, status, signOut } = useSession();
+  const session = data?.session ?? null;
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);

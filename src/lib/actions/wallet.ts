@@ -1,7 +1,6 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -9,8 +8,8 @@ import { prisma } from "@/lib/prisma";
  * Called after the user connects their wallet on the frontend.
  */
 export async function linkWallet(walletAddress: string) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const user = await getCurrentUser();
+  if (!user) {
     return { error: "Not authenticated" };
   }
 
@@ -27,13 +26,13 @@ export async function linkWallet(walletAddress: string) {
     where: { walletAddress: normalizedAddress },
   });
 
-  if (existingUser && existingUser.id !== session.user.id) {
+  if (existingUser && existingUser.id !== user.id) {
     return { error: "This wallet is already linked to another account" };
   }
 
   // Link the wallet
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: user.id },
     data: { walletAddress: normalizedAddress },
   });
 
@@ -44,13 +43,13 @@ export async function linkWallet(walletAddress: string) {
  * Unlink a wallet from the current user's account.
  */
 export async function unlinkWallet() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const user = await getCurrentUser();
+  if (!user) {
     return { error: "Not authenticated" };
   }
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: user.id },
     data: { walletAddress: null },
   });
 
@@ -61,13 +60,13 @@ export async function unlinkWallet() {
  * Get the wallet address for the current user.
  */
 export async function getWalletAddress() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return null;
+  const user = await getCurrentUser();
+  if (!user) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
     select: { walletAddress: true },
   });
 
-  return user?.walletAddress ?? null;
+  return dbUser?.walletAddress ?? null;
 }

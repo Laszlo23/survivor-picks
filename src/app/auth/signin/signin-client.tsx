@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import {
   Mail,
+  Lock,
   Coins,
   Loader2,
   CreditCard,
@@ -23,14 +24,26 @@ import { FadeIn, ScaleIn } from "@/components/motion";
 
 export function SignInClient() {
   const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleEmailSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSending(true);
-    await signIn("email", { email: email.trim(), callbackUrl: "/dashboard" });
-    setSending(false);
+    if (!email.trim() || !password) return;
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (signInError) {
+      setError(signInError.message === "Invalid login credentials" ? "Invalid email or password" : signInError.message);
+      setLoading(false);
+      return;
+    }
+    window.location.href = "/dashboard";
   }
 
   return (
@@ -91,9 +104,14 @@ export function SignInClient() {
                 </div>
               </FadeIn>
 
-              {/* Email magic link */}
+              {/* Email + password */}
               <FadeIn delay={0.3}>
-                <form onSubmit={handleEmailSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  {error && (
+                    <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                      {error}
+                    </p>
+                  )}
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -102,23 +120,36 @@ export function SignInClient() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
                       required
+                      autoComplete="email"
+                      className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/30 transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      required
+                      autoComplete="current-password"
                       className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder:text-muted-foreground outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/30 transition-colors"
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={sending || !email.trim()}
+                    disabled={loading || !email.trim() || !password}
                     className="w-full rounded-lg bg-neon-cyan text-studio-black font-bold text-sm py-3 hover:bg-neon-cyan/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                   >
-                    {sending ? (
+                    {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Sending link…
+                        Signing in…
                       </>
                     ) : (
                       <>
                         <Zap className="h-4 w-4" />
-                        Get Started — Free
+                        Sign in
                       </>
                     )}
                   </button>
@@ -138,8 +169,6 @@ export function SignInClient() {
               {/* Trust line */}
               <FadeIn delay={0.4}>
                 <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-1">
-                  <span>No password</span>
-                  <span className="text-white/10">|</span>
                   <span>Instant wallet</span>
                   <span className="text-white/10">|</span>
                   <span>Buy with Stripe</span>

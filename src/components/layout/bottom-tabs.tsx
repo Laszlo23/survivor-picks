@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-context";
 import { useFarcaster } from "@/lib/farcaster/provider";
 import { motion } from "framer-motion";
 import {

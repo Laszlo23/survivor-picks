@@ -1,13 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { encode } from "next-auth/jwt";
 
 /**
  * DEV-ONLY: Instant login without email verification.
- * Creates/finds user and sets a NextAuth session cookie.
- * Blocked unless NODE_ENV !== "production" AND NEXTAUTH_SECRET is set.
+ * Sets a cookie that getCurrentUser reads. Blocked in production.
  */
 export async function POST(req: Request) {
-  // Double gate: block in production AND require explicit dev flag
   if (
     process.env.NODE_ENV === "production" ||
     process.env.DISABLE_DEV_LOGIN === "true"
@@ -16,15 +13,6 @@ export async function POST(req: Request) {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
-  }
-
-  // Require NEXTAUTH_SECRET — never use a fallback
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    return new Response(
-      JSON.stringify({ error: "NEXTAUTH_SECRET not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
   }
 
   try {
@@ -37,7 +25,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Upsert user — role is ALWAYS "USER" for dev-login (no privilege escalation)
     const user = await prisma.user.upsert({
       where: { email },
       update: { name: name || undefined },
@@ -49,26 +36,8 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create JWT token (same format NextAuth uses)
-    const token = await encode({
-      token: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        sub: user.id,
-      },
-      secret,
-    });
-
-    // Build Set-Cookie header
-    const cookieName =
-      process.env.NEXTAUTH_URL?.startsWith("https://")
-        ? "__Secure-next-auth.session-token"
-        : "next-auth.session-token";
-
     const maxAge = 30 * 24 * 60 * 60; // 30 days
-    const cookieValue = `${cookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+    const cookie = `rp-auth-user-id=${user.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
 
     return new Response(
       JSON.stringify({
@@ -84,7 +53,7 @@ export async function POST(req: Request) {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Set-Cookie": cookieValue,
+          "Set-Cookie": cookie,
         },
       }
     );

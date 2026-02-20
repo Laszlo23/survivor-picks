@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { getStripe, TOKEN_PACKAGES } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const user = await getCurrentUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,9 +24,9 @@ export async function POST(req: NextRequest) {
   const checkoutSession = await getStripe().checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
-    customer_email: session.user.email || undefined,
+    customer_email: user.email || undefined,
     metadata: {
-      userId: session.user.id,
+      userId: user.id,
       packageId: pkg.id,
       picksAmount: String(pkg.picks),
     },

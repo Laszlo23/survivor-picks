@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-context";
 
 type FarcasterContext = {
   isInMiniApp: boolean;
@@ -94,11 +94,14 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           if (sessionStatus !== "authenticated") {
             try {
               const { token } = await sdk.quickAuth.getToken();
-              await fetch("/api/auth/farcaster", {
+              const res = await fetch("/api/auth/farcaster", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token }),
               });
+              if (res.ok && typeof window !== "undefined") {
+                window.dispatchEvent(new Event("auth-change"));
+              }
             } catch (e) {
               console.warn("[Farcaster] Quick Auth bridge failed:", e);
             }
