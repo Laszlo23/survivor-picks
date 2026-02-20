@@ -67,16 +67,29 @@ export async function getUserRank(seasonId: string) {
 
     if (!stats) return null;
 
-    const rank = await prisma.userSeasonStats.count({
-      where: {
-        seasonId,
-        points: { gt: stats.points },
-      },
-    });
+    const [rank, totalPlayers, top10Entry] = await Promise.all([
+      prisma.userSeasonStats.count({
+        where: {
+          seasonId,
+          points: { gt: stats.points },
+        },
+      }),
+      prisma.userSeasonStats.count({
+        where: { seasonId },
+      }),
+      prisma.userSeasonStats.findFirst({
+        where: { seasonId },
+        orderBy: { points: "desc" },
+        skip: 9,
+        select: { points: true },
+      }),
+    ]);
 
     return {
       ...stats,
       rank: rank + 1,
+      totalPlayers,
+      top10Points: top10Entry?.points ?? 0,
     };
   } catch {
     return null;

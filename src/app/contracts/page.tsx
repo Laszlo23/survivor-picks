@@ -7,6 +7,11 @@ import { ArrowRight, Rocket, Shield, ExternalLink } from "lucide-react";
 export default function ContractsPage() {
   return (
     <div className="min-h-screen bg-studio-black pb-24">
+      <div className="mx-auto max-w-4xl px-4 pt-6">
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-200/90">
+          <strong>Advanced details.</strong> Most players don&apos;t need this.
+        </div>
+      </div>
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/[0.06]">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/20 via-studio-black to-studio-black" />

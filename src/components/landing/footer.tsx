@@ -8,17 +8,20 @@ const footerLinks = {
   Product: [
     { label: "Play", href: "/play" },
     { label: "Live", href: "/live" },
-    { label: "AI Predictions", href: "/ai" },
+    { label: "AI", href: "/ai" },
     { label: "Leaderboard", href: "/leaderboard" },
-    { label: "Collectibles", href: "/collectibles" },
-    { label: "$PICKS Token", href: "/token" },
-    { label: "Investors", href: "/invest" },
+    { label: "Badges", href: "/collectibles" },
+    { label: "Token", href: "/token" },
   ],
-  Resources: [
-    { label: "Whitepaper", href: "/whitepaper" },
+  "Investor info": [
     { label: "Tokenomics", href: "/tokenomics" },
     { label: "Contracts", href: "/contracts" },
+    { label: "Investors", href: "/invest" },
+    { label: "Whitepaper", href: "/whitepaper" },
     { label: "Blog", href: "/blog" },
+  ],
+  Resources: [
+    { label: "Help & Glossary", href: "/help" },
     { label: "How It Works", href: "/#how-it-works" },
   ],
   Community: [
@@ -52,7 +55,7 @@ export function LandingFooter() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                The first decentralized prediction platform for reality TV. Free to play. Built on Base.
+                Predict reality TV. Free to play. Tokens are optional rewards (like loyalty points). You can play without buying anything.
               </p>
               <span className="inline-flex items-center gap-1.5 mt-3 text-[10px] font-mono font-bold uppercase tracking-widest text-neon-cyan/60">
                 <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan/50 animate-pulse" />

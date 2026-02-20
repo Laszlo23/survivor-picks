@@ -63,12 +63,12 @@ export function LandingHero({
   const tickerItems = [
     `${showName} ${currentEpisode || ""} — predictions are open`,
     "Who will be eliminated next? Make your pick",
-    `${episodeLabel} — lock your predictions before airtime`,
+    `${episodeLabel} — lock your picks before airtime`,
     "Leaderboard heating up — climb the ranks",
     "Free to play. Predict, earn points, win glory",
-    "New markets drop every episode",
+    "New pick rounds drop every episode",
     "Join the community and start predicting today",
-    "Streak bonus: correct picks in a row multiply your score",
+    "Win streak: correct picks in a row multiply your score",
   ];
 
   const countdownDisplay = !countdown.expired
@@ -156,8 +156,11 @@ export function LandingHero({
 
             <FadeIn delay={0.3}>
               <p className="mx-auto mt-4 max-w-md text-sm sm:text-base text-white/70">
-                Pick winners. Call blindsides. Earn <span className="text-neon-cyan font-semibold">$PICKS</span> rewards.{" "}
+                Pick winners. Call blindsides. Earn points and optional token rewards.{" "}
                 <span className="text-white font-semibold">100% free to play.</span>
+              </p>
+              <p className="mx-auto mt-2 max-w-md text-xs text-white/50">
+                Tokens are optional rewards (like loyalty points). You can play without buying anything.
               </p>
             </FadeIn>
 

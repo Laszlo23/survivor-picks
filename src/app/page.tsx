@@ -187,17 +187,17 @@ function FeaturedMarketPreview({
       <Section>
         <div className="mb-8 text-center">
           <SectionLabel>COMING SOON</SectionLabel>
-          <SectionTitle>Featured Market</SectionTitle>
+          <SectionTitle>Featured pick round</SectionTitle>
         </div>
         <div className="p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-center">
           <p className="text-sm text-muted-foreground">
-            No live markets right now. Check back when the next episode airs.
+            No live pick rounds right now. Check back when the next episode airs.
           </p>
           <Link
             href="/play"
             className="inline-flex items-center gap-1 mt-4 text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors"
           >
-            View all markets <ArrowRight className="h-3 w-3" />
+            Browse pick rounds <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </Section>
@@ -210,7 +210,7 @@ function FeaturedMarketPreview({
     <Section>
       <div className="mb-8 text-center">
         <SectionLabel>PREDICTIONS OPEN</SectionLabel>
-        <SectionTitle>Featured Market</SectionTitle>
+        <SectionTitle>Featured pick round</SectionTitle>
       </div>
 
       <div className="relative p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
@@ -233,11 +233,11 @@ function FeaturedMarketPreview({
 
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
           <MessageSquare className="h-3.5 w-3.5" />
-          {questions} prediction{questions !== 1 ? "s" : ""} available
+          {questions} question{questions !== 1 ? "s" : ""} available
         </p>
 
         <p className="flex items-center gap-1.5 text-[11px] text-neon-gold/70 mb-4">
-          🏆 $PICKS rewards distributed to correct predictions
+          🏆 Token rewards (optional) for correct picks
         </p>
 
         {/* Two-outcome tension preview */}
@@ -280,14 +280,14 @@ function FeaturedMarketPreview({
             href="/dashboard"
             className="gap-2 text-sm px-6 py-2"
           >
-            Predict Now
+            Make your pick
             <ArrowRight className="h-3.5 w-3.5" />
           </NeonButton>
           <Link
             href="/play"
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-neon-cyan transition-colors"
           >
-            View all markets <ArrowRight className="h-3 w-3" />
+            Browse pick rounds <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </div>
@@ -322,7 +322,7 @@ async function SocialProof({
               <SectionLabel>EARLY ACCESS BETA</SectionLabel>
               <SectionTitle>Be a founding player</SectionTitle>
               <p className="text-sm text-muted-foreground">
-                You&apos;re early. Founding players earn bonus XP, exclusive badges, and extra $PICKS rewards.
+                You&apos;re early. Founding players earn bonus season points, exclusive badges, and extra token rewards.
               </p>
               <div className="grid grid-cols-3 gap-3">
                 <StatPill
@@ -332,12 +332,12 @@ async function SocialProof({
                 />
                 <StatPill
                   value={openQuestions.toString()}
-                  label="Open markets"
+                  label="Open pick rounds"
                   live
                 />
                 <StatPill
                   value={totalPredictions.toLocaleString("en-US")}
-                  label="Predictions so far"
+                  label="Picks so far"
                   live
                 />
               </div>
@@ -354,7 +354,7 @@ async function SocialProof({
                 />
                 <StatPill
                   value={openQuestions.toString()}
-                  label="Open markets"
+                  label="Open pick rounds"
                   live
                 />
                 <StatPill
@@ -442,7 +442,7 @@ function ClosingCTA() {
           Ready to play?
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto mb-3">
-          Every episode is a market. Every prediction is a position. Free to play, always.
+          Every episode is a pick round. Every prediction is your pick. Free to play, always.
         </p>
         <p className="text-xs text-neon-gold/60 mb-8">
           Top players earn token rewards and season perks.
@@ -456,7 +456,7 @@ function ClosingCTA() {
             Start Predicting Free <ArrowRight className="h-4 w-4" />
           </NeonButton>
           <NeonButton variant="ghost" href="/play" className="gap-2 text-base px-8 py-3">
-            Browse Markets
+            Browse pick rounds
           </NeonButton>
         </div>
       </div>

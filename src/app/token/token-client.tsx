@@ -14,15 +14,15 @@ const TOKEN_STATS = [
 
 const ENGINE_SPLITS = [
   { label: "Community Rewards", pct: "33.3%", desc: "Distributed to active players, leaderboard winners, and streak holders", color: "bg-neon-cyan" },
-  { label: "Buyback & Burn", pct: "33.3%", desc: "Protocol buys and burns $PICKS from the market, reducing supply", color: "bg-neon-magenta" },
+  { label: "Buyback & Burn", pct: "33.3%", desc: "Tokens are bought and removed from circulation", color: "bg-neon-magenta" },
   { label: "Treasury", pct: "33.3%", desc: "Funds development, partnerships, and platform growth — fully transparent", color: "bg-neon-gold" },
 ];
 
 const HOW_TO_BUY = [
-  { icon: CreditCard, title: "Pay with Card", desc: "Stripe-powered checkout. Visa, Mastercard, Apple Pay. No crypto needed." },
-  { icon: Wallet, title: "Internal Wallet", desc: "Tokens credited instantly. No gas fees, no seed phrases." },
-  { icon: ArrowRightLeft, title: "1:1 On-Chain", desc: "Every internal $PICKS converts to on-chain tokens at fair launch." },
-  { icon: Gamepad2, title: "Use Immediately", desc: "Stake on predictions, earn rewards, and climb the leaderboard right away." },
+  { icon: CreditCard, title: "Pay with Card", desc: "Visa, Mastercard, Apple Pay. No crypto needed." },
+  { icon: Wallet, title: "Your balance", desc: "Your token balance is stored in your account. Later, you can move it to your wallet." },
+  { icon: ArrowRightLeft, title: "On-chain later", desc: "Tokens convert to on-chain at fair launch." },
+  { icon: Gamepad2, title: "Use immediately", desc: "Lock tokens to boost rewards, earn points, climb the leaderboard." },
 ];
 
 export function TokenClient() {
@@ -30,10 +30,10 @@ export function TokenClient() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <FadeIn>
         <h1 className="font-headline text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white mb-2">
-          $PICKS Token
+          Token
         </h1>
         <p className="text-sm text-muted-foreground mb-10 max-w-lg">
-          The utility token powering RealityPicks. Built on the 333 model — every number has meaning.
+          Play → earn points → optional token rewards. Buy with card (optional). Simple.
         </p>
       </FadeIn>
 
@@ -89,10 +89,10 @@ export function TokenClient() {
         <FadeIn>
           <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">GETTING STARTED</p>
           <h2 className="font-headline text-2xl font-extrabold uppercase text-white mb-2">
-            How to Get $PICKS
+            How to get tokens
           </h2>
           <p className="text-sm text-muted-foreground mb-8 max-w-lg">
-            Buy with your credit card. No wallet required. Tokens convert 1:1 on-chain at fair launch.
+            Buy with your credit card. No wallet required. Optional — you can play and earn points without buying anything.
           </p>
         </FadeIn>
 
@@ -123,7 +123,7 @@ export function TokenClient() {
         </div>
         <h2 className="text-lg font-display font-bold mb-2">Fair Launch</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-          Sign up free — get 33,333 $PICKS instantly. On-chain features activate at fair launch.
+          Sign up free — get token rewards. On-chain features activate at fair launch.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link

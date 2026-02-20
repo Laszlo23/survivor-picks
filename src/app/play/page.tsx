@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { getAllActiveSeasons } from "@/lib/actions/episodes";
+import { getTopLeaderboard } from "@/lib/actions/leaderboard";
+import { getUserRank } from "@/lib/actions/profile";
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PlayClient, type MarketData } from "./play-client";
+import {
+  PlayClient,
+  type MarketData,
+  type SeasonContext,
+  type CompetitiveContext,
+} from "./play-client";
 
 export const metadata: Metadata = {
   title: "Play | RealityPicks",
@@ -18,7 +26,8 @@ const SHOW_EMOJI: Record<string, string> = {
   traitors: "🎭",
 };
 
-function emojiForSlug(slug: string): string {
+function emojiForSlug(slug: string | null): string {
+  if (!slug) return "📺";
   for (const [key, emoji] of Object.entries(SHOW_EMOJI)) {
     if (slug.toLowerCase().includes(key)) return emoji;
   }
@@ -28,38 +37,47 @@ function emojiForSlug(slug: string): string {
 function mapStatus(
   epStatus: string,
   lockAt: Date,
-  airAt: Date
 ): MarketData["status"] {
   if (epStatus === "RESOLVED") return "closed";
   if (epStatus === "LOCKED") return "locked";
   if (epStatus === "OPEN") {
     return new Date() < lockAt ? "live" : "locked";
   }
-  if (epStatus === "DRAFT") {
-    return new Date() < airAt ? "upcoming" : "upcoming";
-  }
   return "upcoming";
 }
 
-function timeUntil(date: Date): string {
-  const diff = date.getTime() - Date.now();
-  if (diff <= 0) return "Ended";
-  const days = Math.floor(diff / 86_400_000);
-  const hours = Math.floor((diff % 86_400_000) / 3_600_000);
-  const mins = Math.floor((diff % 3_600_000) / 60_000);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-}
-
 export default async function PlayPage() {
-  const seasons = await getAllActiveSeasons();
+  const [seasons, session] = await Promise.all([
+    getAllActiveSeasons(),
+    getSession(),
+  ]);
 
   const markets: MarketData[] = [];
+  const seasonContexts: SeasonContext[] = [];
+  let competitive: CompetitiveContext | null = null;
 
   for (const season of seasons) {
     const showLabel = season.title;
-    const emoji = emojiForSlug(season.showSlug);
+    const emoji = emojiForSlug((season as any).showSlug);
+    const totalEpisodes = season.episodes.length;
+    const resolvedEpisodes = season.episodes.filter(
+      (ep) => ep.status === "RESOLVED"
+    ).length;
+
+    const nextEpisode = season.episodes.find(
+      (ep) => ep.status === "OPEN" || ep.status === "DRAFT"
+    );
+
+    seasonContexts.push({
+      id: season.id,
+      title: showLabel,
+      emoji,
+      totalEpisodes,
+      resolvedEpisodes,
+      nextEpisodeAirAt: nextEpisode?.airAt?.toISOString() ?? null,
+      nextEpisodeLockAt: nextEpisode?.lockAt?.toISOString() ?? null,
+      nextEpisodeNumber: nextEpisode?.number ?? null,
+    });
 
     for (const episode of season.episodes) {
       const questionCount = await prisma.question.count({
@@ -76,13 +94,8 @@ export default async function PlayPage() {
         where: { question: { episodeId: episode.id } },
       });
 
-      const status = mapStatus(episode.status, episode.lockAt, episode.airAt);
-      const timeLeft =
-        status === "closed"
-          ? "Ended"
-          : status === "locked"
-            ? "Locked"
-            : timeUntil(episode.lockAt);
+      const status = mapStatus(episode.status, episode.lockAt);
+      const lockMs = episode.lockAt.getTime() - Date.now();
 
       markets.push({
         id: episode.id,
@@ -93,13 +106,57 @@ export default async function PlayPage() {
         questions: questionCount,
         participants: uniquePlayers.length,
         predictions: predictionCount,
-        timeLeft,
+        lockAt: episode.lockAt.toISOString(),
         airAt: episode.airAt.toISOString(),
+        hoursUntilLock: lockMs > 0 ? lockMs / 3_600_000 : 0,
         status,
-        href: "/dashboard",
+        href: `/dashboard?episode=${episode.id}`,
+        seasonId: season.id,
       });
     }
   }
 
-  return <PlayClient markets={markets} />;
+  if (seasons.length > 0) {
+    const primarySeasonId = seasons[0].id;
+    const [topEntries, userRank] = await Promise.all([
+      getTopLeaderboard(primarySeasonId, 1),
+      session?.user ? getUserRank(primarySeasonId) : null,
+    ]);
+
+    const leader = topEntries[0];
+    competitive = {
+      leaderName: leader?.user?.name || "—",
+      leaderPoints: leader?.points || 0,
+      userRank: userRank?.rank ?? null,
+      userPoints: userRank?.points ?? null,
+      pointsToNextRank:
+        userRank && userRank.rank > 1
+          ? (() => {
+              return null;
+            })()
+          : null,
+    };
+
+    if (userRank && userRank.rank > 1) {
+      const nextAbove = await prisma.userSeasonStats.findFirst({
+        where: {
+          seasonId: primarySeasonId,
+          points: { gt: userRank.points },
+        },
+        orderBy: { points: "asc" },
+        select: { points: true },
+      });
+      if (nextAbove) {
+        competitive.pointsToNextRank = nextAbove.points - userRank.points;
+      }
+    }
+  }
+
+  return (
+    <PlayClient
+      markets={markets}
+      seasonContexts={seasonContexts}
+      competitive={competitive}
+    />
+  );
 }

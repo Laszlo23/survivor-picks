@@ -47,21 +47,21 @@ const NFT_TIERS = [
 const UTILITY_CARDS = [
   {
     icon: Zap,
-    title: "XP Boost",
+    title: "Points boost",
     desc: "Earn 1.5x points on every correct prediction. Stack with streak bonuses.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
   {
     icon: TrendingUp,
-    title: "Multiplier Perks",
+    title: "Boost perks",
     desc: "Higher tier NFTs unlock bigger multipliers on risk bets — up to 2x returns.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
   },
   {
     icon: Shield,
-    title: "Streak Insurance",
+    title: "Win streak protection",
     desc: "Protect your win streak once per season. One wrong pick won't break your run.",
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
@@ -84,7 +84,7 @@ export function CollectiblesClient() {
           Collectibles
         </h1>
         <p className="text-sm text-muted-foreground mb-12 max-w-xl">
-          NFT badges with real gameplay utility. Boost your edge, protect your streaks, unlock perks.
+          Badges that improve your game. Optional, like boosters.
         </p>
       </FadeIn>
 

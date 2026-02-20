@@ -20,7 +20,6 @@ import {
   Trophy,
   Shield,
   LogOut,
-  Coins,
   Sparkles,
   Menu,
   X,
@@ -28,25 +27,27 @@ import {
   ExternalLink,
   MessageCircle,
   Play,
-  Radio,
   Brain,
   ArrowRight,
+  HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+/** Primary nav for normal users: Play, AI, Leaderboard, Badges, Help */
 const navItems = [
   { href: "/play", label: "Play", icon: Play },
-  { href: "/live", label: "Live", icon: Radio },
   { href: "/ai", label: "AI", icon: Brain },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/collectibles", label: "Collectibles", icon: Sparkles },
-  { href: "/token", label: "Token", icon: Coins },
+  { href: "/collectibles", label: "Badges", icon: Sparkles },
+  { href: "/help", label: "Help", icon: HelpCircle },
 ];
 
-const learnItems = [
+/** Investor/crypto sections - footer only */
+const investorItems = [
   { href: "/whitepaper", label: "Whitepaper" },
   { href: "/tokenomics", label: "Tokenomics" },
   { href: "/contracts", label: "Contracts" },
+  { href: "/invest", label: "Investors" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -164,9 +165,9 @@ export function Navbar() {
 
               <div className="my-4 border-t border-white/[0.06]" />
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                Resources
+                Investor info
               </p>
-              {learnItems.map((item) => (
+              {investorItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

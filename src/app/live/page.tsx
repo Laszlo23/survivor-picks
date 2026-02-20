@@ -22,7 +22,7 @@ export default async function LiveLandingPage() {
       </h1>
       <p className="text-sm text-white/30 max-w-md mb-6">
         There are no live shows right now. Come back when an episode is airing
-        for real-time predictions and live betting with dynamic odds.
+        for real-time predictions. Odds change in real-time based on what players are picking.
       </p>
       <Link
         href="/dashboard"

@@ -27,6 +27,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   Trophy,
+  Flame,
+  Target,
+  Hourglass,
+  Pencil,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFarcaster } from "@/lib/farcaster/provider";
@@ -109,6 +114,9 @@ export function PredictionCard({
   const [stakeInput, setStakeInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(!!question.userPick);
+  const [justLocked, setJustLocked] = useState(false);
+  const [showXpAnim, setShowXpAnim] = useState(false);
+  const [showCommunity, setShowCommunity] = useState(false);
 
   const stakeAmount = stakeInput ? BigInt(Math.floor(parseFloat(stakeInput) || 0)) : 0n;
 
@@ -155,6 +163,10 @@ export function PredictionCard({
         toast.error(result.error);
       } else {
         setSaved(true);
+        setJustLocked(true);
+        setShowXpAnim(true);
+        setTimeout(() => setJustLocked(false), 1200);
+        setTimeout(() => setShowXpAnim(false), 1500);
         const msg =
           stakeAmount > 0n
             ? `Pick locked with ${stakeInput} $PICKS!`
@@ -198,6 +210,19 @@ export function PredictionCard({
 
   const showStaking = useInternalStaking;
   const displayBalance = Number(internalBalance ?? 0).toLocaleString();
+
+  const communityEntries = Object.entries(question.communityPicks);
+  const hotPick =
+    communityEntries.length > 0
+      ? communityEntries.reduce((a, b) => (b[1] > a[1] ? b : a))
+      : null;
+  const hasHotPick = hotPick && hotPick[1] >= 60;
+  const contrarianOptions =
+    question.options.length >= 3
+      ? communityEntries.filter(([, pct]) => pct > 0 && pct <= 15)
+      : [];
+
+  const isLockedNoAction = isLocked && !isResolved && !saved;
 
   // ─── Shared staking section (rendered inline after selected tile) ──
   const stakingSection =
@@ -274,9 +299,23 @@ export function PredictionCard({
         isResolved && question.userPick?.isCorrect
           ? "shadow-[0_0_30px_hsl(185_100%_55%/0.2)]"
           : ""
-      }`}
+      } ${justLocked ? "animate-lock-in-glow" : ""} ${isLockedNoAction ? "opacity-60 grayscale-[30%]" : ""}`}
       style={{ background: "linear-gradient(180deg, hsl(220 15% 6%) 0%, hsl(220 12% 4%) 100%)" }}
     >
+      {/* XP floating animation on lock-in */}
+      <AnimatePresence>
+        {showXpAnim && (
+          <motion.div
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 0, y: -40 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="absolute top-2 right-4 z-50 font-mono font-bold text-sm text-neon-cyan pointer-events-none"
+          >
+            +{potentialPts} XP
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* ── Scanline overlay on the card ────────────────────────── */}
       <div
         className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]"
@@ -331,8 +370,13 @@ export function PredictionCard({
                 <Clock className="h-3 w-3" />
                 {getTimeUntilLock(question.lockAt)}
               </span>
+            ) : isLockedNoAction ? (
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 font-mono bg-white/[0.03] px-2 py-1 rounded-md">
+                <Hourglass className="h-3 w-3" />
+                Awaiting results
+              </span>
             ) : (
-              <span className="flex items-center gap-1 text-[10px] text-red-400/80 font-mono bg-red-500/10 px-2 py-1 rounded-md">
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 font-mono bg-white/[0.03] px-2 py-1 rounded-md">
                 <Lock className="h-3 w-3" />
                 LOCKED
               </span>
@@ -353,6 +397,27 @@ export function PredictionCard({
         <p className="font-headline text-base md:text-lg font-bold leading-snug tracking-tight uppercase">
           {question.prompt}
         </p>
+
+        {/* Hot Pick / Contrarian tags */}
+        {!isResolved && (hasHotPick || contrarianOptions.length > 0) && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {hasHotPick && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-400 bg-orange-400/10 border border-orange-400/20 px-2 py-0.5 rounded-full">
+                <Flame className="h-3 w-3" />
+                Hot Pick: {hotPick[0]}
+              </span>
+            )}
+            {contrarianOptions.map(([opt]) => (
+              <span
+                key={opt}
+                className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2 py-0.5 rounded-full"
+              >
+                <Target className="h-3 w-3" />
+                Contrarian: {opt}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Options ───────────────────────────────────────────────── */}
@@ -458,54 +523,131 @@ export function PredictionCard({
             </div>
           </motion.div>
         ) : saved ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 text-xs font-headline uppercase tracking-wider">
-                <Check className="h-3 w-3 mr-1" />
-                Locked In
-              </Badge>
-              {isRisk && (
-                <Badge
-                  variant="outline"
-                  className="text-accent border-accent/30 text-xs"
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  Risk
-                </Badge>
-              )}
-              {useJoker && (
-                <Badge
-                  variant="outline"
-                  className="text-primary border-primary/30 text-xs"
+                  <Badge className="bg-neon-cyan/10 text-neon-cyan border-neon-cyan/20 text-xs font-headline uppercase tracking-wider">
+                    <Check className="h-3 w-3 mr-1" />
+                    Locked In
+                  </Badge>
+                </motion.div>
+                {isRisk && (
+                  <Badge
+                    variant="outline"
+                    className="text-accent border-accent/30 text-xs"
+                  >
+                    1.5x Risk
+                  </Badge>
+                )}
+                {useJoker && (
+                  <Badge
+                    variant="outline"
+                    className="text-primary border-primary/30 text-xs"
+                  >
+                    Joker
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono text-xs font-bold"
+                  style={{ color: accentColor }}
                 >
-                  Joker
-                </Badge>
-              )}
+                  {potentialPts} pts
+                </span>
+                {isInMiniApp && (
+                  <button
+                    onClick={handleShareOnFarcaster}
+                    className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+                    title="Share on Farcaster"
+                  >
+                    <Share2 className="h-3.5 w-3.5 text-muted-foreground hover:text-white" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span
-                className="font-mono text-xs font-bold"
-                style={{ color: accentColor }}
-              >
-                {potentialPts} pts
-              </span>
-              {!isLocked && (
+
+            {/* Action buttons */}
+            {!isLocked && (
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setSaved(false)}
-                  className="text-[10px] text-muted-foreground hover:text-white transition-colors underline uppercase tracking-wider"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-muted-foreground bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:text-white transition-colors"
                 >
-                  Change
+                  <Pencil className="h-3 w-3" />
+                  Edit Pick
                 </button>
-              )}
-              {isInMiniApp && (
+                {!isRisk && (
+                  <button
+                    onClick={() => {
+                      setSaved(false);
+                      setIsRisk(true);
+                      setUseJoker(false);
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-accent/70 bg-accent/5 border border-accent/10 hover:bg-accent/10 hover:text-accent transition-colors"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Go Risk
+                  </button>
+                )}
                 <button
-                  onClick={handleShareOnFarcaster}
-                  className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
-                  title="Share on Farcaster"
+                  onClick={() => setShowCommunity(!showCommunity)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-colors ${
+                    showCommunity
+                      ? "text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20"
+                      : "text-muted-foreground bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:text-white"
+                  }`}
                 >
-                  <Share2 className="h-3.5 w-3.5 text-muted-foreground hover:text-white" />
+                  <BarChart3 className="h-3 w-3" />
+                  Community
                 </button>
+              </div>
+            )}
+
+            {/* Community breakdown */}
+            <AnimatePresence>
+              {showCommunity && Object.keys(question.communityPicks).length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-1.5">
+                    <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider font-semibold">
+                      Community Picks
+                    </p>
+                    {Object.entries(question.communityPicks)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([option, pct]) => (
+                        <div key={option} className="flex items-center gap-2">
+                          <span className="text-[10px] text-white/70 truncate flex-1 min-w-0">
+                            {option}
+                            {option === selected && (
+                              <span className="text-neon-cyan ml-1">← You</span>
+                            )}
+                          </span>
+                          <div className="w-20 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-neon-cyan/40"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">
+                            {pct}%
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         ) : (
           <div className="space-y-3">
@@ -527,12 +669,12 @@ export function PredictionCard({
                             className="flex items-center gap-1 cursor-pointer text-xs"
                           >
                             <AlertTriangle className="h-3 w-3 text-accent" />
-                            Risk
+                            {isRisk ? "1.5x Risk" : "Risk"}
                           </Label>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className="text-xs max-w-[180px]">
-                            1.5x if correct, 0 if wrong. No joker save.
+                          <p className="text-xs max-w-[200px]">
+                            1.5x multiplier if correct, 0 if wrong. Joker cannot save a risk bet.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -568,13 +710,23 @@ export function PredictionCard({
                 )}
               </div>
 
-              <div className="text-right">
-                <span className="text-xs text-muted-foreground">
-                  {question.odds >= 0 ? "+" : ""}
-                  {question.odds}
-                </span>
+              <div className="text-right flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold font-mono bg-white/[0.04] border border-white/[0.08] px-1.5 py-0.5 rounded cursor-help"
+                      style={{ color: accentColor }}
+                    >
+                      {multiplier}x
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-[200px]">
+                      Based on {question.odds >= 0 ? "+" : ""}{question.odds} odds. Higher multiplier = harder pick = bigger reward.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
                 <span
-                  className="ml-2 font-mono text-xs font-bold"
+                  className="font-mono text-xs font-bold"
                   style={{ color: accentColor }}
                 >
                   {potentialPts} pts
@@ -798,7 +950,7 @@ function ContestantTile({
             </motion.div>
           ) : (
             <span className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">
-              Tap to pick
+              Tap to choose
             </span>
           )}
         </div>

@@ -83,13 +83,12 @@ export function AIClient() {
           </div>
           <div>
             <h1 className="font-headline text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white">
-              Can You Beat The Machine?
+              Tips vs AI
             </h1>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-10 max-w-xl">
-          AI analyzes patterns, stats, and live feeds to generate predictions.
-          See its picks, then decide: follow or fade.
+          AI looks at show patterns and stats and suggests a pick. See its picks, then decide: pick the same or pick the opposite.
         </p>
       </FadeIn>
 
@@ -150,8 +149,8 @@ export function AIClient() {
                       <p className="text-2xl font-bold text-neon-gold">{active.aiConfidence}%</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Odds</span>
-                      <p className="text-2xl font-bold text-white">{active.odds}</p>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Boost</span>
+                      <p className="text-2xl font-bold text-white">~{active.odds.replace("x", "")}x</p>
                     </div>
                   </div>
                 </div>
@@ -176,13 +175,16 @@ export function AIClient() {
                 <div className="grid grid-cols-2 gap-3">
                   <button className="flex items-center justify-center gap-2 py-3.5 rounded-xl bg-neon-cyan/10 border border-neon-cyan/20 text-neon-cyan font-bold hover:bg-neon-cyan/20 transition-colors">
                     <TrendingUp className="h-4 w-4" />
-                    Follow AI
+                    Pick the same
                   </button>
                   <button className="flex items-center justify-center gap-2 py-3.5 rounded-xl bg-neon-magenta/10 border border-neon-magenta/20 text-neon-magenta font-bold hover:bg-neon-magenta/20 transition-colors">
                     <TrendingDown className="h-4 w-4" />
-                    Fade AI
+                    Pick the opposite
                   </button>
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Boost is approximate and can change.
+                </p>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -190,9 +192,9 @@ export function AIClient() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: Target, label: "AI Win Rate", value: "73%", color: "text-violet-400" },
-              { icon: Zap, label: "Current Streak", value: "5W", color: "text-neon-cyan" },
-              { icon: BarChart3, label: "Picks This Week", value: "12", color: "text-neon-gold" },
+              { icon: Target, label: "AI hit rate", value: "73%", color: "text-violet-400" },
+              { icon: Zap, label: "Win streak", value: "5W", color: "text-neon-cyan" },
+              { icon: BarChart3, label: "Picks this week", value: "12", color: "text-neon-gold" },
             ].map((stat) => (
               <div key={stat.label} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
                 <stat.icon className={`h-4 w-4 mx-auto mb-2 ${stat.color}`} />

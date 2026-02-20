@@ -1,9 +1,16 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ShareButton } from "./share-button";
-import { CheckCircle, Clock, Zap, Users, Trophy, Share2 } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  Zap,
+  Users,
+  Trophy,
+  Share2,
+  Sparkles,
+} from "lucide-react";
 import type { SocialTaskWithStatus } from "@/lib/actions/social";
 
 interface SocialTasksCardProps {
@@ -24,6 +31,8 @@ export function SocialTasksCard({
   seasonTitle,
 }: SocialTasksCardProps) {
   const completedToday = tasks.filter((t) => t.completedToday).length;
+  const allComplete = tasks.length > 0 && completedToday === tasks.length;
+  const totalReward = tasks.reduce((sum, t) => sum + t.pointsReward, 0);
 
   const getTaskIcon = (key: string) => {
     switch (key) {
@@ -61,16 +70,23 @@ export function SocialTasksCard({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Zap className="h-5 w-5 text-amber-400" />
-            Daily Tasks
+            Daily tasks
           </CardTitle>
-          <span className="text-xs text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
-            {completedToday}/{tasks.length} today
+          <span
+            className={`text-xs px-2.5 py-1 rounded-full font-mono font-bold ${
+              allComplete
+                ? "bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20"
+                : "text-muted-foreground bg-secondary/50"
+            }`}
+          >
+            {completedToday}/{tasks.length}
           </span>
         </div>
-        {/* Progress bar */}
         <div className="w-full bg-secondary/50 rounded-full h-1.5 mt-2">
           <div
-            className="bg-amber-400 h-1.5 rounded-full transition-all duration-500"
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              allComplete ? "bg-neon-cyan" : "bg-amber-400"
+            }`}
             style={{
               width: `${tasks.length > 0 ? (completedToday / tasks.length) * 100 : 0}%`,
             }}
@@ -78,6 +94,15 @@ export function SocialTasksCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
+        {allComplete && (
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2.5 bg-neon-cyan/5 border border-neon-cyan/20">
+            <Sparkles className="h-4 w-4 text-neon-cyan shrink-0" />
+            <p className="text-xs font-semibold text-neon-cyan">
+              All tasks complete! +{totalReward} season points earned today
+            </p>
+          </div>
+        )}
+
         {tasks.map((task) => (
           <div
             key={task.id}
@@ -87,7 +112,6 @@ export function SocialTasksCard({
                 : "bg-secondary/30 hover:bg-secondary/50"
             }`}
           >
-            {/* Icon */}
             <div
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                 task.completedToday
@@ -102,7 +126,6 @@ export function SocialTasksCard({
               )}
             </div>
 
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{task.title}</p>
               <p className="text-xs text-muted-foreground">
@@ -117,7 +140,6 @@ export function SocialTasksCard({
               </p>
             </div>
 
-            {/* Points + Action */}
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={`text-xs font-mono font-bold ${

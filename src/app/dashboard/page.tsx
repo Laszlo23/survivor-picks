@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
   description: "Make predictions across live reality TV shows. View your picks, stats, and climb the leaderboard.",
 };
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import {
   getAllActiveSeasons,
   listSeasonEpisodes,
@@ -25,7 +27,7 @@ import { ReferralCard } from "@/components/social/referral-card";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import { PredictionFeed } from "@/components/predictions/prediction-feed";
 import { DashboardStats } from "@/components/dashboard/stats";
-import { BalanceBar } from "@/components/wallet/balance-bar";
+import { SeasonOverview } from "@/components/dashboard/season-overview";
 import {
   Trophy,
   Calendar,
@@ -36,7 +38,6 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session?.user) redirect("/auth/signin");
 
-  // Fetch ALL active seasons (one per show)
   const seasons = await getAllActiveSeasons();
 
   if (seasons.length === 0) {
@@ -51,11 +52,9 @@ export default async function DashboardPage() {
     );
   }
 
-  // Use the first season for stats, social, episodes (primary season)
   const primarySeason = seasons[0];
 
-  // Load predictions for ALL active seasons in parallel
-  const [allPredictions, episodes, rankData, socialTasks, referralStats, picksBalance] =
+  const [allPredictions, episodes, rankData, socialTasks, referralStats, picksBalance, episodeCounts] =
     await Promise.all([
       Promise.all(
         seasons.map(async (s) => ({
@@ -69,9 +68,22 @@ export default async function DashboardPage() {
       getSocialTasks(primarySeason.id),
       getReferralStats(),
       getBalance(session.user.id),
+      prisma.episode.groupBy({
+        by: ["status"],
+        where: { seasonId: primarySeason.id },
+        _count: { id: true },
+      }),
     ]);
 
-  // Build contestant images from all seasons
+  const totalEpisodes = episodeCounts.reduce((sum, g) => sum + g._count.id, 0);
+  const resolvedEpisodes =
+    episodeCounts.find((g) => g.status === "RESOLVED")?._count.id ?? 0;
+
+  const latestOpenEpisode = episodes.find(
+    (ep) => ep.status === "OPEN" || ep.status === "LOCKED"
+  );
+  const currentEpisodeNumber = latestOpenEpisode?.number ?? resolvedEpisodes;
+
   const contestantImages: Record<string, string> = {};
   for (const season of seasons) {
     if (season.contestants) {
@@ -81,9 +93,8 @@ export default async function DashboardPage() {
     }
   }
 
-  // Build feeds — only include seasons that have a showSlug set
   const feeds = allPredictions
-    .filter((f) => f.showSlug) // skip seasons with no showSlug
+    .filter((f) => f.showSlug)
     .map((f) => ({
       showSlug: f.showSlug as string,
       seasonId: f.seasonId,
@@ -93,7 +104,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       {/* ── Compact Header ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Image
@@ -127,27 +138,57 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── Animated Stats Row ───────────────────────────────────── */}
+      {/* ── Season Overview ────────────────────────────────────── */}
+      <SeasonOverview
+        seasonTitle={primarySeason.title}
+        currentEpisode={currentEpisodeNumber}
+        totalEpisodes={totalEpisodes}
+        resolvedEpisodes={resolvedEpisodes}
+        rank={rankData?.rank || 0}
+        totalPlayers={rankData?.totalPlayers || 0}
+      />
+
+      {/* ── Legend ─────────────────────────────────────────────── */}
+      <p className="text-[10px] text-muted-foreground/70 mb-2">
+        Season points = points you earn across the season. Win streak = correct picks in a row.
+      </p>
+
+      {/* ── Gamified Stats ─────────────────────────────────────── */}
       <DashboardStats
         points={rankData?.points || 0}
         rank={rankData?.rank || 0}
         winRate={rankData?.winRate || 0}
         streak={rankData?.currentStreak || 0}
+        longestStreak={rankData?.longestStreak || 0}
+        top10Points={rankData?.top10Points || 0}
+        totalPlayers={rankData?.totalPlayers || 0}
+        picksBalance={picksBalance.toString()}
       />
 
-      {/* ── Balance + Buy $PICKS ──────────────────────────────── */}
-      <BalanceBar balance={picksBalance.toString()} />
+      {/* ── Daily tasks ───────────────────────────────────────── */}
+      <div className="mb-5">
+        <SocialTasksCard
+          tasks={socialTasks}
+          seasonId={primarySeason.id}
+          referralCode={referralStats?.referralCode}
+          rank={rankData?.rank}
+          totalPoints={rankData?.points}
+          seasonTitle={primarySeason.title}
+        />
+      </div>
 
-      {/* ── Prediction Feed (per-show tabs + per-show predictions) ── */}
-      <PredictionFeed
-        feeds={feeds}
-        jokersRemaining={rankData?.jokersRemaining ?? 3}
-        contestantImages={contestantImages}
-        seasonId={primarySeason.id}
-        internalBalance={picksBalance.toString()}
-      />
+      {/* ── Prediction Feed ────────────────────────────────────── */}
+      <Suspense>
+        <PredictionFeed
+          feeds={feeds}
+          jokersRemaining={rankData?.jokersRemaining ?? 3}
+          contestantImages={contestantImages}
+          seasonId={primarySeason.id}
+          internalBalance={picksBalance.toString()}
+        />
+      </Suspense>
 
-      {/* ── All Episodes ─────────────────────────────────────────── */}
+      {/* ── All Episodes ───────────────────────────────────────── */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">
@@ -194,16 +235,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Social + Referral ────────────────────────────────────── */}
-      <div className="mt-8 space-y-6">
-        <SocialTasksCard
-          tasks={socialTasks}
-          seasonId={primarySeason.id}
-          referralCode={referralStats?.referralCode}
-          rank={rankData?.rank}
-          totalPoints={rankData?.points}
-          seasonTitle={primarySeason.title}
-        />
+      {/* ── Referral ───────────────────────────────────────────── */}
+      <div className="mt-8">
         <ReferralCard stats={referralStats} seasonId={primarySeason.id} />
       </div>
 

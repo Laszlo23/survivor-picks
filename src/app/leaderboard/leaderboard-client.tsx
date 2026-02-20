@@ -130,7 +130,9 @@ export function LeaderboardClient({
                 <Users className="h-4 w-4" />
               )}
             </span>
-            <span className="relative capitalize">{t}</span>
+            <span className="relative">
+              {t === "points" ? "Points" : "Community results"}
+            </span>
           </button>
         ))}
       </div>
@@ -237,7 +239,9 @@ export function LeaderboardClient({
 
                 {data.entries.length === 0 && (
                   <p className="text-center py-8 text-muted-foreground text-sm">
-                    No players found
+                    {data.total === 0
+                      ? "No one has joined yet. Be the first!"
+                      : "No players found"}
                   </p>
                 )}
               </div>

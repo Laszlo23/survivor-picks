@@ -17,8 +17,8 @@ const tabs = [
   { href: "/play", label: "Play", icon: Play },
   { href: "/live", label: "Live", icon: Radio },
   { href: "/ai", label: "AI", icon: Brain },
-  { href: "/leaderboard", label: "Ranks", icon: Trophy },
-  { href: "/collectibles", label: "NFTs", icon: Sparkles },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/collectibles", label: "Badges", icon: Sparkles },
 ];
 
 export function BottomTabs() {
