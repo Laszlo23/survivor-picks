@@ -34,8 +34,8 @@ export async function GET() {
       tagline: "Predict Reality. Win Glory.",
       iconUrl: `${baseUrl}/logo.png`,
       homeUrl: baseUrl,
-      imageUrl: `${baseUrl}/og-image.png`,
-      heroImageUrl: `${baseUrl}/hero-stage.jpg`,
+      imageUrl: `${baseUrl}/opengraph-image`,
+      heroImageUrl: `${baseUrl}/opengraph-image`,
       screenshotUrls: [
         `${baseUrl}/screenshot-1.png`,
         `${baseUrl}/screenshot-2.png`,
@@ -49,13 +49,11 @@ export async function GET() {
       ogTitle: "RealityPicks",
       ogDescription:
         "Free reality TV prediction game. Pick winners, earn points, collect badges. Built on Base.",
-      ogImageUrl: `${baseUrl}/og-image.png`,
+      ogImageUrl: `${baseUrl}/opengraph-image`,
       noindex: false,
       requiredChains: ["eip155:8453"],
       requiredCapabilities: [
         "actions.signIn",
-        "wallet.getEthereumProvider",
-        "actions.swapToken",
       ],
     },
   };
