@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, Users, Clock, Coins } from "lucide-react";
+import { ArrowRight, Users, Clock, Coins, MessageSquare } from "lucide-react";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
+import { prisma } from "@/lib/prisma";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingEmailCapture } from "@/components/landing/email-capture";
@@ -18,22 +19,65 @@ export const revalidate = 60;
 export default async function LandingPage() {
   const season = await getActiveSeason();
 
-  const nextEpisodeAt = season?.episodes
-    ?.filter((ep) => new Date(ep.airAt) > new Date())
-    ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0]
-    ?.airAt?.toISOString() ?? null;
+  const nextEpisode = season?.episodes
+    ?.filter((ep) => ep.status === "OPEN" || (ep.status === "DRAFT" && new Date(ep.airAt) > new Date()))
+    ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0];
+
+  const nextEpisodeAt = nextEpisode?.airAt?.toISOString() ?? null;
+
+  // Featured market: first OPEN episode
+  const featuredEpisode = season?.episodes?.find((ep) => ep.status === "OPEN");
+  let featuredQuestions = 0;
+  let featuredPlayers = 0;
+  let featuredPredictions = 0;
+  if (featuredEpisode) {
+    featuredQuestions = await prisma.question.count({
+      where: { episodeId: featuredEpisode.id, status: "OPEN" },
+    });
+    const players = await prisma.prediction.groupBy({
+      by: ["userId"],
+      where: { question: { episodeId: featuredEpisode.id } },
+    });
+    featuredPlayers = players.length;
+    featuredPredictions = await prisma.prediction.count({
+      where: { question: { episodeId: featuredEpisode.id } },
+    });
+  }
+
+  // Stats
+  const totalPlayers = await prisma.user.count();
+  const totalPredictions = await prisma.prediction.count();
+  const openQuestions = await prisma.question.count({ where: { status: "OPEN" } });
 
   return (
     <LandingShell>
     <div className="min-h-screen">
-      <LandingHero seasonTitle={season?.title} nextEpisodeAt={nextEpisodeAt} />
+      <LandingHero
+        seasonTitle={season?.title}
+        nextEpisodeAt={nextEpisodeAt}
+        showSlug={season?.showSlug ?? undefined}
+        currentEpisode={featuredEpisode ? `EP${featuredEpisode.number}` : undefined}
+        currentEpisodeTitle={featuredEpisode?.title ?? undefined}
+      />
 
       <div className="relative z-10 bg-studio-black">
 
-      <FeaturedMarketPreview />
+      <FeaturedMarketPreview
+        seasonTitle={season?.title}
+        showSlug={season?.showSlug ?? undefined}
+        episode={featuredEpisode}
+        questions={featuredQuestions}
+        players={featuredPlayers}
+        predictions={featuredPredictions}
+      />
 
       <Suspense fallback={<SocialProofSkeleton />}>
-        <SocialProof seasonId={season?.id} />
+        <SocialProof
+          seasonId={season?.id}
+          totalPlayers={totalPlayers}
+          totalPredictions={totalPredictions}
+          openQuestions={openQuestions}
+        />
       </Suspense>
 
       <LandingHowItWorks />
@@ -51,70 +95,116 @@ export default async function LandingPage() {
 }
 
 // ─── Featured Market Preview ────────────────────────────────────────
-function FeaturedMarketPreview() {
+
+const SHOW_EMOJI: Record<string, string> = {
+  survivor: "🏝️",
+  bachelor: "🌹",
+  "love-island": "💕",
+  "big-brother": "🏠",
+  traitors: "🎭",
+};
+
+function emojiForSlug(slug?: string): string {
+  if (!slug) return "📺";
+  for (const [key, emoji] of Object.entries(SHOW_EMOJI)) {
+    if (slug.toLowerCase().includes(key)) return emoji;
+  }
+  return "📺";
+}
+
+function timeUntil(date: Date): string {
+  const diff = date.getTime() - Date.now();
+  if (diff <= 0) return "Live now";
+  const days = Math.floor(diff / 86_400_000);
+  const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+  const mins = Math.floor((diff % 3_600_000) / 60_000);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+function FeaturedMarketPreview({
+  seasonTitle,
+  showSlug,
+  episode,
+  questions,
+  players,
+  predictions,
+}: {
+  seasonTitle?: string;
+  showSlug?: string;
+  episode?: { id: string; number: number; title: string; lockAt: Date; airAt: Date; status: string } | null;
+  questions: number;
+  players: number;
+  predictions: number;
+}) {
+  if (!episode) {
+    return (
+      <Section>
+        <div className="mb-8 text-center">
+          <SectionLabel>COMING SOON</SectionLabel>
+          <SectionTitle>Featured Market</SectionTitle>
+        </div>
+        <div className="p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-center">
+          <p className="text-sm text-muted-foreground">
+            No live markets right now. Check back when the next episode airs.
+          </p>
+          <Link
+            href="/play"
+            className="inline-flex items-center gap-1 mt-4 text-xs text-neon-cyan hover:text-neon-cyan/80 transition-colors"
+          >
+            View all markets <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </Section>
+    );
+  }
+
+  const emoji = emojiForSlug(showSlug);
+
   return (
     <Section>
       <div className="mb-8 text-center">
-        <SectionLabel>LIVE NOW</SectionLabel>
+        <SectionLabel>PREDICTIONS OPEN</SectionLabel>
         <SectionTitle>Featured Market</SectionTitle>
       </div>
 
       <div className="relative p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
-          <span className="text-3xl">🏝️</span>
+          <span className="text-3xl">{emoji}</span>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Survivor S47 · EP7
+              {seasonTitle} · EP{episode.number}
             </p>
             <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-neon-cyan">
               <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan animate-pulse" />
-              LIVE
+              {episode.status === "OPEN" ? "OPEN" : "LOCKED"}
             </span>
           </div>
         </div>
 
-        {/* Question */}
-        <h3 className="text-lg sm:text-xl font-bold text-white mb-5">
-          Who Gets Voted Off Episode 7?
+        {/* Episode title */}
+        <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+          {episode.title}
         </h3>
 
-        {/* Two-outcome preview with social proof % */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <button className="group relative p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-neon-cyan/30 hover:bg-white/[0.05] transition-all text-left">
-            <p className="text-sm font-semibold text-white group-hover:text-neon-cyan transition-colors">
-              Venus
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">42% picked</span>
-              <div className="h-1 w-12 rounded-full bg-white/[0.06] overflow-hidden">
-                <div className="h-full w-[42%] rounded-full bg-neon-cyan/50" />
-              </div>
-            </div>
-          </button>
-          <button className="group relative p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-neon-magenta/30 hover:bg-white/[0.05] transition-all text-left">
-            <p className="text-sm font-semibold text-white group-hover:text-neon-magenta transition-colors">
-              Sam
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">31% picked</span>
-              <div className="h-1 w-12 rounded-full bg-white/[0.06] overflow-hidden">
-                <div className="h-full w-[31%] rounded-full bg-neon-magenta/50" />
-              </div>
-            </div>
-          </button>
-        </div>
+        {/* Question count */}
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground mb-5">
+          <MessageSquare className="h-3.5 w-3.5" />
+          {questions} prediction{questions !== 1 ? "s" : ""} available
+        </p>
 
         {/* Stats row */}
         <div className="flex items-center gap-5 text-xs text-muted-foreground border-t border-white/[0.06] pt-4 mb-5">
           <span className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" /> 247 players
+            <Users className="h-3.5 w-3.5" /> {players} player{players !== 1 ? "s" : ""}
           </span>
           <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" /> 2h 15m left
+            <Clock className="h-3.5 w-3.5" /> {timeUntil(episode.lockAt)}
           </span>
           <span className="flex items-center gap-1.5 text-neon-cyan font-bold">
-            <Coins className="h-3.5 w-3.5" /> 1,250 pool
+            <Coins className="h-3.5 w-3.5" /> {predictions} prediction{predictions !== 1 ? "s" : ""}
           </span>
         </div>
 
@@ -122,7 +212,7 @@ function FeaturedMarketPreview() {
         <div className="flex items-center justify-between">
           <NeonButton
             variant="primary"
-            href="/play"
+            href="/dashboard"
             className="gap-2 text-sm px-6 py-2"
           >
             Predict Now
@@ -141,7 +231,17 @@ function FeaturedMarketPreview() {
 }
 
 // ─── Social Proof ───────────────────────────────────────────────────
-async function SocialProof({ seasonId }: { seasonId?: string }) {
+async function SocialProof({
+  seasonId,
+  totalPlayers,
+  totalPredictions,
+  openQuestions,
+}: {
+  seasonId?: string;
+  totalPlayers: number;
+  totalPredictions: number;
+  openQuestions: number;
+}) {
   const leaderboard = seasonId ? await getTopLeaderboard(seasonId, 10) : [];
 
   return (
@@ -152,9 +252,21 @@ async function SocialProof({ seasonId }: { seasonId?: string }) {
           <SectionLabel>Social Proof</SectionLabel>
           <SectionTitle>The community is growing</SectionTitle>
           <div className="grid grid-cols-3 gap-3">
-            <StatPill value="3,333+" label="Players" live />
-            <StatPill value="33" label="Markets" />
-            <StatPill value="12K+" label="Predictions this week" live />
+            <StatPill
+              value={totalPlayers.toLocaleString("en-US") + "+"}
+              label="Players"
+              live
+            />
+            <StatPill
+              value={openQuestions.toString()}
+              label="Open markets"
+              live
+            />
+            <StatPill
+              value={totalPredictions.toLocaleString("en-US")}
+              label="Predictions"
+              live
+            />
           </div>
         </div>
 

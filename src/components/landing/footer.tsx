@@ -12,6 +12,7 @@ const footerLinks = {
     { label: "Leaderboard", href: "/leaderboard" },
     { label: "Collectibles", href: "/collectibles" },
     { label: "$PICKS Token", href: "/token" },
+    { label: "Investors", href: "/invest" },
   ],
   Resources: [
     { label: "Whitepaper", href: "/whitepaper" },

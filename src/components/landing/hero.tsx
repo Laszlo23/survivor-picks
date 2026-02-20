@@ -6,15 +6,6 @@ import { ArrowRight, Play } from "lucide-react";
 import { FadeIn, ScaleIn } from "@/components/motion";
 import { NeonButton } from "@/components/ui/neon-button";
 
-const TICKER_ITEMS = [
-  "Sarah predicted the tribal blindside — 320 pts",
-  "Survivor EP7 pool hits 1,250 $PICKS",
-  "@DannyBets takes #1 on the leaderboard",
-  "Bachelor finale: 840 predictions locked",
-  "Love Island recoupling market now live",
-  "Team Alpha hit a 5x multiplier streak",
-];
-
 function useCountdown(targetDate: string | null) {
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0, expired: true });
 
@@ -52,10 +43,31 @@ function pad(n: number) {
 interface LandingHeroProps {
   seasonTitle?: string;
   nextEpisodeAt?: string | null;
+  showSlug?: string;
+  currentEpisode?: string;
+  currentEpisodeTitle?: string;
 }
 
-export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
+export function LandingHero({
+  seasonTitle,
+  nextEpisodeAt,
+  showSlug,
+  currentEpisode,
+  currentEpisodeTitle,
+}: LandingHeroProps) {
   const countdown = useCountdown(nextEpisodeAt ?? null);
+
+  const showName = seasonTitle || "Reality TV";
+  const episodeLabel = currentEpisodeTitle || "Tribal Council";
+
+  const tickerItems = [
+    `${showName} ${currentEpisode || ""} predictions are open`,
+    "Who will be the next one eliminated?",
+    `${currentEpisodeTitle ? currentEpisodeTitle + " — " : ""}Make your picks before lock`,
+    "Leaderboard heating up — climb the ranks",
+    "Free to play. Predict, earn points, win glory",
+    "New episode markets drop every week",
+  ];
 
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex flex-col">
@@ -76,7 +88,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
       </div>
 
       {/* ── Live ticker ── */}
-      <LiveTicker />
+      <LiveTicker items={tickerItems} />
 
       {/* ── Main content ── */}
       <div className="relative flex-1 flex items-center">
@@ -110,7 +122,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
                   </span>
                   <span className="h-3 w-px bg-white/10" />
                   <span className="text-[10px] uppercase tracking-wider text-white/40">
-                    {seasonTitle || "Survivor"} · Tribal Council
+                    {showName} · {episodeLabel}
                   </span>
                 </div>
               </div>
@@ -122,7 +134,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
                 <div className="mb-6 flex justify-center">
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.04] border border-neon-cyan/20 backdrop-blur-sm animate-glow-pulse">
                     <span className="text-[10px] uppercase tracking-widest text-white/40">
-                      Next elimination
+                      Next episode
                     </span>
                     <span className="font-mono text-xl sm:text-2xl font-bold tracking-wider text-neon-cyan drop-shadow-[0_0_12px_hsl(185_100%_55%/0.6)]">
                       {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
@@ -132,7 +144,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
               </FadeIn>
             )}
 
-            {/* Headline — tight */}
+            {/* Headline */}
             <FadeIn delay={0.2}>
               <h1 className="font-headline text-4xl font-extrabold uppercase tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
                 Predict Reality.{" "}
@@ -142,7 +154,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
               </h1>
             </FadeIn>
 
-            {/* Subheadline — single line */}
+            {/* Subheadline */}
             <FadeIn delay={0.3}>
               <p className="mx-auto mt-4 max-w-lg text-sm sm:text-base text-white/70 leading-relaxed">
                 Call eliminations, predict twists, and climb the leaderboard.{" "}
@@ -178,7 +190,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
   );
 }
 
-function LiveTicker() {
+function LiveTicker({ items }: { items: string[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
 
@@ -200,7 +212,7 @@ function LiveTicker() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const items = TICKER_ITEMS.map((item, i) => (
+  const rendered = items.map((item, i) => (
     <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-5 text-white/50">
       <span className="h-1 w-1 rounded-full bg-neon-cyan/50 shrink-0" />
       <span>{item}</span>
@@ -222,8 +234,8 @@ function LiveTicker() {
             className="flex text-[11px] py-2 will-change-transform"
             style={{ transform: `translateX(-${offset}px)` }}
           >
-            {items}
-            {items}
+            {rendered}
+            {rendered}
           </div>
         </div>
       </div>
