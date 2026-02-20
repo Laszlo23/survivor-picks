@@ -13,11 +13,12 @@ const footerLinks = {
     { label: "Collectibles", href: "/collectibles" },
     { label: "$PICKS Token", href: "/token" },
   ],
-  Learn: [
+  Resources: [
     { label: "Whitepaper", href: "/whitepaper" },
     { label: "Tokenomics", href: "/tokenomics" },
     { label: "Contracts", href: "/contracts" },
     { label: "Blog", href: "/blog" },
+    { label: "How It Works", href: "/#how-it-works" },
   ],
   Community: [
     { label: "Discord", href: "https://discord.gg/Km7Tw6jHhk", external: true },
@@ -30,11 +31,9 @@ export function LandingFooter() {
   return (
     <FadeIn>
       <footer className="border-t border-neon-cyan/20 mt-16 relative">
-        {/* Neon top glow line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-neon-cyan/40 to-transparent" />
 
         <div className="mx-auto max-w-7xl px-4 py-10">
-          {/* Link columns */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
             {/* Brand column */}
             <div className="col-span-2 sm:col-span-1">

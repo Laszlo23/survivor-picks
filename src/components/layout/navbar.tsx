@@ -110,13 +110,19 @@ export function Navbar() {
               )}
 
               {status === "unauthenticated" && (
-                <div className="mb-4">
+                <div className="mb-4 space-y-2">
                   <Button
                     onClick={() => router.push("/auth/signin")}
                     className="w-full shadow-glow"
                   >
                     Start Predicting Free
                   </Button>
+                  <Link
+                    href="/auth/signin"
+                    className="block text-center text-xs text-muted-foreground hover:text-white transition-colors"
+                  >
+                    Already have an account? Log in
+                  </Link>
                 </div>
               )}
 
@@ -171,7 +177,7 @@ export function Navbar() {
 
               <div className="my-4 border-t border-white/[0.06]" />
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-                Learn
+                Resources
               </p>
               {learnItems.map((item) => (
                 <Link
@@ -192,35 +198,14 @@ export function Navbar() {
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                 Community
               </p>
-              <a
-                href="https://discord.gg/Km7Tw6jHhk"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Discord
-                <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
+              <a href="https://discord.gg/Km7Tw6jHhk" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                <MessageCircle className="h-4 w-4" /> Discord <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
               </a>
-              <a
-                href="https://warpcast.com/0xlaszlo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Farcaster
-                <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
+              <a href="https://warpcast.com/0xlaszlo" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                <ExternalLink className="h-4 w-4" /> Farcaster <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
               </a>
-              <a
-                href="https://x.com/laszloleonardo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-              >
-                <ExternalLink className="h-4 w-4" />
-                X / Twitter
-                <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
+              <a href="https://x.com/laszloleonardo" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                <ExternalLink className="h-4 w-4" /> X / Twitter <ExternalLink className="h-3 w-3 ml-auto opacity-40" />
               </a>
 
               {status === "authenticated" && (
@@ -266,6 +251,7 @@ export function Navbar() {
             </span>
           </Link>
 
+          {/* Desktop nav — no Learn dropdown */}
           <nav className="hidden md:flex items-center gap-0.5">
             {navItems.map((item) => {
               const isActive =
@@ -297,43 +283,30 @@ export function Navbar() {
                 </Link>
               );
             })}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors duration-200 ${
-                    learnItems.some((i) => pathname === i.href)
-                      ? "text-foreground bg-neon-cyan/[0.08] border border-neon-cyan/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                  }`}
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                  Learn
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                {learnItems.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href}>{item.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </nav>
 
-          <div className="flex items-center gap-2">
+          {/* Right side — CTA + Log in */}
+          <div className="flex items-center gap-3">
             {status === "loading" && (
               <div className="h-8 w-20 rounded-md bg-secondary shimmer" />
             )}
 
-            {status !== "loading" && (
-              <Link
-                href="/auth/signin"
-                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neon-cyan text-studio-black text-sm font-bold uppercase tracking-wider shadow-neon-cyan hover:shadow-neon-cyan-lg hover:brightness-110 transition-all"
-              >
-                Start Predicting Free
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+            {status === "unauthenticated" && (
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="hidden md:inline text-sm text-muted-foreground hover:text-white transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/auth/signin"
+                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neon-cyan text-studio-black text-sm font-bold uppercase tracking-wider shadow-neon-cyan hover:shadow-neon-cyan-lg hover:brightness-110 transition-all"
+                >
+                  Start Predicting Free
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </>
             )}
 
             {status === "authenticated" && session?.user && (

@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { FadeIn, ScaleIn } from "@/components/motion";
 import { NeonButton } from "@/components/ui/neon-button";
 
 const TICKER_ITEMS = [
-  "Sarah just predicted Venus gets voted out",
-  "Mike bet 3,333 $PICKS on a tribal blindside",
-  "Team Alpha hit a 5x multiplier on The Traitors",
-  "Jess called the rose ceremony twist — 200 pts",
-  "Leaderboard shakeup: @DannyBets takes #1",
-  "Bachelor finale pool: 12,847 predictions locked",
-  "Survivor merge boot predicted by 23% of players",
-  "Guild Wars: The Strategists overtake Chaos Crew",
+  "Sarah predicted the tribal blindside — 320 pts",
+  "Survivor EP7 pool hits 1,250 $PICKS",
+  "@DannyBets takes #1 on the leaderboard",
+  "Bachelor finale: 840 predictions locked",
+  "Love Island recoupling market now live",
+  "Team Alpha hit a 5x multiplier streak",
 ];
 
 function useCountdown(targetDate: string | null) {
@@ -59,16 +57,9 @@ interface LandingHeroProps {
 export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
   const countdown = useCountdown(nextEpisodeAt ?? null);
 
-  const tickerContent = TICKER_ITEMS.map((item, i) => (
-    <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-6">
-      <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan shrink-0" />
-      <span>{item}</span>
-    </span>
-  ));
-
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex flex-col">
-      {/* ── CSS animated background — red/blue tension gradients ── */}
+      {/* ── CSS animated background ── */}
       <div className="fixed inset-0 -z-10" aria-hidden="true">
         <div className="absolute inset-0 bg-studio-black" />
         <div className="hero-gradient-red" />
@@ -81,31 +72,25 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
         <div className="hero-particle hero-particle--cyan" style={{ left: "12%", animationDuration: "8s", animationDelay: "0s" }} />
         <div className="hero-particle hero-particle--cyan" style={{ left: "32%", animationDuration: "10s", animationDelay: "1.5s" }} />
         <div className="hero-particle hero-particle--cyan" style={{ left: "58%", animationDuration: "12s", animationDelay: "3s" }} />
-        <div className="hero-particle hero-particle--cyan" style={{ left: "78%", animationDuration: "9s", animationDelay: "4.5s" }} />
         <div className="hero-particle hero-particle--magenta" style={{ left: "45%", animationDuration: "11s", animationDelay: "2s" }} />
       </div>
 
-      {/* ── Live ticker marquee ── */}
-      <div className="relative z-10 w-full overflow-hidden border-b border-white/[0.06] bg-studio-black/60 backdrop-blur-sm">
-        <div className="hero-ticker flex text-xs text-white/60 py-2">
-          {tickerContent}
-          {tickerContent}
-        </div>
-      </div>
+      {/* ── Live ticker ── */}
+      <LiveTicker />
 
       {/* ── Main content ── */}
       <div className="relative flex-1 flex items-center">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:py-28 lg:py-36 w-full">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:py-24 lg:py-32 w-full">
           <div className="text-center">
-            {/* Logo — smaller per plan */}
+            {/* Logo */}
             <ScaleIn>
-              <div className="mb-8 flex justify-center">
+              <div className="mb-6 flex justify-center">
                 <div className="relative">
                   <Image
                     src="/pickslogoicon.png"
                     alt="RealityPicks"
-                    width={56}
-                    height={56}
+                    width={48}
+                    height={48}
                     className="rounded-xl relative z-10 drop-shadow-[0_0_16px_hsl(185_100%_55%/0.5)]"
                     style={{ mixBlendMode: "screen" }}
                     priority
@@ -115,13 +100,29 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
               </div>
             </ScaleIn>
 
+            {/* ON AIR label */}
+            <FadeIn delay={0.05}>
+              <div className="mb-4 flex justify-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+                    ON AIR
+                  </span>
+                  <span className="h-3 w-px bg-white/10" />
+                  <span className="text-[10px] uppercase tracking-wider text-white/40">
+                    {seasonTitle || "Survivor"} · Tribal Council
+                  </span>
+                </div>
+              </div>
+            </FadeIn>
+
             {/* Countdown timer */}
             {!countdown.expired && (
               <FadeIn delay={0.1}>
                 <div className="mb-6 flex justify-center">
-                  <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.04] border border-neon-cyan/20 backdrop-blur-sm">
-                    <span className="text-xs uppercase tracking-widest text-white/50">
-                      Next Elimination in
+                  <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.04] border border-neon-cyan/20 backdrop-blur-sm animate-glow-pulse">
+                    <span className="text-[10px] uppercase tracking-widest text-white/40">
+                      Next elimination
                     </span>
                     <span className="font-mono text-xl sm:text-2xl font-bold tracking-wider text-neon-cyan drop-shadow-[0_0_12px_hsl(185_100%_55%/0.6)]">
                       {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
@@ -131,7 +132,7 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
               </FadeIn>
             )}
 
-            {/* Headline */}
+            {/* Headline — tight */}
             <FadeIn delay={0.2}>
               <h1 className="font-headline text-4xl font-extrabold uppercase tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
                 Predict Reality.{" "}
@@ -141,18 +142,16 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
               </h1>
             </FadeIn>
 
-            {/* Subheadline */}
-            <FadeIn delay={0.35}>
-              <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base md:text-lg text-white/80 leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.6)]">
-                Pick winners, call eliminations, spot twists before they happen
-                across Survivor, The Traitors, The Bachelor, and more. Earn
-                points, build streaks, and climb the leaderboard.{" "}
+            {/* Subheadline — single line */}
+            <FadeIn delay={0.3}>
+              <p className="mx-auto mt-4 max-w-lg text-sm sm:text-base text-white/70 leading-relaxed">
+                Call eliminations, predict twists, and climb the leaderboard.{" "}
                 <span className="text-white font-semibold">Free to play.</span>
               </p>
             </FadeIn>
 
             {/* CTAs */}
-            <FadeIn delay={0.5}>
+            <FadeIn delay={0.45}>
               <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4 sm:flex-row sm:justify-center">
                 <NeonButton
                   variant="primary"
@@ -176,5 +175,58 @@ export function LandingHero({ seasonTitle, nextEpisodeAt }: LandingHeroProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+function LiveTicker() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const halfWidth = el.scrollWidth / 2;
+    let raf: number;
+    let pos = 0;
+    const speed = 0.4;
+
+    function step() {
+      pos += speed;
+      if (pos >= halfWidth) pos = 0;
+      setOffset(pos);
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const items = TICKER_ITEMS.map((item, i) => (
+    <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-5 text-white/50">
+      <span className="h-1 w-1 rounded-full bg-neon-cyan/50 shrink-0" />
+      <span>{item}</span>
+    </span>
+  ));
+
+  return (
+    <div className="relative z-10 w-full overflow-hidden border-b border-white/[0.06] bg-studio-black/60 backdrop-blur-sm">
+      <div className="flex items-center">
+        <span className="shrink-0 flex items-center gap-1.5 px-3 py-2 border-r border-white/[0.06] bg-white/[0.02]">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">
+            Live Feed
+          </span>
+        </span>
+        <div className="overflow-hidden flex-1">
+          <div
+            ref={trackRef}
+            className="flex text-[11px] py-2 will-change-transform"
+            style={{ transform: `translateX(-${offset}px)` }}
+          >
+            {items}
+            {items}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

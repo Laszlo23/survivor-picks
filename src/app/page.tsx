@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Users, Clock, Coins } from "lucide-react";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { LandingHero } from "@/components/landing/hero";
@@ -11,6 +11,7 @@ import { LandingShell } from "@/components/landing/landing-shell";
 import { NeonButton } from "@/components/ui/neon-button";
 import { LowerThird } from "@/components/ui/lower-third";
 import { ScoreboardRow } from "@/components/ui/scoreboard-row";
+import { Section, SectionLabel, SectionTitle, StatPill } from "@/components/ui/primitives";
 
 export const revalidate = 60;
 
@@ -29,21 +30,16 @@ export default async function LandingPage() {
 
       <div className="relative z-10 bg-studio-black">
 
-      {/* One Featured Live Market */}
       <FeaturedMarketPreview />
 
-      {/* Social Proof */}
       <Suspense fallback={<SocialProofSkeleton />}>
         <SocialProof seasonId={season?.id} />
       </Suspense>
 
-      {/* How It Works */}
       <LandingHowItWorks />
 
-      {/* Email Capture */}
       <LandingEmailCapture />
 
-      {/* Closing CTA */}
       <ClosingCTA />
 
       <LandingFooter />
@@ -54,70 +50,111 @@ export default async function LandingPage() {
   );
 }
 
-// ─── Featured Market Preview (single highlight card) ───────────────
+// ─── Featured Market Preview ────────────────────────────────────────
 function FeaturedMarketPreview() {
   return (
-    <section className="mx-auto max-w-4xl px-4 pt-16 pb-8">
+    <Section>
       <div className="mb-8 text-center">
-        <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">LIVE NOW</p>
-        <h2 className="font-headline text-2xl sm:text-3xl font-extrabold uppercase text-white">
-          Featured Market
-        </h2>
+        <SectionLabel>LIVE NOW</SectionLabel>
+        <SectionTitle>Featured Market</SectionTitle>
       </div>
 
-      <Link href="/play" className="block group">
-        <div className="relative p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-neon-cyan/20 hover:bg-white/[0.04] transition-all">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-3xl">🏝️</span>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Survivor S47 · EP7</p>
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-neon-cyan">
-                <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan animate-pulse" />
-                LIVE
-              </span>
-            </div>
-          </div>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-neon-cyan transition-colors">
-            Who Gets Voted Off Episode 7?
-          </h3>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <span>18 players</span>
-            <span>2h 15m left</span>
-            <span className="text-neon-cyan font-bold">1,250 pool</span>
-          </div>
-          <div className="absolute top-6 right-6 sm:top-8 sm:right-8 flex items-center gap-1 text-sm text-muted-foreground group-hover:text-neon-cyan transition-colors">
-            View all markets <ArrowRight className="h-4 w-4" />
+      <div className="relative p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <span className="text-3xl">🏝️</span>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Survivor S47 · EP7
+            </p>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-neon-cyan">
+              <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan animate-pulse" />
+              LIVE
+            </span>
           </div>
         </div>
-      </Link>
-    </section>
+
+        {/* Question */}
+        <h3 className="text-lg sm:text-xl font-bold text-white mb-5">
+          Who Gets Voted Off Episode 7?
+        </h3>
+
+        {/* Two-outcome preview with social proof % */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <button className="group relative p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-neon-cyan/30 hover:bg-white/[0.05] transition-all text-left">
+            <p className="text-sm font-semibold text-white group-hover:text-neon-cyan transition-colors">
+              Venus
+            </p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">42% picked</span>
+              <div className="h-1 w-12 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full w-[42%] rounded-full bg-neon-cyan/50" />
+              </div>
+            </div>
+          </button>
+          <button className="group relative p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-neon-magenta/30 hover:bg-white/[0.05] transition-all text-left">
+            <p className="text-sm font-semibold text-white group-hover:text-neon-magenta transition-colors">
+              Sam
+            </p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">31% picked</span>
+              <div className="h-1 w-12 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full w-[31%] rounded-full bg-neon-magenta/50" />
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-5 text-xs text-muted-foreground border-t border-white/[0.06] pt-4 mb-5">
+          <span className="flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5" /> 247 players
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" /> 2h 15m left
+          </span>
+          <span className="flex items-center gap-1.5 text-neon-cyan font-bold">
+            <Coins className="h-3.5 w-3.5" /> 1,250 pool
+          </span>
+        </div>
+
+        {/* CTA row */}
+        <div className="flex items-center justify-between">
+          <NeonButton
+            variant="primary"
+            href="/play"
+            className="gap-2 text-sm px-6 py-2"
+          >
+            Predict Now
+            <ArrowRight className="h-3.5 w-3.5" />
+          </NeonButton>
+          <Link
+            href="/play"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-neon-cyan transition-colors"
+          >
+            View all markets <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </div>
+    </Section>
   );
 }
 
-// ─── Social Proof (async — leaderboard preview + stats) ────────────
+// ─── Social Proof ───────────────────────────────────────────────────
 async function SocialProof({ seasonId }: { seasonId?: string }) {
   const leaderboard = seasonId ? await getTopLeaderboard(seasonId, 10) : [];
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12">
+    <Section className="pt-0">
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Stats */}
         <div className="space-y-4">
-          <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold">Social Proof</p>
-          <h2 className="font-headline text-2xl font-extrabold uppercase text-white">
-            The community is growing
-          </h2>
+          <SectionLabel>Social Proof</SectionLabel>
+          <SectionTitle>The community is growing</SectionTitle>
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { value: "3,333+", label: "Players" },
-              { value: "33", label: "Markets" },
-              { value: "333K", label: "Predictions" },
-            ].map((stat) => (
-              <div key={stat.label} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] text-center">
-                <p className="text-xl font-bold font-mono text-neon-cyan">{stat.value}</p>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{stat.label}</p>
-              </div>
-            ))}
+            <StatPill value="3,333+" label="Players" live />
+            <StatPill value="33" label="Markets" />
+            <StatPill value="12K+" label="Predictions this week" live />
           </div>
         </div>
 
@@ -147,13 +184,13 @@ async function SocialProof({ seasonId }: { seasonId?: string }) {
           </div>
         )}
       </div>
-    </section>
+    </Section>
   );
 }
 
 function SocialProofSkeleton() {
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12">
+    <Section className="pt-0">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
           <div className="h-4 w-24 bg-white/[0.04] rounded animate-pulse" />
@@ -181,14 +218,14 @@ function SocialProofSkeleton() {
           </div>
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
 
-// ─── Closing CTA (lightweight) ─────────────────────────────────────
+// ─── Closing CTA ────────────────────────────────────────────────────
 function ClosingCTA() {
   return (
-    <section className="relative mx-auto max-w-4xl px-4 py-20">
+    <Section>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
         <div className="w-[500px] h-[250px] bg-neon-cyan/5 rounded-full blur-[100px]" />
       </div>
@@ -212,6 +249,6 @@ function ClosingCTA() {
           </NeonButton>
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
