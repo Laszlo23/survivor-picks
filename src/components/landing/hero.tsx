@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import { FadeIn, ScaleIn } from "@/components/motion";
 import { NeonButton } from "@/components/ui/neon-button";
 
 function useCountdown(targetDate: string | null) {
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0, expired: true });
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0, expired: true });
 
   useEffect(() => {
     if (!targetDate) return;
@@ -17,11 +17,12 @@ function useCountdown(targetDate: string | null) {
     function tick() {
       const diff = target - Date.now();
       if (diff <= 0) {
-        setTimeLeft({ h: 0, m: 0, s: 0, expired: true });
+        setTimeLeft({ d: 0, h: 0, m: 0, s: 0, expired: true });
         return;
       }
       setTimeLeft({
-        h: Math.floor(diff / 3_600_000),
+        d: Math.floor(diff / 86_400_000),
+        h: Math.floor((diff % 86_400_000) / 3_600_000),
         m: Math.floor((diff % 3_600_000) / 60_000),
         s: Math.floor((diff % 60_000) / 1_000),
         expired: false,
@@ -51,7 +52,6 @@ interface LandingHeroProps {
 export function LandingHero({
   seasonTitle,
   nextEpisodeAt,
-  showSlug,
   currentEpisode,
   currentEpisodeTitle,
 }: LandingHeroProps) {
@@ -61,17 +61,24 @@ export function LandingHero({
   const episodeLabel = currentEpisodeTitle || "Tribal Council";
 
   const tickerItems = [
-    `${showName} ${currentEpisode || ""} predictions are open`,
-    "Who will be the next one eliminated?",
-    `${currentEpisodeTitle ? currentEpisodeTitle + " — " : ""}Make your picks before lock`,
+    `${showName} ${currentEpisode || ""} — predictions are open`,
+    "Who will be eliminated next? Make your pick",
+    `${episodeLabel} — lock your predictions before airtime`,
     "Leaderboard heating up — climb the ranks",
     "Free to play. Predict, earn points, win glory",
-    "New episode markets drop every week",
+    "New markets drop every episode",
+    "Join the community and start predicting today",
+    "Streak bonus: correct picks in a row multiply your score",
   ];
+
+  const countdownDisplay = !countdown.expired
+    ? countdown.d > 0
+      ? `${countdown.d}d ${pad(countdown.h)}h ${pad(countdown.m)}m`
+      : `${pad(countdown.h)}:${pad(countdown.m)}:${pad(countdown.s)}`
+    : null;
 
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex flex-col">
-      {/* ── CSS animated background ── */}
       <div className="fixed inset-0 -z-10" aria-hidden="true">
         <div className="absolute inset-0 bg-studio-black" />
         <div className="hero-gradient-red" />
@@ -79,7 +86,6 @@ export function LandingHero({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_35%,transparent_0%,hsl(220_15%_4%/0.6)_70%,hsl(220_15%_4%/0.95)_100%)]" />
       </div>
 
-      {/* ── Floating particles ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="hero-particle hero-particle--cyan" style={{ left: "12%", animationDuration: "8s", animationDelay: "0s" }} />
         <div className="hero-particle hero-particle--cyan" style={{ left: "32%", animationDuration: "10s", animationDelay: "1.5s" }} />
@@ -87,14 +93,11 @@ export function LandingHero({
         <div className="hero-particle hero-particle--magenta" style={{ left: "45%", animationDuration: "11s", animationDelay: "2s" }} />
       </div>
 
-      {/* ── Live ticker ── */}
       <LiveTicker items={tickerItems} />
 
-      {/* ── Main content ── */}
       <div className="relative flex-1 flex items-center">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:py-24 lg:py-32 w-full">
           <div className="text-center">
-            {/* Logo */}
             <ScaleIn>
               <div className="mb-6 flex justify-center">
                 <div className="relative">
@@ -112,7 +115,6 @@ export function LandingHero({
               </div>
             </ScaleIn>
 
-            {/* ON AIR label */}
             <FadeIn delay={0.05}>
               <div className="mb-4 flex justify-center">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08]">
@@ -128,23 +130,21 @@ export function LandingHero({
               </div>
             </FadeIn>
 
-            {/* Countdown timer */}
-            {!countdown.expired && (
+            {countdownDisplay && (
               <FadeIn delay={0.1}>
                 <div className="mb-6 flex justify-center">
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.04] border border-neon-cyan/20 backdrop-blur-sm animate-glow-pulse">
                     <span className="text-[10px] uppercase tracking-widest text-white/40">
-                      Next episode
+                      Next episode in:
                     </span>
                     <span className="font-mono text-xl sm:text-2xl font-bold tracking-wider text-neon-cyan drop-shadow-[0_0_12px_hsl(185_100%_55%/0.6)]">
-                      {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
+                      {countdownDisplay}
                     </span>
                   </div>
                 </div>
               </FadeIn>
             )}
 
-            {/* Headline */}
             <FadeIn delay={0.2}>
               <h1 className="font-headline text-4xl font-extrabold uppercase tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
                 Predict Reality.{" "}
@@ -154,15 +154,13 @@ export function LandingHero({
               </h1>
             </FadeIn>
 
-            {/* Subheadline */}
             <FadeIn delay={0.3}>
-              <p className="mx-auto mt-4 max-w-lg text-sm sm:text-base text-white/70 leading-relaxed">
-                Call eliminations, predict twists, and climb the leaderboard.{" "}
-                <span className="text-white font-semibold">Free to play.</span>
+              <p className="mx-auto mt-4 max-w-md text-sm sm:text-base text-white/70">
+                Pick winners. Call blindsides. Climb the leaderboard.{" "}
+                <span className="text-white font-semibold">100% free.</span>
               </p>
             </FadeIn>
 
-            {/* CTAs */}
             <FadeIn delay={0.45}>
               <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3 sm:gap-4 sm:flex-row sm:justify-center">
                 <NeonButton
@@ -192,30 +190,27 @@ export function LandingHero({
 
 function LiveTicker({ items }: { items: string[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
+  const posRef = useRef(0);
 
-  useEffect(() => {
+  const animate = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
     const halfWidth = el.scrollWidth / 2;
-    let raf: number;
-    let pos = 0;
-    const speed = 0.4;
-
-    function step() {
-      pos += speed;
-      if (pos >= halfWidth) pos = 0;
-      setOffset(pos);
-      raf = requestAnimationFrame(step);
-    }
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    posRef.current += 0.4;
+    if (posRef.current >= halfWidth) posRef.current = 0;
+    el.style.transform = `translateX(-${posRef.current}px)`;
+    requestAnimationFrame(animate);
   }, []);
 
+  useEffect(() => {
+    const raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [animate]);
+
   const rendered = items.map((item, i) => (
-    <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-5 text-white/50">
-      <span className="h-1 w-1 rounded-full bg-neon-cyan/50 shrink-0" />
-      <span>{item}</span>
+    <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-5 text-white/45 text-[11px]">
+      <span className="h-1 w-1 rounded-full bg-neon-cyan/40 shrink-0" />
+      {item}
     </span>
   ));
 
@@ -231,8 +226,7 @@ function LiveTicker({ items }: { items: string[] }) {
         <div className="overflow-hidden flex-1">
           <div
             ref={trackRef}
-            className="flex text-[11px] py-2 will-change-transform"
-            style={{ transform: `translateX(-${offset}px)` }}
+            className="flex py-2 will-change-transform"
           >
             {rendered}
             {rendered}

@@ -71,6 +71,8 @@ export function Navbar() {
     };
   }, [mobileOpen]);
 
+  const isAdmin = status === "authenticated" && session?.user?.role === "ADMIN";
+
   const mobileMenu = (
     <AnimatePresence>
       {mobileOpen && (
@@ -160,21 +162,6 @@ export function Navbar() {
                 </Link>
               )}
 
-              {status === "authenticated" &&
-                session?.user?.role === "ADMIN" && (
-                  <Link
-                    href="/admin"
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
-                      pathname === "/admin"
-                        ? "text-neon-gold bg-neon-gold/[0.08] border border-neon-gold/10"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <Shield className="h-4 w-4" />
-                    Admin Panel
-                  </Link>
-                )}
-
               <div className="my-4 border-t border-white/[0.06]" />
               <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                 Resources
@@ -251,7 +238,6 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop nav — no Learn dropdown */}
           <nav className="hidden md:flex items-center gap-0.5">
             {navItems.map((item) => {
               const isActive =
@@ -285,7 +271,6 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Right side — CTA + Log in */}
           <div className="flex items-center gap-3">
             {status === "loading" && (
               <div className="h-8 w-20 rounded-md bg-secondary shimmer" />
@@ -310,44 +295,44 @@ export function Navbar() {
             )}
 
             {status === "authenticated" && session?.user && (
-              <>
-                {session.user.role === "ADMIN" && (
-                  <Link href="/admin" className="hidden md:block">
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <Shield className="h-3.5 w-3.5" />
-                      Admin
-                    </Button>
-                  </Link>
-                )}
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild className="hidden md:flex">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 text-muted-foreground"
-                    >
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30">
-                        {session.user.name?.[0]?.toUpperCase() ||
-                          session.user.email?.[0]?.toUpperCase()}
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard">Dashboard</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut()}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild className="hidden md:flex">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-muted-foreground"
+                  >
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30">
+                      {session.user.name?.[0]?.toUpperCase() ||
+                        session.user.email?.[0]?.toUpperCase()}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center gap-2">
+                          <Shield className="h-3.5 w-3.5" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {status !== "loading" && (

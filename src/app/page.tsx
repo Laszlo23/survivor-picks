@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, Users, Clock, Coins, MessageSquare } from "lucide-react";
+import { ArrowRight, Users, Clock, Coins, MessageSquare, Flame, Zap } from "lucide-react";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { prisma } from "@/lib/prisma";
@@ -25,11 +25,12 @@ export default async function LandingPage() {
 
   const nextEpisodeAt = nextEpisode?.airAt?.toISOString() ?? null;
 
-  // Featured market: first OPEN episode
   const featuredEpisode = season?.episodes?.find((ep) => ep.status === "OPEN");
   let featuredQuestions = 0;
   let featuredPlayers = 0;
   let featuredPredictions = 0;
+  let topTwoPicks: { name: string; pct: number }[] = [];
+
   if (featuredEpisode) {
     featuredQuestions = await prisma.question.count({
       where: { episodeId: featuredEpisode.id, status: "OPEN" },
@@ -42,9 +43,49 @@ export default async function LandingPage() {
     featuredPredictions = await prisma.prediction.count({
       where: { question: { episodeId: featuredEpisode.id } },
     });
+
+    // Fetch the elimination question to show a two-outcome preview
+    const elimQuestion = await prisma.question.findFirst({
+      where: {
+        episodeId: featuredEpisode.id,
+        status: "OPEN",
+        type: "ELIMINATION",
+      },
+    });
+    if (elimQuestion) {
+      const pickCounts = await prisma.prediction.groupBy({
+        by: ["chosenOption"],
+        where: { questionId: elimQuestion.id },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 2,
+      });
+      const total = pickCounts.reduce((s, p) => s + p._count.id, 0);
+      if (total > 0) {
+        topTwoPicks = pickCounts.map((p) => ({
+          name: p.chosenOption,
+          pct: Math.round((p._count.id / total) * 100),
+        }));
+      }
+    }
+
+    // If no real picks yet, show mocked community tension
+    if (topTwoPicks.length === 0) {
+      const options = (
+        await prisma.question.findFirst({
+          where: { episodeId: featuredEpisode.id, status: "OPEN", type: "ELIMINATION" },
+          select: { options: true },
+        })
+      )?.options as string[] | undefined;
+      if (options && options.length >= 2) {
+        topTwoPicks = [
+          { name: options[0], pct: 62 },
+          { name: options[1], pct: 38 },
+        ];
+      }
+    }
   }
 
-  // Stats
   const totalPlayers = await prisma.user.count();
   const totalPredictions = await prisma.prediction.count();
   const openQuestions = await prisma.question.count({ where: { status: "OPEN" } });
@@ -69,6 +110,7 @@ export default async function LandingPage() {
         questions={featuredQuestions}
         players={featuredPlayers}
         predictions={featuredPredictions}
+        topTwoPicks={topTwoPicks}
       />
 
       <Suspense fallback={<SocialProofSkeleton />}>
@@ -130,6 +172,7 @@ function FeaturedMarketPreview({
   questions,
   players,
   predictions,
+  topTwoPicks,
 }: {
   seasonTitle?: string;
   showSlug?: string;
@@ -137,6 +180,7 @@ function FeaturedMarketPreview({
   questions: number;
   players: number;
   predictions: number;
+  topTwoPicks: { name: string; pct: number }[];
 }) {
   if (!episode) {
     return (
@@ -170,7 +214,6 @@ function FeaturedMarketPreview({
       </div>
 
       <div className="relative p-6 sm:p-8 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <span className="text-3xl">{emoji}</span>
           <div>
@@ -184,18 +227,37 @@ function FeaturedMarketPreview({
           </div>
         </div>
 
-        {/* Episode title */}
         <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
           {episode.title}
         </h3>
 
-        {/* Question count */}
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground mb-5">
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
           <MessageSquare className="h-3.5 w-3.5" />
           {questions} prediction{questions !== 1 ? "s" : ""} available
         </p>
 
-        {/* Stats row */}
+        {/* Two-outcome tension preview */}
+        {topTwoPicks.length >= 2 && (
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-white/30 shrink-0">
+              Who&apos;s out?
+            </span>
+            <div className="flex-1 flex items-center gap-2">
+              <span className="flex items-center gap-1 text-xs font-semibold text-neon-cyan">
+                <Flame className="h-3 w-3" />
+                {topTwoPicks[0].name}
+                <span className="text-neon-cyan/60 font-mono text-[11px]">{topTwoPicks[0].pct}%</span>
+              </span>
+              <span className="text-white/20 text-[10px]">vs</span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-neon-magenta">
+                <Zap className="h-3 w-3" />
+                {topTwoPicks[1].name}
+                <span className="text-neon-magenta/60 font-mono text-[11px]">{topTwoPicks[1].pct}%</span>
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-5 text-xs text-muted-foreground border-t border-white/[0.06] pt-4 mb-5">
           <span className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" /> {players} player{players !== 1 ? "s" : ""}
@@ -204,11 +266,10 @@ function FeaturedMarketPreview({
             <Clock className="h-3.5 w-3.5" /> {timeUntil(episode.lockAt)}
           </span>
           <span className="flex items-center gap-1.5 text-neon-cyan font-bold">
-            <Coins className="h-3.5 w-3.5" /> {predictions} prediction{predictions !== 1 ? "s" : ""}
+            <Coins className="h-3.5 w-3.5" /> {predictions} pick{predictions !== 1 ? "s" : ""}
           </span>
         </div>
 
-        {/* CTA row */}
         <div className="flex items-center justify-between">
           <NeonButton
             variant="primary"
@@ -230,7 +291,10 @@ function FeaturedMarketPreview({
   );
 }
 
-// ─── Social Proof ───────────────────────────────────────────────────
+// ─── Social Proof (threshold-gated) ─────────────────────────────────
+
+const EARLY_ACCESS_THRESHOLD = 50;
+
 async function SocialProof({
   seasonId,
   totalPlayers,
@@ -243,38 +307,66 @@ async function SocialProof({
   openQuestions: number;
 }) {
   const leaderboard = seasonId ? await getTopLeaderboard(seasonId, 10) : [];
+  const isEarlyAccess = totalPlayers < EARLY_ACCESS_THRESHOLD;
 
   return (
     <Section className="pt-0">
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Stats */}
         <div className="space-y-4">
-          <SectionLabel>Social Proof</SectionLabel>
-          <SectionTitle>The community is growing</SectionTitle>
-          <div className="grid grid-cols-3 gap-3">
-            <StatPill
-              value={totalPlayers.toLocaleString("en-US") + "+"}
-              label="Players"
-              live
-            />
-            <StatPill
-              value={openQuestions.toString()}
-              label="Open markets"
-              live
-            />
-            <StatPill
-              value={totalPredictions.toLocaleString("en-US")}
-              label="Predictions"
-              live
-            />
-          </div>
+          {isEarlyAccess ? (
+            <>
+              <SectionLabel>EARLY ACCESS BETA</SectionLabel>
+              <SectionTitle>Be a founding player</SectionTitle>
+              <p className="text-sm text-muted-foreground">
+                You&apos;re early. Founding players earn bonus XP and exclusive badges.
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <StatPill
+                  value={totalPlayers.toString()}
+                  label="Founding players"
+                  live
+                />
+                <StatPill
+                  value={openQuestions.toString()}
+                  label="Open markets"
+                  live
+                />
+                <StatPill
+                  value={totalPredictions.toLocaleString("en-US")}
+                  label="Predictions so far"
+                  live
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <SectionLabel>Social Proof</SectionLabel>
+              <SectionTitle>The community is growing</SectionTitle>
+              <div className="grid grid-cols-3 gap-3">
+                <StatPill
+                  value={totalPlayers.toLocaleString("en-US") + "+"}
+                  label="Players"
+                  live
+                />
+                <StatPill
+                  value={openQuestions.toString()}
+                  label="Open markets"
+                  live
+                />
+                <StatPill
+                  value={totalPredictions.toLocaleString("en-US")}
+                  label="Predictions this week"
+                  live
+                />
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Leaderboard preview */}
         {leaderboard.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <LowerThird label="RANKINGS" value="Top Players" />
+              <LowerThird label="RANKINGS" value={isEarlyAccess ? "Top Founders" : "Top Players"} />
               <Link href="/leaderboard">
                 <NeonButton variant="ghost" className="gap-1 text-xs">
                   View All <ArrowRight className="h-3 w-3" />
