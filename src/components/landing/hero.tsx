@@ -156,8 +156,8 @@ export function LandingHero({
 
             <FadeIn delay={0.3}>
               <p className="mx-auto mt-4 max-w-md text-sm sm:text-base text-white/70">
-                Pick winners. Call blindsides. Climb the leaderboard.{" "}
-                <span className="text-white font-semibold">100% free.</span>
+                Pick winners. Call blindsides. Earn <span className="text-neon-cyan font-semibold">$PICKS</span> rewards.{" "}
+                <span className="text-white font-semibold">100% free to play.</span>
               </p>
             </FadeIn>
 

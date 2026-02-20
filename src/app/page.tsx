@@ -236,6 +236,10 @@ function FeaturedMarketPreview({
           {questions} prediction{questions !== 1 ? "s" : ""} available
         </p>
 
+        <p className="flex items-center gap-1.5 text-[11px] text-neon-gold/70 mb-4">
+          🏆 $PICKS rewards distributed to correct predictions
+        </p>
+
         {/* Two-outcome tension preview */}
         {topTwoPicks.length >= 2 && (
           <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-5">
@@ -318,7 +322,7 @@ async function SocialProof({
               <SectionLabel>EARLY ACCESS BETA</SectionLabel>
               <SectionTitle>Be a founding player</SectionTitle>
               <p className="text-sm text-muted-foreground">
-                You&apos;re early. Founding players earn bonus XP and exclusive badges.
+                You&apos;re early. Founding players earn bonus XP, exclusive badges, and extra $PICKS rewards.
               </p>
               <div className="grid grid-cols-3 gap-3">
                 <StatPill
@@ -437,8 +441,11 @@ function ClosingCTA() {
         <h2 className="font-headline text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-4">
           Ready to play?
         </h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
+        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-3">
           Every episode is a market. Every prediction is a position. Free to play, always.
+        </p>
+        <p className="text-xs text-neon-gold/60 mb-8">
+          Top players earn token rewards and season perks.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <NeonButton
