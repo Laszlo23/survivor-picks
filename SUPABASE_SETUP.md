@@ -73,11 +73,12 @@ In **Authentication → URL Configuration**:
   - `http://localhost:3000/auth/callback`
   - `https://yourdomain.com/auth/callback`
 
-## 7. Enable Email Auth
+## 7. Enable Email Auth (Magic Link)
 
 In **Authentication → Providers → Email**:
 - Enable Email provider
-- Configure "Confirm email" as desired (off = instant sign-in with password)
+- Magic link is the default; no password required
+- Configure "Confirm email" if you want double opt-in (off = instant magic link)
 
 ## 8. Vercel Production
 
