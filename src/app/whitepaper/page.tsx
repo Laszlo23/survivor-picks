@@ -30,7 +30,7 @@ const CHAPTERS = [
   { id: "community", num: "07", title: "The Community", icon: Users },
   { id: "live", num: "08", title: "The Live", icon: Radio },
   { id: "roadmap", num: "09", title: "The Roadmap", icon: Map },
-  { id: "founder", num: "10", title: "The Founder", icon: User },
+  { id: "founders", num: "10", title: "The Founders", icon: Users },
 ] as const;
 
 export default function WhitepaperPage() {
@@ -52,17 +52,17 @@ export default function WhitepaperPage() {
               <span className="text-gradient-cyan">RealityPicks</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-              A whitepaper written not in spreadsheets, but in stories. How two decades
-              of building, the power of 333, and one obsession with reality TV created
-              the first decentralized prediction platform for entertainment — with Stripe
-              at its heart.
+              A whitepaper written not in spreadsheets, but in stories. How three builders
+              who were always in the office, the power of 333, and one shared obsession with
+              reality TV created the first decentralized prediction platform for entertainment
+              — with Stripe at its heart.
             </p>
             <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5" /> By 0xlaszlo
+                <Users className="h-3.5 w-3.5" /> By Laszlo, Aiman &amp; Emilio
               </span>
               <span className="w-px h-3 bg-white/20" />
-              <span>Base Network</span>
+              <span>staffone.site</span>
               <span className="w-px h-3 bg-white/20" />
               <span>333 Philosophy</span>
               <span className="w-px h-3 bg-white/20" />
@@ -102,7 +102,7 @@ export default function WhitepaperPage() {
           {/* Chapter 01: The Origin */}
           <FadeIn>
             <section id="origin" className="scroll-mt-32">
-              <ChapterHeader num="01" title="The Origin" subtitle="Two Decades of Building" />
+              <ChapterHeader num="01" title="The Origin" subtitle="Three Who Refused to Sit Still" />
               <div className="prose-section">
                 <p>
                   Every revolution starts with someone who refuses to accept the status quo.
@@ -116,16 +116,35 @@ export default function WhitepaperPage() {
                   He minted when minting meant something. He built when building meant nobody was watching.
                 </p>
                 <p>
+                  But the real spark didn&apos;t come from a whiteboard or a pitch deck. It came from the office.
+                  Three people — always the same three — who were always the first to arrive and the last to leave.
+                  <strong className="text-white"> Laszlo Bihary</strong>,{" "}
+                  <strong className="text-neon-cyan">Aiman El Boujamai</strong>, and{" "}
+                  <strong className="text-neon-magenta">Emilio Dimitri Dik</strong>. Late nights turning into early mornings.
+                  Coffee turning into code. Ideas scribbled on whiteboards turning into shipped products.
+                </p>
+                <p>
+                  They didn&apos;t plan to build RealityPicks. They were just vibing — talking about what was broken
+                  in entertainment, in crypto, in how people interact with the shows they love. Aiman brought
+                  the operational discipline. Emilio brought the creative fire. Laszlo brought the two decades
+                  of building and the Web3 conviction. Together, under the banner of{" "}
+                  <a href="https://staffone.site" target="_blank" rel="noopener noreferrer" className="text-neon-gold hover:text-neon-gold/80 font-bold transition-colors">
+                    staffone.site
+                  </a>
+                  , they were already a team — fully committed, fully aligned, fully in the zone.
+                </p>
+                <p>
                   After 20 years of shipping products across Web2 and Web3, contributing to guilds on
                   Guild.xyz, participating in DAO governance on Snapshot and Tally, minting on Zora and
                   BasePaint, and nurturing communities on Farcaster and Lens — one obsession remained:
                   <em className="text-neon-cyan"> how do we make prediction markets fun, fair, and accessible to everyone?</em>
                 </p>
-                <p>That obsession became <strong className="text-white">RealityPicks</strong>.</p>
+                <p>That obsession — born in the late-night sessions of those three always in the office — became <strong className="text-white">RealityPicks</strong>.</p>
                 <p>
                   But this time, it wouldn&apos;t just be built differently. It would be built on a philosophy —
                   a number that kept appearing at every turning point, in every alignment, in every sign that
-                  said <em className="text-neon-gold">&ldquo;keep going.&rdquo;</em>
+                  said <em className="text-neon-gold">&ldquo;keep going.&rdquo;</em> And it would be built by three.
+                  Because of course it would.
                 </p>
               </div>
             </section>
@@ -534,48 +553,92 @@ export default function WhitepaperPage() {
             </section>
           </FadeIn>
 
-          {/* Chapter 10: The Founder */}
+          {/* Chapter 10: The Founders */}
           <FadeIn>
-            <section id="founder" className="scroll-mt-32">
-              <ChapterHeader num="10" title="The Founder" subtitle="0xlaszlo" />
+            <section id="founders" className="scroll-mt-32">
+              <ChapterHeader num="10" title="The Founders" subtitle="The Three Who Were Always in the Office" />
               <div className="prose-section">
                 <p>
-                  Laszlo Bihary has spent two decades at the frontier of technology and community. From
-                  early internet startups to Web3 protocols, his journey spans the entire evolution of the digital age.
+                  RealityPicks wasn&apos;t born from a slide deck or a VC pitch. It was born from the energy
+                  of three people who kept showing up — for each other, for the work, for the obsession.
+                  Working together as{" "}
+                  <a href="https://staffone.site" target="_blank" rel="noopener noreferrer" className="text-neon-gold hover:text-neon-gold/80 font-bold transition-colors">
+                    staffone.site
+                  </a>
+                  , they are fully committed to building the future of entertainment predictions.
                 </p>
-                <p>
-                  Active on Farcaster as <strong className="text-neon-cyan">0xlaszlo</strong>, on Lens as poker4me.lens,
-                  on X as laszloleonardo — verified across platforms. A quiet builder in a noisy space. The one who
-                  minted the <strong className="text-neon-gold">Stripe NFT</strong> on Farcaster — not as a flex, but as
-                  a declaration: <em>this is how we bridge worlds</em>.
-                </p>
-                <p>
-                  His wallet — <code className="text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
-                  0xa820...4709</code> — tells a story that no resume can: years of minting, voting, staking,
-                  governing, and building across the decentralized web. Every transaction is a chapter.
-                  Every smart contract interaction is a paragraph in a story that led, inevitably, to RealityPicks.
-                </p>
-                <p>
-                  333 found him. Or he found 333. Either way, the alignment was unmistakable — and the
+
+                <div className="mt-8 grid gap-5 sm:grid-cols-3">
+                  {/* Laszlo */}
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] border-t-[3px] border-t-neon-cyan/50">
+                    <p className="text-xs font-mono text-neon-cyan/60 mb-1">FOUNDER & BUILDER</p>
+                    <h4 className="text-base font-bold text-white mb-1">Laszlo Bihary</h4>
+                    <p className="text-xs text-neon-cyan font-bold mb-3">0xlaszlo</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Two decades at the frontier of technology and community. From early internet startups
+                      to Web3 protocols — Farcaster, Guild.xyz, DAO governance, Zora, BasePaint, Lens.
+                      The one who minted the Stripe NFT on Farcaster. The quiet builder in a noisy space.
+                      His wallet tells the story no resume can.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <a
+                        href="https://web3.bio/0xa82082380585489b0456e15343c23809bc334709"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] text-neon-cyan hover:text-neon-cyan/80 transition-colors"
+                      >
+                        Onchain <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                      <a
+                        href="https://warpcast.com/0xlaszlo"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
+                      >
+                        Farcaster <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Aiman */}
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] border-t-[3px] border-t-neon-magenta/50">
+                    <p className="text-xs font-mono text-neon-magenta/60 mb-1">CO-FOUNDER & OPERATIONS</p>
+                    <h4 className="text-base font-bold text-white mb-1">Aiman El Boujamai</h4>
+                    <p className="text-xs text-neon-magenta font-bold mb-3">staffone.site</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The operational backbone. Aiman brings structure to chaos and execution to vision.
+                      Always the first to challenge an idea and the first to ship the solution. His
+                      discipline turns late-night brainstorms into production-ready systems. Without him,
+                      the vibes stay vibes — with him, they become products.
+                    </p>
+                  </div>
+
+                  {/* Emilio */}
+                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] border-t-[3px] border-t-neon-gold/50">
+                    <p className="text-xs font-mono text-neon-gold/60 mb-1">CO-FOUNDER & CREATIVE</p>
+                    <h4 className="text-base font-bold text-white mb-1">Emilio Dimitri Dik</h4>
+                    <p className="text-xs text-neon-gold font-bold mb-3">staffone.site</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The creative spark. Emilio sees what others miss — the angle, the story, the moment
+                      that turns a feature into an experience. His instinct for what feels right drives
+                      the product forward. The energy in the room when he starts riffing on an idea is
+                      the reason the other two never left the office.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-6">
+                  Three founders. Three skill sets. Three reasons to stay late. It&apos;s not a coincidence
+                  that the number <strong className="text-neon-gold">333</strong> found them — or maybe they found it.
+                  Either way, the alignment was unmistakable. Three people, one office, one obsession — and the
                   rest is being written, one prediction at a time.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <a
-                    href="https://web3.bio/0xa82082380585489b0456e15343c23809bc334709"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-neon-cyan hover:text-neon-cyan/80 transition-colors"
-                  >
-                    View Onchain Identity <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                  <a
-                    href="https://warpcast.com/0xlaszlo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors"
-                  >
-                    Farcaster <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+
+                <div className="mt-6 p-4 rounded-xl bg-neon-gold/5 border border-neon-gold/15 text-center">
+                  <p className="text-sm font-bold text-neon-gold mb-1">staffone.site</p>
+                  <p className="text-xs text-muted-foreground">
+                    The team behind RealityPicks. Fully committed. Building together.
+                  </p>
                 </div>
               </div>
             </section>

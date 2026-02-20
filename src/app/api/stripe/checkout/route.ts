@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
           product_data: {
             name: `${pkg.picks.toLocaleString()} $PICKS — ${pkg.label}`,
             description: `${pkg.picks.toLocaleString()} $PICKS tokens at $0.00333/token`,
-            images: [`${appUrl}/logo.png`],
+            images: [`${appUrl}/pickslogoicon.png`],
           },
           unit_amount: Math.round(pkg.priceUsd * 100),
         },

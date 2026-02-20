@@ -53,7 +53,7 @@ function StepWelcome() {
       <div className="flex justify-center">
         <div className="relative">
           <Image
-            src="/logo.png"
+            src="/pickslogoicon.png"
             alt="RealityPicks"
             width={72}
             height={72}

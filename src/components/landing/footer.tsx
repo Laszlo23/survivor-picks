@@ -40,7 +40,7 @@ export function LandingFooter() {
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2.5 mb-3">
                 <Image
-                  src="/logo.png"
+                  src="/pickslogoicon.png"
                   alt="RealityPicks"
                   width={28}
                   height={28}

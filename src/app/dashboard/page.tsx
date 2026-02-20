@@ -97,7 +97,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Image
-              src="/logo.png"
+              src="/pickslogoicon.png"
               alt="RealityPicks"
               width={36}
               height={36}

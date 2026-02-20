@@ -55,7 +55,7 @@ export function CurtainIntro({ onEnter }: { onEnter: () => void }) {
           <div className="mb-6 flex justify-center">
             <div className="relative">
               <Image
-                src="/logo.png"
+                src="/pickslogoicon.png"
                 alt="RealityPicks"
                 width={80}
                 height={80}

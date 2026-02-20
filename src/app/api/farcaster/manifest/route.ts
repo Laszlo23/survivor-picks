@@ -32,7 +32,7 @@ export async function GET() {
       description:
         "Predict reality TV outcomes across Survivor, The Bachelor, Love Island and more. Earn points, build streaks, climb the leaderboard. Free to play on Base.",
       tagline: "Predict Reality. Win Glory.",
-      iconUrl: `${baseUrl}/logo.png`,
+      iconUrl: `${baseUrl}/pickslogoicon.png`,
       homeUrl: baseUrl,
       imageUrl: `${baseUrl}/opengraph-image`,
       heroImageUrl: `${baseUrl}/opengraph-image`,
@@ -41,7 +41,7 @@ export async function GET() {
         `${baseUrl}/screenshot-2.png`,
       ],
       buttonTitle: "Predict Now",
-      splashImageUrl: `${baseUrl}/logo.png`,
+      splashImageUrl: `${baseUrl}/pickslogoicon.png`,
       splashBackgroundColor: "#0a0a0f",
       webhookUrl: `${baseUrl}/api/farcaster/webhook`,
       primaryCategory: "entertainment",

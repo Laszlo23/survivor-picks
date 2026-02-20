@@ -45,7 +45,7 @@ export function LandingHero({ seasonTitle }: { seasonTitle?: string }) {
             <div className="mb-6 flex justify-center">
               <div className="relative">
                 <Image
-                  src="/logo.png"
+                  src="/pickslogoicon.png"
                   alt="RealityPicks"
                   width={72}
                   height={72}

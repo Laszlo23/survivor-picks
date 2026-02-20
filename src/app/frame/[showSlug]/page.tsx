@@ -60,7 +60,7 @@ export async function generateMetadata({
             type: "launch_frame",
             name: "RealityPicks",
             url: `${BASE_URL}/dashboard?show=${show.slug}`,
-            splashImageUrl: `${BASE_URL}/logo.png`,
+            splashImageUrl: `${BASE_URL}/pickslogoicon.png`,
             splashBackgroundColor: "#0a0a0f",
           },
         },

@@ -248,7 +248,7 @@ export function Navbar() {
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
               <Image
-                src="/logo.png"
+                src="/pickslogoicon.png"
                 alt="RealityPicks"
                 width={32}
                 height={32}

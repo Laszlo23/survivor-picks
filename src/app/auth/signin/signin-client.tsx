@@ -46,7 +46,7 @@ export function SignInClient() {
               <FadeIn delay={0.1}>
                 <div className="mx-auto mb-4 relative">
                   <Image
-                    src="/logo.png"
+                    src="/pickslogoicon.png"
                     alt="RealityPicks"
                     width={64}
                     height={64}

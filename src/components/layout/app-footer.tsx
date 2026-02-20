@@ -19,7 +19,7 @@ export function AppFooter() {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/pickslogoicon.png"
               alt="RealityPicks"
               width={20}
               height={20}
