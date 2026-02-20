@@ -300,15 +300,21 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-2 text-muted-foreground"
+                    className="gap-2 text-muted-foreground relative group"
+                    title={session.user.name || session.user.email || "Account"}
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30">
-                      {session.user.name?.[0]?.toUpperCase() ||
-                        session.user.email?.[0]?.toUpperCase()}
+                      <User className="h-3.5 w-3.5" />
                     </div>
+                    <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[10px] bg-studio-dark border border-white/[0.08] text-white/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                      {session.user.name || "Account"}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground truncate border-b border-white/[0.06] mb-1">
+                    {session.user.email}
+                  </div>
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>

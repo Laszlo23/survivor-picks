@@ -188,31 +188,58 @@ export function LandingHero({
   );
 }
 
+/**
+ * Infinite ticker with a single DOM copy of each item.
+ * Each item is absolutely positioned; when it scrolls off the left edge
+ * it gets repositioned to the right of the last visible item.
+ */
 function LiveTicker({ items }: { items: string[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const posRef = useRef(0);
+  const rafRef = useRef<number>(0);
 
-  const animate = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    const halfWidth = el.scrollWidth / 2;
-    posRef.current += 0.4;
-    if (posRef.current >= halfWidth) posRef.current = 0;
-    el.style.transform = `translateX(-${posRef.current}px)`;
-    requestAnimationFrame(animate);
+  const setup = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const children = Array.from(track.children) as HTMLElement[];
+    if (children.length === 0) return;
+
+    const widths = children.map((c) => c.offsetWidth);
+
+    let positions: number[] = [];
+    let x = 0;
+    for (let i = 0; i < children.length; i++) {
+      positions[i] = x;
+      children[i].style.transform = `translateX(${x}px)`;
+      x += widths[i];
+    }
+
+    const speed = 0.5;
+
+    function animate() {
+      for (let i = 0; i < children.length; i++) {
+        positions[i] -= speed;
+
+        if (positions[i] + widths[i] < 0) {
+          let maxRight = -Infinity;
+          for (let j = 0; j < children.length; j++) {
+            const right = positions[j] + widths[j];
+            if (right > maxRight) maxRight = right;
+          }
+          positions[i] = maxRight;
+        }
+
+        children[i].style.transform = `translateX(${positions[i]}px)`;
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    }
+
+    rafRef.current = requestAnimationFrame(animate);
   }, []);
 
   useEffect(() => {
-    const raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(raf);
-  }, [animate]);
-
-  const rendered = items.map((item, i) => (
-    <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap px-5 text-white/45 text-[11px]">
-      <span className="h-1 w-1 rounded-full bg-neon-cyan/40 shrink-0" />
-      {item}
-    </span>
-  ));
+    setup();
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [setup]);
 
   return (
     <div className="relative z-10 w-full overflow-hidden border-b border-white/[0.06] bg-studio-black/60 backdrop-blur-sm">
@@ -223,13 +250,17 @@ function LiveTicker({ items }: { items: string[] }) {
             Live Feed
           </span>
         </span>
-        <div className="overflow-hidden flex-1">
-          <div
-            ref={trackRef}
-            className="flex py-2 will-change-transform"
-          >
-            {rendered}
-            {rendered}
+        <div className="overflow-hidden flex-1 relative h-7">
+          <div ref={trackRef} className="absolute inset-y-0 left-0">
+            {items.map((item, i) => (
+              <span
+                key={i}
+                className="absolute top-0 left-0 inline-flex items-center gap-2 whitespace-nowrap px-5 h-full text-white/45 text-[11px] will-change-transform"
+              >
+                <span className="h-1 w-1 rounded-full bg-neon-cyan/40 shrink-0" />
+                {item}
+              </span>
+            ))}
           </div>
         </div>
       </div>

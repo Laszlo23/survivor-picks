@@ -86,7 +86,7 @@ export default async function LandingPage() {
     }
   }
 
-  const totalPlayers = await prisma.user.count();
+  const totalPlayers = await prisma.user.count({ where: { role: { not: "ADMIN" } } });
   const totalPredictions = await prisma.prediction.count();
   const openQuestions = await prisma.question.count({ where: { status: "OPEN" } });
 

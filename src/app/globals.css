@@ -281,15 +281,7 @@
   100% { transform: translate(-4%, 3%) scale(1.06); }
 }
 
-/* Hero live ticker marquee — pure CSS */
-.hero-ticker {
-  animation: hero-ticker-scroll 40s linear infinite;
-  width: max-content;
-}
-@keyframes hero-ticker-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
+/* Hero live ticker — see LiveTicker component (JS-driven, single DOM copy) */
 
 /* Hero floating particles — pure CSS, GPU-accelerated */
 .hero-particle {

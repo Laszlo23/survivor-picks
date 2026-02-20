@@ -13,13 +13,12 @@ export async function getLeaderboard(params: {
 
   const where = {
     seasonId,
-    ...(search
-      ? {
-          user: {
-            name: { contains: search, mode: "insensitive" as const },
-          },
-        }
-      : {}),
+    user: {
+      role: { not: "ADMIN" as const },
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    },
   };
 
   const [entries, total] = await Promise.all([
@@ -37,7 +36,6 @@ export async function getLeaderboard(params: {
     prisma.userSeasonStats.count({ where }),
   ]);
 
-  // Add rank numbers
   const ranked = entries.map((entry, index) => ({
     ...entry,
     rank: skip + index + 1,
@@ -54,7 +52,10 @@ export async function getLeaderboard(params: {
 export async function getTopLeaderboard(seasonId: string, limit = 10) {
   try {
     const entries = await prisma.userSeasonStats.findMany({
-      where: { seasonId },
+      where: {
+        seasonId,
+        user: { role: { not: "ADMIN" } },
+      },
       include: {
         user: {
           select: { id: true, name: true, image: true },
