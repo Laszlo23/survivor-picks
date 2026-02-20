@@ -15,6 +15,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "supabase:link": "npx supabase link --project-ref wfobsunzcrgverpgtcdp",
+    "supabase:push": "npx supabase db push",
     "postinstall": "prisma generate && node scripts/patch-next.js"
   },
   "prisma": {
