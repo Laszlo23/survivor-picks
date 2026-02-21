@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -12,56 +12,87 @@ import { Loader2 } from "lucide-react";
  * The Supabase browser client auto-processes the hash on init and saves the session to cookies.
  */
 export default function AuthCallbackPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
   useEffect(() => {
     let mounted = true;
 
+    function redirectTo(path: string) {
+      // Full page navigation ensures cookies are sent; router.replace can race with cookie write
+      window.location.href = path;
+    }
+
     async function handleCallback() {
       const supabase = createClient();
       const next = searchParams.get("next") ?? "/dashboard";
+      const target = next.startsWith("/") ? next : `/${next}`;
 
-      // Supabase client auto-processes hash (#access_token=...) on init.
-      // Wait for init, then check session.
+      // Subscribe to SIGNED_IN first (may fire during init), then trigger init via getSession
+      const signedInPromise = new Promise<boolean>((resolve) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_IN") {
+            subscription.unsubscribe();
+            resolve(true);
+          }
+        });
+        setTimeout(() => {
+          subscription.unsubscribe();
+          resolve(false);
+        }, 5000);
+      });
+
+      // getSession triggers client init, which processes hash and may fire SIGNED_IN
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (!mounted) return;
 
       if (error) {
         setStatus("error");
-        router.replace(`/auth/signin?error=auth`);
+        redirectTo("/auth/signin?error=auth");
         return;
       }
 
       if (session) {
         setStatus("success");
-        router.replace(next.startsWith("/") ? next : `/${next}`);
+        await new Promise((r) => setTimeout(r, 150));
+        redirectTo(target);
         return;
       }
 
-      // No session — hash may still be processing. Supabase client processes hash on init.
+      // No session yet — wait for SIGNED_IN (init may still be processing)
+      const gotSignedIn = await signedInPromise;
+      if (!mounted) return;
+
+      if (gotSignedIn) {
+        setStatus("success");
+        await new Promise((r) => setTimeout(r, 150));
+        redirectTo(target);
+        return;
+      }
+
+      // Retry getSession in case of timing
       const hasHash = typeof window !== "undefined" && window.location.hash?.length > 0;
       if (hasHash) {
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 500));
         const { data: { session: retry } } = await supabase.auth.getSession();
         if (mounted && retry) {
           setStatus("success");
-          router.replace(next.startsWith("/") ? next : `/${next}`);
+          await new Promise((r) => setTimeout(r, 150));
+          redirectTo(target);
           return;
         }
       }
 
       setStatus("error");
-      router.replace("/auth/signin?error=auth");
+      redirectTo("/auth/signin?error=auth");
     }
 
     handleCallback();
     return () => {
       mounted = false;
     };
-  }, [router, searchParams]);
+  }, [searchParams]);
 
   return (
     <div className="flex min-h-[calc(100vh-56px)] items-center justify-center">
