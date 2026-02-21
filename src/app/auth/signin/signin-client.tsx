@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Mail,
@@ -27,6 +26,36 @@ export function SignInClient() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLocalhost, setIsLocalhost] = useState(false);
+
+  useEffect(() => {
+    const host = window.location.hostname;
+    setIsLocalhost(host === "localhost" || host === "127.0.0.1");
+  }, []);
+
+  async function handleDevLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/dev-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (data?.success) {
+        window.location.href = "/dashboard";
+        return;
+      }
+      setError(data?.error || "Dev login failed");
+    } catch (err) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,27 +63,42 @@ export function SignInClient() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const redirectTo =
-        typeof window !== "undefined"
-          ? new URL("/auth/callback", window.location.origin).href
-          : "";
-      const { error: signInError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: redirectTo },
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
       });
-      if (signInError) {
-        setError(signInError.message);
+      const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+
+      if (!res.ok) {
+        const serverMsg = data?.error;
+        if (res.status >= 500) {
+          setError(serverMsg || "Server error. Please try again later.");
+        } else if (res.status === 503) {
+          setError(serverMsg || "Auth is not configured. Please contact support.");
+        } else {
+          setError(serverMsg || "Something went wrong. Please try again.");
+        }
         setLoading(false);
         return;
       }
-      setSent(true);
+
+      if (data?.success) {
+        setSent(true);
+      } else {
+        setError(data?.error || "Failed to send magic link.");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      const isNetwork =
+        msg.includes("fetch") ||
+        msg.includes("network") ||
+        msg.includes("Failed to fetch") ||
+        msg.toLowerCase().includes("network");
       setError(
-        msg.includes("fetch") || msg.includes("network")
-          ? "Network error. If on Vercel: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to env vars, then redeploy."
-          : msg
+        isNetwork
+          ? "Network error. Check your connection and try again."
+          : msg || "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -177,6 +221,16 @@ export function SignInClient() {
                         </>
                       )}
                     </button>
+                    {isLocalhost && (
+                      <button
+                        type="button"
+                        onClick={handleDevLogin}
+                        disabled={loading || !email.trim()}
+                        className="w-full rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-400 text-xs py-2 hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        Instant login (dev only — skips email)
+                      </button>
+                    )}
                   </form>
                 )}
               </FadeIn>

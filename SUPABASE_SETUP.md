@@ -24,6 +24,9 @@ Add to `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL="https://wfobsunzcrgverpgtcdp.supabase.co"
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_CXs6z6GtI54jkDbFiB4Tuw_md3iQ6oj"
 
+# App URL (for magic link redirect; prod: https://www.realitypicks.xyz)
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
 # Supabase Postgres
 DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres"
 DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres"
@@ -43,6 +46,27 @@ DIRECT_URL="<paste Session pooler or Direct URI from Connect>"
 ```
 
 **Important:** If your password contains special characters (`/`, `@`, `#`, etc.), URL-encode them (e.g. `/` → `%2F`).
+
+### "Can't reach database server" — use the pooler
+
+The **direct** connection (`db.xxx.supabase.co:5432`) uses **IPv6 only**. Many networks (home, office) don't support IPv6, so the connection fails.
+
+**Fix:** Use the **pooler** connection strings from Supabase Dashboard → Connect:
+
+| Variable | Use | Format |
+|----------|-----|--------|
+| `DATABASE_URL` | App queries (serverless) | **Transaction pooler** — `aws-0-[REGION].pooler.supabase.com:6543`, user `postgres.[PROJECT_REF]` |
+| `DIRECT_URL` | Migrations | **Session pooler** — `aws-0-[REGION].pooler.supabase.com:5432`, user `postgres.[PROJECT_REF]` |
+
+Example (replace `[REGION]` with your region, e.g. `eu-central-1`):
+```
+DATABASE_URL="postgresql://postgres.wfobsunzcrgverpgtcdp:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres"
+DIRECT_URL="postgresql://postgres.wfobsunzcrgverpgtcdp:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+```
+
+Note: Pooler uses `postgres.[PROJECT_REF]` as the user, not `postgres`. Get the exact URIs from Connect → URI.
+
+**Other checks:** Project not paused? IP not banned (Settings → Database → Connection pooling)?
 
 ## 5. Push Schema & Seed
 
@@ -74,7 +98,23 @@ In **Authentication → URL Configuration**:
   - `https://yourdomain.com/auth/callback`
   - `https://*.vercel.app/auth/callback` (if using Vercel preview deployments)
 
-**"Failed to fetch" fix:** Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to Vercel env vars, then redeploy. If Supabase project is paused (free tier), restore it from the Dashboard.
+## 6b. Magic Link Production Checklist (Vercel)
+
+The signin form calls `/api/auth/magic-link` (same-origin). Ensure these env vars in **Vercel → Settings → Environment Variables**:
+
+| Variable | Required | Example |
+|----------|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://wfobsunzcrgverpgtcdp.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | `sb_publishable_xxx` |
+| `NEXT_PUBLIC_APP_URL` | Yes (prod) | `https://www.realitypicks.xyz` |
+
+**www vs non-www:** Set `NEXT_PUBLIC_APP_URL` to your canonical domain (e.g. `https://www.realitypicks.xyz`). Add both variants to Supabase Redirect URLs if users can reach either.
+
+**Supabase Dashboard → Authentication → URL Configuration:**
+- Site URL: `https://www.realitypicks.xyz` (no trailing slash)
+- Redirect URLs: `https://www.realitypicks.xyz/auth/callback` (and `https://realitypicks.xyz/auth/callback` if non-www is used)
+
+**Supabase project paused?** Free tier projects pause after inactivity. Restore from Dashboard.
 
 ## 7. Enable Email Auth (Magic Link)
 
@@ -82,6 +122,8 @@ In **Authentication → Providers → Email**:
 - Enable Email provider
 - Magic link is the default; no password required
 - Configure "Confirm email" if you want double opt-in (off = instant magic link)
+
+**Local dev:** Supabase's built-in email has a low rate limit (~3/hour). Use the "Instant login (dev only)" button on the signin page when on localhost, or configure [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) in Supabase Dashboard.
 
 ## 8. Vercel Production
 
@@ -105,3 +147,19 @@ alter default privileges for role postgres in schema public grant all on sequenc
 ```
 
 Then use `prisma.[PROJECT_REF]` instead of `postgres.[PROJECT_REF]` in `DATABASE_URL` and `prisma` as the user in `DIRECT_URL`.
+
+## Magic Link Test Plan
+
+**Local:**
+1. `npm run dev`, open `http://localhost:3000/auth/signin`
+2. Enter email, click "Send magic link"
+3. Expect "Check your email" (no "Failed to fetch")
+4. Click link in email → should land on `/auth/callback` then redirect to `/dashboard`
+
+**Production (https://www.realitypicks.xyz):**
+1. Open `https://www.realitypicks.xyz/auth/signin`
+2. Enter email, click "Send magic link"
+3. Expect "Check your email"
+4. Click link in email → should redirect to `https://www.realitypicks.xyz/dashboard`
+
+**If it fails:** Check Vercel logs for `[magic-link]` entries. Verify env vars are set and Supabase project is not paused.

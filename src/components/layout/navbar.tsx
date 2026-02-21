@@ -117,7 +117,8 @@ export function Navbar() {
                 <div className="mb-4 space-y-2">
                   <Button
                     onClick={() => router.push("/auth/signin")}
-                    className="w-full shadow-glow"
+                    size="sm"
+                    className="w-full text-xs py-2"
                   >
                     Start Predicting Free
                   </Button>
@@ -288,10 +289,10 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/auth/signin"
-                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neon-cyan text-studio-black text-sm font-bold uppercase tracking-wider shadow-neon-cyan hover:shadow-neon-cyan-lg hover:brightness-110 transition-all"
+                  className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-neon-cyan text-studio-black text-xs font-semibold uppercase tracking-wider hover:brightness-110 transition-all"
                 >
-                  Start Predicting Free
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  Start Free
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               </>
             )}

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { ArrowRight, Users, Clock, Coins, MessageSquare, Flame, Zap } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { prisma } from "@/lib/prisma";
@@ -19,6 +21,16 @@ import { Section, SectionLabel, SectionTitle, StatPill } from "@/components/ui/p
 export const revalidate = 60;
 
 export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const supabase = await createClient(cookieStore);
+  let todos: unknown[] | null = null;
+  try {
+    const { data } = await supabase.from("todos").select();
+    todos = data;
+  } catch {
+    // todos table may not exist yet
+  }
+
   let season = null;
   let featuredEpisode: { id: string; number: number; title: string; lockAt: Date; airAt: Date; status: string } | null = null;
   let featuredQuestions = 0;
@@ -131,6 +143,19 @@ export default async function LandingPage() {
       <LandingLiveBettingTeaser />
 
       <LandingWalletExplainer />
+
+      {todos && todos.length > 0 && (
+        <Section>
+          <SectionLabel>TODOS</SectionLabel>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            {todos.map((todo: Record<string, unknown>, i: number) => (
+              <li key={(todo.id as string) || `todo-${i}`}>
+                {(todo.title as string) ?? JSON.stringify(todo)}
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
       <Suspense fallback={<SocialProofSkeleton />}>
         <SocialProof
@@ -470,11 +495,11 @@ function ClosingCTA() {
           <NeonButton
             variant="primary"
             href="/auth/signin"
-            className="gap-2 text-base px-10 py-3 shadow-[0_0_40px_hsl(185_100%_55%/0.3)]"
+            className="gap-1.5 text-sm px-5 py-2"
           >
-            Start Predicting Free <ArrowRight className="h-4 w-4" />
+            Start Predicting Free <ArrowRight className="h-3.5 w-3.5" />
           </NeonButton>
-          <NeonButton variant="ghost" href="/play" className="gap-2 text-base px-8 py-3">
+          <NeonButton variant="ghost" href="/play" className="gap-1.5 text-sm px-5 py-2">
             Browse pick rounds
           </NeonButton>
         </div>
