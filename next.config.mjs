@@ -29,7 +29,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.infura.io https://*.alchemy.com https://*.base.org https://auth.farcaster.xyz https://api.farcaster.xyz https://api.neynar.com",
+              "connect-src 'self' https://*.supabase.co https://*.stripe.com https://*.infura.io https://*.alchemy.com https://*.base.org https://auth.farcaster.xyz https://api.farcaster.xyz https://api.neynar.com",
               "frame-src 'self' https://www.youtube.com https://*.farcaster.xyz https://*.warpcast.com https://checkout.stripe.com",
               "frame-ancestors *",
               "object-src 'none'",
