@@ -113,6 +113,7 @@ The signin form calls `/api/auth/magic-link` (same-origin). Ensure these env var
 **Supabase Dashboard → Authentication → URL Configuration:**
 - Site URL: `https://www.realitypicks.xyz` (no trailing slash)
 - Redirect URLs: `https://www.realitypicks.xyz/auth/callback` (and `https://realitypicks.xyz/auth/callback` if non-www is used)
+- **Local dev:** Add `http://localhost:3000/auth/callback` to Redirect URLs
 
 **Supabase project paused?** Free tier projects pause after inactivity. Restore from Dashboard.
 
