@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       }
     }
     origin = origin || process.env.NEXT_PUBLIC_APP_URL || "";
-    const redirectTo = origin ? `${origin.replace(/\/$/, "")}/auth/callback?next=/profile` : "";
+    const redirectTo = origin ? `${origin.replace(/\/$/, "")}/auth/callback?next=/play` : "";
 
     if (!redirectTo) {
       return Response.json(

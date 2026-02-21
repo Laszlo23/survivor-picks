@@ -44,10 +44,10 @@ export default function HelpPage() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white mb-1">
-                  What are tokens?
+                  What are $PICKS tokens?
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Optional rewards you can earn by playing. You can buy more with a card if you want, but it&apos;s not required.
+                  $PICKS are in-app tokens you get for free when you sign up (33,333 $PICKS). You can stake them on your predictions for extra rewards, or buy more with a credit card via Stripe. Playing without tokens is always free.
                 </p>
               </div>
               <div>
@@ -63,7 +63,15 @@ export default function HelpPage() {
                   What happens if I&apos;m right?
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  You earn points. Correct picks in a row (win streak) multiply your score. Top players earn token rewards.
+                  You earn points based on the difficulty of the question. Riskier picks pay more. Top players on the leaderboard earn $PICKS token rewards each season.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white mb-1">
+                  How does the leaderboard work?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Your points are tallied across each season. The more correct predictions you make, the higher you climb. Season rankings reset with each new season.
                 </p>
               </div>
             </div>

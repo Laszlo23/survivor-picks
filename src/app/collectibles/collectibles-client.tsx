@@ -1,75 +1,99 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { Zap, TrendingUp, Shield, Award, Lock, Sparkles } from "lucide-react";
+import {
+  Zap,
+  TrendingUp,
+  Shield,
+  Award,
+  Sparkles,
+  Star,
+  Crown,
+  Flame,
+  Trophy,
+  ChevronRight,
+} from "lucide-react";
 import { FadeIn } from "@/components/motion";
-import { NeonButton } from "@/components/ui/neon-button";
 
-const NFT_TIERS = [
+const BADGE_TIERS = [
   {
     name: "Early Supporter",
-    image: "/nfts/early-supporter.png",
+    icon: Star,
+    gradient: "from-amber-500/20 to-amber-600/5",
     border: "border-amber-500/30",
+    color: "text-amber-400",
     supply: "1,111 max",
     desc: "First supporters of the platform",
+    requirement: "Sign up during beta",
   },
   {
     name: "Player",
-    image: "/nfts/player.png",
+    icon: Zap,
+    gradient: "from-indigo-500/20 to-indigo-600/5",
     border: "border-indigo-500/30",
+    color: "text-indigo-400",
     supply: "3,000 max",
-    desc: "33+ predictions made",
+    desc: "Active prediction maker",
+    requirement: "Make 33+ predictions",
   },
   {
     name: "Community OG",
-    image: "/nfts/community-og.png",
+    icon: Trophy,
+    gradient: "from-teal-500/20 to-teal-600/5",
     border: "border-teal-500/30",
+    color: "text-teal-400",
     supply: "1,000 max",
-    desc: "Referred 3+ friends",
+    desc: "Community builder",
+    requirement: "Refer 3+ friends",
   },
   {
-    name: "Survivor Pro",
-    image: "/nfts/survivor-pro.png",
+    name: "Season Pro",
+    icon: Flame,
+    gradient: "from-red-500/20 to-red-600/5",
     border: "border-red-500/30",
+    color: "text-red-400",
     supply: "500 max",
-    desc: "3-episode win streak",
+    desc: "Consistently top performer",
+    requirement: "Top 10% in a full season",
   },
   {
     name: "Legend",
-    image: "/nfts/legend.png",
+    icon: Crown,
+    gradient: "from-yellow-500/20 to-yellow-600/5",
     border: "border-yellow-500/40",
+    color: "text-yellow-400",
     supply: "111 max",
-    desc: "Top 33 all-time",
+    desc: "All-time great",
+    requirement: "Top 33 all-time leaderboard",
   },
 ];
 
-const UTILITY_CARDS = [
+const PLANNED_PERKS = [
   {
     icon: Zap,
-    title: "Points boost",
-    desc: "Earn 1.5x points on every correct prediction. Stack with streak bonuses.",
+    title: "Points Boost",
+    desc: "Earn bonus points on correct predictions with higher-tier badges.",
     color: "text-neon-cyan",
     accent: "hsl(185 100% 55%)",
   },
   {
     icon: TrendingUp,
-    title: "Boost perks",
-    desc: "Higher tier NFTs unlock bigger multipliers on risk bets — up to 2x returns.",
+    title: "Multiplier Perks",
+    desc: "Higher tier badges unlock bigger multipliers on risk bets.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
   },
   {
     icon: Shield,
-    title: "Win streak protection",
-    desc: "Protect your win streak once per season. One wrong pick won't break your run.",
+    title: "Streak Protection",
+    desc: "Protect your win streak once per season from a wrong pick.",
     color: "text-neon-magenta",
     accent: "hsl(320 100% 60%)",
   },
   {
     icon: Award,
     title: "Season Pass",
-    desc: "Exclusive access to premium markets, early predictions, and bonus challenges.",
+    desc: "Exclusive access to premium markets and bonus challenges.",
     color: "text-violet-400",
     accent: "hsl(260 80% 60%)",
   },
@@ -78,34 +102,87 @@ const UTILITY_CARDS = [
 export function CollectiblesClient() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* Header */}
       <FadeIn>
-        <h1 className="font-headline text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white mb-2">
-          Collectibles
-        </h1>
-        <p className="text-sm text-muted-foreground mb-12 max-w-xl">
-          Badges that improve your game. Optional, like boosters.
-        </p>
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon-gold/10 border border-neon-gold/20 text-neon-gold text-xs font-bold uppercase tracking-wider mb-4">
+            <Sparkles className="h-3 w-3" />
+            Roadmap
+          </div>
+
+          <h1 className="font-headline text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-white mb-3">
+            Collectible Badges
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+            Earn badges by playing and climbing the leaderboard. Each badge tier will unlock in-game perks at fair launch.
+          </p>
+        </div>
       </FadeIn>
 
-      {/* Utility section */}
+      {/* Badge Tiers */}
       <section className="mb-16">
         <FadeIn>
-          <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">UTILITY</p>
+          <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">BADGE TIERS</p>
           <h2 className="font-headline text-2xl font-extrabold uppercase text-white mb-8">
-            Boost Your Edge
+            How to Earn
           </h2>
         </FadeIn>
 
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {BADGE_TIERS.map((badge, i) => (
+            <motion.div
+              key={badge.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.06 }}
+              className={`relative rounded-2xl border ${badge.border} bg-gradient-to-br ${badge.gradient} overflow-hidden group`}
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06] border border-white/[0.08] ${badge.color}`}>
+                    <badge.icon className="h-6 w-6" />
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground bg-white/[0.04] px-2 py-0.5 rounded-full">
+                    {badge.supply}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-1">{badge.name}</h3>
+                <p className="text-xs text-muted-foreground mb-3">{badge.desc}</p>
+                <div className="flex items-center gap-1.5 text-xs text-white/50">
+                  <ChevronRight className="h-3 w-3" />
+                  <span>{badge.requirement}</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Planned Perks */}
+      <section className="mb-16">
+        <FadeIn>
+          <div className="flex items-center gap-3 mb-8">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">PLANNED PERKS</p>
+              <h2 className="font-headline text-2xl font-extrabold uppercase text-white">
+                What Badges Unlock
+              </h2>
+            </div>
+            <span className="px-2 py-0.5 rounded-md bg-white/[0.06] text-[10px] font-bold text-muted-foreground uppercase tracking-wider self-end mb-1">
+              Planned
+            </span>
+          </div>
+        </FadeIn>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {UTILITY_CARDS.map((card, i) => (
+          {PLANNED_PERKS.map((card, i) => (
             <motion.div
               key={card.title}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:shadow-[0_0_20px_hsl(185_100%_55%/0.08)] transition-all"
+              className="p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all relative"
             >
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg mb-4"
@@ -120,60 +197,16 @@ export function CollectiblesClient() {
         </div>
       </section>
 
-      {/* NFT Grid */}
-      <section className="mb-16">
-        <FadeIn>
-          <p className="text-[10px] uppercase tracking-widest text-neon-cyan/60 font-bold mb-2">COLLECTION</p>
-          <h2 className="font-headline text-2xl font-extrabold uppercase text-white mb-8">
-            Badge Tiers
-          </h2>
-        </FadeIn>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {NFT_TIERS.map((nft, i) => (
-            <motion.div
-              key={nft.name}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.06 }}
-              className={`relative rounded-2xl border ${nft.border} bg-studio-dark/60 overflow-hidden group`}
-            >
-              <div className="aspect-square relative">
-                <Image
-                  src={nft.image}
-                  alt={nft.name}
-                  fill
-                  className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-60 group-hover:opacity-0 transition-opacity">
-                  <Lock className="h-8 w-8 text-white/40" />
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-white">{nft.name}</p>
-                  <span className="text-[10px] font-mono text-muted-foreground">{nft.supply}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{nft.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer note */}
+      {/* Footer CTA */}
       <div className="text-center p-8 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
         <Sparkles className="h-6 w-6 text-neon-gold mx-auto mb-3" />
         <h3 className="text-lg font-display font-bold text-white mb-2">
           Minting Opens at Fair Launch
         </h3>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-          Your eligibility is being tracked. Keep predicting to unlock higher tiers.
+        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+          Keep predicting to work toward higher badge tiers. Your progress is tracked automatically.
         </p>
-        <p className="text-[10px] text-white/30">Powered by NFTs on Base</p>
+        <p className="text-[10px] text-white/30">Badges will be minted as NFTs on Base</p>
       </div>
     </div>
   );

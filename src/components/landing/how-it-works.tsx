@@ -28,7 +28,7 @@ const steps = [
   {
     icon: Trophy,
     title: "Climb the Board",
-    desc: "Correct picks earn points. Build streaks, unlock perks, and compete for the top.",
+    desc: "Correct picks earn points. Compete for the top and earn $PICKS token rewards.",
     color: "text-neon-gold",
     accent: "hsl(45 100% 55%)",
   },

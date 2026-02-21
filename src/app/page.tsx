@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { ArrowRight, Users, Clock, Coins, MessageSquare, Flame, Zap } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getTopLeaderboard } from "@/lib/actions/leaderboard";
 import { prisma } from "@/lib/prisma";
@@ -21,16 +19,6 @@ import { Section, SectionLabel, SectionTitle, StatPill } from "@/components/ui/p
 export const revalidate = 60;
 
 export default async function LandingPage() {
-  const cookieStore = await cookies();
-  const supabase = await createClient(cookieStore);
-  let todos: unknown[] | null = null;
-  try {
-    const { data } = await supabase.from("todos").select();
-    todos = data;
-  } catch {
-    // todos table may not exist yet
-  }
-
   let season = null;
   let featuredEpisode: { id: string; number: number; title: string; lockAt: Date; airAt: Date; status: string } | null = null;
   let featuredQuestions = 0;
@@ -45,10 +33,6 @@ export default async function LandingPage() {
   try {
     season = await getActiveSeason();
     seasonId = season?.id;
-
-    const nextEpisode = season?.episodes
-      ?.filter((ep) => ep.status === "OPEN" || (ep.status === "DRAFT" && new Date(ep.airAt) > new Date()))
-      ?.sort((a, b) => new Date(a.airAt).getTime() - new Date(b.airAt).getTime())[0];
 
     featuredEpisode = season?.episodes?.find((ep) => ep.status === "OPEN") ?? null;
 
@@ -98,8 +82,8 @@ export default async function LandingPage() {
         )?.options as string[] | undefined;
         if (options && options.length >= 2) {
           topTwoPicks = [
-            { name: options[0], pct: 62 },
-            { name: options[1], pct: 38 },
+            { name: options[0], pct: 0 },
+            { name: options[1], pct: 0 },
           ];
         }
       }
@@ -143,22 +127,6 @@ export default async function LandingPage() {
       <LandingLiveBettingTeaser />
 
       <LandingWalletExplainer />
-
-      {todos && todos.length > 0 && (
-        <Section>
-          <SectionLabel>TODOS</SectionLabel>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            {todos.map((todo, i) => {
-              const t = todo as Record<string, unknown>;
-              return (
-              <li key={(t.id as string) || `todo-${i}`}>
-                {(t.title as string) ?? JSON.stringify(todo)}
-              </li>
-              );
-            })}
-          </ul>
-        </Section>
-      )}
 
       <Suspense fallback={<SocialProofSkeleton />}>
         <SocialProof
@@ -297,15 +265,22 @@ function FeaturedMarketPreview({
               <span className="flex items-center gap-1 text-xs font-semibold text-neon-cyan">
                 <Flame className="h-3 w-3" />
                 {topTwoPicks[0].name}
-                <span className="text-neon-cyan/60 font-mono text-[11px]">{topTwoPicks[0].pct}%</span>
+                {topTwoPicks[0].pct > 0 && (
+                  <span className="text-neon-cyan/60 font-mono text-[11px]">{topTwoPicks[0].pct}%</span>
+                )}
               </span>
               <span className="text-white/20 text-[10px]">vs</span>
               <span className="flex items-center gap-1 text-xs font-semibold text-neon-magenta">
                 <Zap className="h-3 w-3" />
                 {topTwoPicks[1].name}
-                <span className="text-neon-magenta/60 font-mono text-[11px]">{topTwoPicks[1].pct}%</span>
+                {topTwoPicks[1].pct > 0 && (
+                  <span className="text-neon-magenta/60 font-mono text-[11px]">{topTwoPicks[1].pct}%</span>
+                )}
               </span>
             </div>
+            {topTwoPicks[0].pct === 0 && (
+              <span className="text-[10px] text-neon-cyan/50 italic">Be first to predict</span>
+            )}
           </div>
         )}
 

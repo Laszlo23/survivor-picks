@@ -19,12 +19,8 @@ import {
   Zap,
   Star,
   Coins,
-  Flame,
   ArrowRight,
   ArrowLeft,
-  Swords,
-  Eye,
-  Heart,
   Check,
   Wallet,
 } from "lucide-react";
@@ -74,8 +70,8 @@ function StepWelcome() {
       <div className="grid gap-3 mt-6 text-left">
         {[
           { icon: Target, color: "bg-primary/15 border-primary/20", iconColor: "text-primary", title: "1. Make Your Picks", desc: "Choose from questions about each episode \u2014 who wins, who\u2019s eliminated, what twist happens next." },
-          { icon: Zap, color: "bg-amber-500/15 border-amber-500/20", iconColor: "text-amber-400", title: "2. Earn Points", desc: "Correct picks earn points based on difficulty. Build streaks for bonus points." },
-          { icon: TrendingUp, color: "bg-neon-cyan/15 border-neon-cyan/20", iconColor: "text-neon-cyan", title: "3. Climb the Leaderboard", desc: "Compete with fans worldwide. Unlock badges and prove you know reality TV." },
+          { icon: Zap, color: "bg-amber-500/15 border-amber-500/20", iconColor: "text-amber-400", title: "2. Earn Points", desc: "Correct picks earn points based on difficulty. Higher risk picks pay more." },
+          { icon: TrendingUp, color: "bg-neon-cyan/15 border-neon-cyan/20", iconColor: "text-neon-cyan", title: "3. Climb the Leaderboard", desc: "Compete with fans worldwide. Top players earn $PICKS token rewards." },
         ].map((item) => (
           <div key={item.title} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.color} border`}>
@@ -112,8 +108,7 @@ function StepScoring() {
           { icon: null, title: "Base Points", value: "100 pts", valueColor: "text-primary", desc: "Every correct pick earns 100 base points, multiplied by the question\u2019s odds.", bg: "" },
           { icon: TrendingUp, title: "Odds Multiplier", value: "up to 5x", valueColor: "", desc: "Underdog picks have higher multipliers. Pick the longshot and earn big!", bg: "" },
           { icon: AlertTriangle, title: "Risk Bet", value: "1.5x", valueColor: "text-accent", desc: "Correct = 1.5x bonus. Wrong = 0 points. High risk, high reward.", bg: "border-accent/15" },
-          { icon: Shield, title: "Immunity Joker", value: "3 / season", valueColor: "text-primary", desc: "Protect a pick. Even if wrong, you still get 100 base points.", bg: "border-primary/15" },
-          { icon: Flame, title: "Streak Bonus", value: "+25 pts/ep", valueColor: "text-amber-400", desc: "Get at least one correct pick per episode to build a streak.", bg: "" },
+          { icon: Coins, title: "$PICKS Staking", value: "optional", valueColor: "text-neon-gold", desc: "Stake $PICKS tokens on your picks for extra rewards. 100% free to play without tokens.", bg: "" },
         ].map((item) => (
           <div key={item.title} className={`p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] ${item.bg}`}>
             <div className="flex items-center justify-between mb-1">
@@ -154,9 +149,9 @@ function StepTokens() {
 
         <div className="space-y-3">
           {[
-            { title: "Stake for Boost", desc: "Lock $PICKS to earn up to 1.5x multiplier on all predictions" },
-            { title: "NFT Badges", desc: "Collect on-chain achievement badges that prove your prediction skills" },
-            { title: "Season Pass", desc: "Burn $PICKS for a premium Season Pass NFT with exclusive perks" },
+            { title: "Stake on Picks", desc: "Put $PICKS behind your predictions for bigger potential rewards" },
+            { title: "Buy with Card", desc: "Purchase $PICKS easily via Stripe \u2014 no crypto wallet needed" },
+            { title: "On-Chain at Launch", desc: "$PICKS converts 1:1 to a real token on Base at fair launch" },
           ].map((item) => (
             <div key={item.title} className="flex items-start gap-3">
               <Star className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
@@ -194,12 +189,6 @@ function StepTokens() {
 }
 
 function StepShows() {
-  const shows = [
-    { name: "Survivor 50", icon: Swords, color: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20", desc: "The ultimate survival competition" },
-    { name: "The Traitors US", icon: Eye, color: "bg-red-500/15 text-red-400 border border-red-500/20", desc: "Trust no one. Season 4 is live." },
-    { name: "The Bachelor", icon: Heart, color: "bg-pink-500/15 text-pink-400 border border-pink-500/20", desc: "Predict every rose ceremony" },
-  ];
-
   return (
     <div className="space-y-4">
       <div className="text-center">
@@ -215,29 +204,32 @@ function StepShows() {
         </div>
         <h2 className="text-xl font-display font-bold">You&apos;re All Set!</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          Pick a show and start making predictions
+          Head to the Markets page to start making picks
         </p>
       </div>
 
-      <div className="space-y-2">
-        {shows.map((show) => (
-          <div
-            key={show.name}
-            className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition-colors"
-          >
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${show.color}`}>
-              <show.icon className="h-5 w-5" />
+      <div className="space-y-3 mt-4">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-neon-cyan/5 border border-primary/20 text-center">
+          <p className="text-sm font-medium mb-1">You got <span className="text-neon-gold font-bold">33,333 $PICKS</span> to start</p>
+          <p className="text-xs text-muted-foreground">Use them to stake on your predictions and earn rewards</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { icon: Target, label: "Make Picks", color: "text-primary" },
+            { icon: TrendingUp, label: "Earn Points", color: "text-neon-cyan" },
+            { icon: Star, label: "Win Rewards", color: "text-neon-gold" },
+          ].map((item) => (
+            <div key={item.label} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
+              <p className="text-[10px] font-medium text-muted-foreground">{item.label}</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{show.name}</p>
-              <p className="text-xs text-muted-foreground">{show.desc}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-2">
-        More shows are added every season. Stay tuned!
+        New shows and markets are added every season
       </p>
     </div>
   );

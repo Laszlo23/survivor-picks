@@ -75,6 +75,7 @@ import {
   ThumbsDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { LIVE_SHOWS } from "@/lib/shows";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -362,15 +363,17 @@ function SeasonsTab({ seasons }: { seasons: Season[] }) {
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [showSlug, setShowSlug] = useState("");
   const router = useRouter();
 
   const handleCreate = () => {
     startTransition(async () => {
-      await createSeason({ title, description, active: false });
+      await createSeason({ title, description, active: false, showSlug: showSlug || undefined });
       toast.success("Season created");
       setShowCreate(false);
       setTitle("");
       setDescription("");
+      setShowSlug("");
       router.refresh();
     });
   };
@@ -406,6 +409,21 @@ function SeasonsTab({ seasons }: { seasons: Season[] }) {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Reality Show 2026"
                 />
+              </div>
+              <div>
+                <Label>Show</Label>
+                <Select value={showSlug} onValueChange={setShowSlug}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Link to a show (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LIVE_SHOWS.map((show) => (
+                      <SelectItem key={show.slug} value={show.slug}>
+                        {show.emoji} {show.name} ({show.network})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Description</Label>
@@ -966,6 +984,7 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
   const [showAddTribe, setShowAddTribe] = useState(false);
   const [newName, setNewName] = useState("");
   const [newTribeId, setNewTribeId] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState("");
   const [tribeName, setTribeName] = useState("");
   const [tribeColor, setTribeColor] = useState("#ef4444");
   const router = useRouter();
@@ -978,10 +997,12 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
         name: newName,
         seasonId: selectedSeason,
         tribeId: newTribeId || undefined,
+        imageUrl: newImageUrl || undefined,
       });
       toast.success(`${newName} added`);
       setNewName("");
       setNewTribeId("");
+      setNewImageUrl("");
       setShowAddContestant(false);
       router.refresh();
     });
@@ -1153,6 +1174,14 @@ function ContestantsTab({ seasons }: { seasons: Season[] }) {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Contestant name"
+                />
+              </div>
+              <div>
+                <Label>Image URL</Label>
+                <Input
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
                 />
               </div>
               <div>

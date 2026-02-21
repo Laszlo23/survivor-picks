@@ -23,9 +23,11 @@ interface BuyPicksModalProps {
 
 export function BuyPicksModal({ open, onClose }: BuyPicksModalProps) {
   const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handlePurchase(packageId: string) {
     setLoading(packageId);
+    setError(null);
     try {
       const returnTo = typeof window !== "undefined" ? window.location.pathname || "/profile" : "/profile";
       const res = await fetch("/api/stripe/checkout", {
@@ -36,8 +38,12 @@ export function BuyPicksModal({ open, onClose }: BuyPicksModalProps) {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError(data.error || "Could not start checkout. Please try again.");
+        setLoading(null);
       }
     } catch {
+      setError("Network error. Please check your connection.");
       setLoading(null);
     }
   }
@@ -83,6 +89,12 @@ export function BuyPicksModal({ open, onClose }: BuyPicksModalProps) {
                   1 $PICKS = $0.00<span className="text-neon-gold font-bold">333</span> USD &bull; The 333 Fair Launch
                 </p>
               </div>
+
+              {error && (
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-4 text-center">
+                  {error}
+                </p>
+              )}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {TOKEN_PACKAGES.map((pkg, i) => {

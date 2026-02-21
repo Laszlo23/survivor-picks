@@ -63,7 +63,7 @@ export default async function DashboardPage() {
     await Promise.all([
       Promise.all(
         seasons.map(async (s) => ({
-          showSlug: (s as any).showSlug || null,
+          showSlug: s.showSlug || null,
           seasonId: s.id,
           questions: await getShowPredictions(s.id).catch(() => []),
         }))
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
   const contestantImages: Record<string, string> = {};
   for (const season of seasons) {
     if (season.contestants) {
-      for (const c of season.contestants as any[]) {
+      for (const c of season.contestants) {
         if (c.imageUrl) contestantImages[c.name] = c.imageUrl;
       }
     }
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
 
       {/* ── Legend ─────────────────────────────────────────────── */}
       <p className="text-[10px] text-muted-foreground/70 mb-2">
-        Season points = points you earn across the season. Win streak = correct picks in a row.
+        Season points = points you earn across the season. Higher risk picks earn more.
       </p>
 
       {/* ── Gamified Stats ─────────────────────────────────────── */}
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[10px] text-muted-foreground">
-                  {(ep as any).questions?.length || 0}q
+                  {ep.questions?.length || 0}q
                 </span>
                 <StatusChip status={ep.status} />
               </div>

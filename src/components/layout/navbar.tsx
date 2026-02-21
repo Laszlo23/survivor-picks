@@ -226,6 +226,19 @@ export function Navbar() {
 
               {status === "authenticated" && (
                 <>
+                  {isAdmin && (
+                    <>
+                      <div className="my-4 border-t border-white/[0.06]" />
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <Shield className="h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </>
+                  )}
                   <div className="my-4 border-t border-white/[0.06]" />
                   <button
                     onClick={() => signOut()}
@@ -388,28 +401,34 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <WalletModal open={walletOpen} onClose={() => setWalletOpen(false)} />
               </>
             )}
 
-            {status !== "loading" && (
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              >
-                {mobileOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-            )}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      {typeof document !== "undefined" && createPortal(mobileMenu, document.body)}
+      {typeof document !== "undefined" &&
+        createPortal(mobileMenu, document.body)}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <WalletModal
+            open={walletOpen}
+            onClose={() => setWalletOpen(false)}
+          />,
+          document.body
+        )}
     </>
   );
 }

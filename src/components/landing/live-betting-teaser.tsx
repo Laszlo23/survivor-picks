@@ -36,9 +36,6 @@ const BALANCE = 33_333;
 const MIN_BET = 333;
 
 export function LandingLiveBettingTeaser() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
   const [sliderPos, setSliderPos] = useState(0.5);
   const [isDragging, setIsDragging] = useState(false);
   const [betAmount, setBetAmount] = useState(3_333);
@@ -79,9 +76,13 @@ export function LandingLiveBettingTeaser() {
 
   const handlePointerUp = useCallback(() => setIsDragging(false), []);
 
+  const [demoWon, setDemoWon] = useState(false);
+
   const handleConfirm = () => {
     if (!side) return;
     setConfirmed(true);
+    const won = Math.random() > 0.5;
+    setDemoWon(won);
     setTimeout(() => setShowResult(true), 3_000);
   };
 
@@ -295,12 +296,15 @@ export function LandingLiveBettingTeaser() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-neon-gold/5 border border-neon-gold/20"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl ${demoWon ? "bg-neon-gold/5 border border-neon-gold/20" : "bg-neon-magenta/5 border border-neon-magenta/20"}`}
                   >
-                    <Trophy className="h-6 w-6 text-neon-gold" />
-                    <p className="text-sm font-bold text-neon-gold">
-                      You Won {potentialWin.toLocaleString("en-US")} $PICKS!
+                    <Trophy className={`h-6 w-6 ${demoWon ? "text-neon-gold" : "text-muted-foreground"}`} />
+                    <p className={`text-sm font-bold ${demoWon ? "text-neon-gold" : "text-neon-magenta"}`}>
+                      {demoWon
+                        ? `You Won ${potentialWin.toLocaleString("en-US")} $PICKS!`
+                        : `You Lost ${betAmount.toLocaleString("en-US")} $PICKS`}
                     </p>
+                    <p className="text-[10px] text-muted-foreground">This is a demo — no real tokens used</p>
                     <button
                       onClick={handleReset}
                       className="mt-1 px-4 py-1.5 rounded-lg bg-neon-cyan text-studio-black text-xs font-bold hover:bg-neon-cyan/90 transition-colors"
@@ -417,9 +421,9 @@ export function LandingLiveBettingTeaser() {
       {/* ── Features Row ──────────────────────────────────────────── */}
       <div className="grid gap-3 sm:grid-cols-3 mt-6">
         {[
-          { icon: Radio, title: "Watch & Bet Live", desc: "Stream in-app via YouTube while the community bets alongside you.", color: "text-neon-cyan", accent: "hsl(185 100% 55%)" },
-          { icon: Bot, title: "AI Creates the Odds", desc: "Gemini AI watches the feed and generates dynamic flash bets in real-time.", color: "text-violet-400", accent: "hsl(260 80% 60%)" },
-          { icon: TrendingUp, title: "One Slider, Two Outcomes", desc: "Drag the line to pick your side and set your stake. Early conviction = better odds.", color: "text-neon-gold", accent: "hsl(45 100% 55%)" },
+          { icon: Radio, title: "Watch & Bet Live", desc: "Stream in-app while the community bets alongside you in real-time.", color: "text-neon-cyan", accent: "hsl(185 100% 55%)" },
+          { icon: Bell, title: "Community-Driven Odds", desc: "Odds shift as players pick sides. Early conviction = better payout potential.", color: "text-violet-400", accent: "hsl(260 80% 60%)" },
+          { icon: TrendingUp, title: "One Slider, Two Outcomes", desc: "Drag the line to pick your side and set your stake. Simple and fast.", color: "text-neon-gold", accent: "hsl(45 100% 55%)" },
         ].map((f, i) => (
           <motion.div
             key={f.title}

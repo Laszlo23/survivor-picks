@@ -23,6 +23,7 @@ export async function createSeason(data: {
   title: string;
   description?: string;
   active?: boolean;
+  showSlug?: string;
 }) {
   await requireAdminSession();
   const season = await prisma.season.create({ data });
@@ -32,7 +33,7 @@ export async function createSeason(data: {
 
 export async function updateSeason(
   id: string,
-  data: { title?: string; description?: string; active?: boolean }
+  data: { title?: string; description?: string; active?: boolean; showSlug?: string }
 ) {
   await requireAdminSession();
   const season = await prisma.season.update({ where: { id }, data });
@@ -148,6 +149,7 @@ export async function createContestant(data: {
   name: string;
   seasonId: string;
   tribeId?: string;
+  imageUrl?: string;
 }) {
   await requireAdminSession();
   const contestant = await prisma.contestant.create({ data });
@@ -157,7 +159,7 @@ export async function createContestant(data: {
 
 export async function updateContestant(
   id: string,
-  data: { name?: string; status?: string; tribeId?: string | null }
+  data: { name?: string; status?: string; tribeId?: string | null; imageUrl?: string | null }
 ) {
   await requireAdminSession();
   const contestant = await prisma.contestant.update({ where: { id }, data });

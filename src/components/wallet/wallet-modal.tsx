@@ -15,8 +15,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { BuyPicksModal } from "./buy-picks-modal";
-
-const PICKS_PRICE_USD = 0.00333;
+import { PICKS_PRICE_USD } from "@/lib/picks-config";
 
 interface WalletModalProps {
   open: boolean;
@@ -48,6 +47,15 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
 
   const purchaseSuccess = searchParams.get("purchase") === "success";
   const purchasePicks = searchParams.get("picks");
+
+  useEffect(() => {
+    if (purchaseSuccess) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("purchase");
+      url.searchParams.delete("picks");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }, [purchaseSuccess]);
 
   useEffect(() => {
     if (!open) return;
@@ -147,18 +155,20 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
                         </p>
                       </div>
 
-                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                        <div className="flex items-center gap-2 mb-1">
-                          <DollarSign className="h-4 w-4 text-emerald-400" />
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            USDC
+                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] border-dashed">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-emerald-400/50" />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                              USDC
+                            </span>
+                          </div>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-muted-foreground uppercase tracking-wider font-bold">
+                            Coming Soon
                           </span>
                         </div>
-                        <p className="text-2xl font-bold font-mono text-white">
-                          0.00
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          Coming at fair launch
+                        <p className="text-xs text-muted-foreground mt-1">
+                          On-chain USDC withdrawals unlock at fair launch
                         </p>
                       </div>
                     </div>

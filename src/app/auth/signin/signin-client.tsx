@@ -33,11 +33,19 @@ export function SignInClient() {
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLocalhost, setIsLocalhost] = useState(false);
+  const [otpType, setOtpType] = useState<string | null>(null);
   const otpRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const host = window.location.hostname;
     setIsLocalhost(host === "localhost" || host === "127.0.0.1");
+
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error");
+    if (urlError === "callback_failed") {
+      setError("Sign-in failed. Please try again.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
 
   useEffect(() => {
@@ -87,6 +95,7 @@ export function SignInClient() {
       const data = (await res.json().catch(() => ({}))) as {
         success?: boolean;
         error?: string;
+        otpType?: string;
       };
 
       if (!res.ok || !data?.success) {
@@ -94,6 +103,7 @@ export function SignInClient() {
         return;
       }
 
+      if (data.otpType) setOtpType(data.otpType);
       setStep("otp");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -121,15 +131,17 @@ export function SignInClient() {
     try {
       const supabase = createClient();
 
-      // Try magiclink type first, then signup, then email
-      const types = ["magiclink", "signup", "email"] as const;
+      const fallbackTypes = ["magiclink", "signup", "email"] as const;
+      const orderedTypes = otpType
+        ? [otpType, ...fallbackTypes.filter((t) => t !== otpType)]
+        : [...fallbackTypes];
       let success = false;
 
-      for (const type of types) {
+      for (const type of orderedTypes) {
         const { error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim().toLowerCase(),
           token: code,
-          type,
+          type: type as "magiclink" | "signup" | "email",
         });
         if (!verifyError) {
           success = true;

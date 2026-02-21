@@ -18,8 +18,7 @@ export default async function LeaderboardPage({
 }: {
   searchParams: { page?: string; search?: string };
 }) {
-  const session = await getSession();
-  if (!session?.user) redirect("/auth/signin");
+  const session = await getSession().catch(() => null);
 
   const season = await getActiveSeason();
   if (!season) {
@@ -51,7 +50,7 @@ export default async function LeaderboardPage({
     <LeaderboardClient
       data={data}
       seasonTitle={season.title}
-      currentUserId={session.user.id}
+      currentUserId={session?.user?.id ?? ""}
       search={search}
       tribes={season.tribes}
       communityData={communityData}

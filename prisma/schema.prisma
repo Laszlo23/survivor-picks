@@ -60,7 +60,9 @@ model User {
   id             String    @id @default(cuid())
   email          String    @unique
   name           String?
+  username       String?   @unique
   image          String?
+  bio            String?
   emailVerified  DateTime?
   role           Role      @default(USER)
   hasOnboarded   Boolean   @default(false)
@@ -68,6 +70,12 @@ model User {
   referralCode   String?   @unique  // auto-generated 8-char code
   referredById   String?             // userId of who referred this user
   picksBalance   BigInt   @default(0) // internal $PICKS ledger, migrated on-chain after deploy
+
+  socialTwitter   String?
+  socialInstagram String?
+  socialTiktok    String?
+  socialFarcaster String?
+  socialWebsite   String?
 
   supabaseAuthId       String?   @unique  // Supabase auth.users.id (uuid)
   // Farcaster Mini App fields

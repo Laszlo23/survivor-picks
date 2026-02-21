@@ -192,7 +192,7 @@ export function PredictionCard({
   const handleShareOnFarcaster = async () => {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL || "https://realitypicks.xyz";
-    const showSlug = show?.slug || "survivor-2026";
+    const showSlug = show?.slug || "reality-picks";
     const resultText =
       isResolved && question.userPick
         ? question.userPick.isCorrect

@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { FadeIn } from "@/components/motion";
 import Link from "next/link";
 import { NeonButton } from "@/components/ui/neon-button";
+import { PICKS_PRICE_USD } from "@/lib/picks-config";
 
 const SIGNUP_BONUS = 33_333;
-const PICKS_PRICE_USD = 0.00333;
 
 export function LandingWalletExplainer() {
-  const usdValue = (SIGNUP_BONUS * PICKS_PRICE_USD).toFixed(2);
+  const priceLabel = `$${PICKS_PRICE_USD} per $PICK`;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16">
@@ -32,7 +32,7 @@ export function LandingWalletExplainer() {
                     <span className="text-sm text-muted-foreground ml-1 font-normal">$PICKS</span>
                   </p>
                   <p className="text-xs text-muted-foreground font-mono">
-                    ≈ ${usdValue} USD · Sign-up bonus
+                    Free sign-up bonus · {priceLabel}
                   </p>
                 </div>
               </div>

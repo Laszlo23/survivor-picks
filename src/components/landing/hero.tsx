@@ -58,17 +58,17 @@ export function LandingHero({
   const countdown = useCountdown(nextEpisodeAt ?? null);
 
   const showName = seasonTitle || "Reality TV";
-  const episodeLabel = currentEpisodeTitle || "Tribal Council";
+  const episodeLabel = currentEpisodeTitle || "New Episode";
 
   const tickerItems = [
     `${showName} ${currentEpisode || ""} — predictions are open`,
     "Who will be eliminated next? Make your pick",
     `${episodeLabel} — lock your picks before airtime`,
     "Leaderboard heating up — climb the ranks",
-    "Free to play. Predict, earn points, win glory",
+    "Free to play — predict, earn points, win glory",
     "New pick rounds drop every episode",
     "Join the community and start predicting today",
-    "Win streak: correct picks in a row multiply your score",
+    "Top players earn $PICKS token rewards each season",
   ];
 
   const countdownDisplay = !countdown.expired
