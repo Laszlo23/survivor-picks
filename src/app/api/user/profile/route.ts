@@ -15,7 +15,7 @@ export async function PATCH(request: Request) {
     return Response.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const updates: { name?: string; image?: string } = {};
+  const updates: { name?: string; image?: string | null } = {};
   if (typeof body.name === "string") {
     const trimmed = body.name.trim();
     if (trimmed.length > 0 && trimmed.length <= 50) {
@@ -24,8 +24,10 @@ export async function PATCH(request: Request) {
   }
   if (typeof body.image === "string") {
     const url = body.image.trim();
-    if (url.length === 0 || (url.startsWith("http") && url.length <= 500)) {
-      updates.image = url || null;
+    if (url.length === 0) {
+      updates.image = null;
+    } else if (url.startsWith("http") && url.length <= 500) {
+      updates.image = url;
     }
   }
 

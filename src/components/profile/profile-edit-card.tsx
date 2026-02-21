@@ -16,7 +16,7 @@ type ProfileEditCardProps = {
   name: string | null;
   image: string | null;
   email: string;
-  onUpdate: (updates: { name?: string; image?: string }) => Promise<void>;
+  onUpdate: (updates: { name?: string; image?: string }) => Promise<unknown>;
 };
 
 export function ProfileEditCard({ name, image, email, onUpdate }: ProfileEditCardProps) {
