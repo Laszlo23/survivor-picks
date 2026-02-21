@@ -148,11 +148,14 @@ export default async function LandingPage() {
         <Section>
           <SectionLabel>TODOS</SectionLabel>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            {todos.map((todo: Record<string, unknown>, i: number) => (
-              <li key={(todo.id as string) || `todo-${i}`}>
-                {(todo.title as string) ?? JSON.stringify(todo)}
+            {todos.map((todo, i) => {
+              const t = todo as Record<string, unknown>;
+              return (
+              <li key={(t.id as string) || `todo-${i}`}>
+                {(t.title as string) ?? JSON.stringify(todo)}
               </li>
-            ))}
+              );
+            })}
           </ul>
         </Section>
       )}
