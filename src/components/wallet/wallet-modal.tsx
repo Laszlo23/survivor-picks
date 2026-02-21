@@ -81,44 +81,40 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
     <>
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
-          >
+          <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm"
               onClick={onClose}
             />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-md max-h-[85vh] rounded-t-2xl sm:rounded-2xl border border-white/[0.1] bg-studio-dark shadow-2xl overflow-y-auto"
-            >
-              <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-neon-cyan/10 to-transparent pointer-events-none" />
+            <div className="fixed inset-0 z-[101] overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="relative w-full max-w-md rounded-2xl border border-white/[0.1] bg-studio-dark shadow-2xl"
+                >
+                  <div className="sticky top-0 z-10 flex items-center justify-between p-4 pb-0">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-5 w-5 text-neon-cyan" />
+                      <h2 className="text-lg font-display font-bold text-white">
+                        Wallet
+                      </h2>
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
+                    >
+                      <X className="h-4 w-4 text-white/60" />
+                    </button>
+                  </div>
 
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
-              >
-                <X className="h-4 w-4 text-white/60" />
-              </button>
-
-              <div className="relative p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Wallet className="h-5 w-5 text-neon-cyan" />
-                  <h2 className="text-lg font-display font-bold text-white">
-                    Wallet
-                  </h2>
-                </div>
-
+                  <div className="p-6 pt-4">
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-neon-cyan" />
@@ -242,7 +238,9 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
                 )}
               </div>
             </motion.div>
-          </motion.div>
+          </div>
+        </div>
+      </>
         )}
       </AnimatePresence>
 
