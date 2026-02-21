@@ -35,7 +35,12 @@ import {
 } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  let session;
+  try {
+    session = await getSession();
+  } catch {
+    redirect("/auth/signin?error=session");
+  }
   if (!session?.user) redirect("/auth/signin");
 
   const seasons = await getAllActiveSeasons();
@@ -60,19 +65,19 @@ export default async function DashboardPage() {
         seasons.map(async (s) => ({
           showSlug: (s as any).showSlug || null,
           seasonId: s.id,
-          questions: await getShowPredictions(s.id),
+          questions: await getShowPredictions(s.id).catch(() => []),
         }))
-      ),
-      listSeasonEpisodes(primarySeason.id),
-      getUserRank(primarySeason.id),
-      getSocialTasks(primarySeason.id),
-      getReferralStats(),
-      getBalance(session.user.id),
+      ).catch(() => []),
+      listSeasonEpisodes(primarySeason.id).catch(() => []),
+      getUserRank(primarySeason.id).catch(() => null),
+      getSocialTasks(primarySeason.id).catch(() => []),
+      getReferralStats().catch(() => null),
+      getBalance(session.user.id).catch(() => BigInt(0)),
       prisma.episode.groupBy({
         by: ["status"],
         where: { seasonId: primarySeason.id },
         _count: { id: true },
-      }),
+      }).catch(() => []),
     ]);
 
   const totalEpisodes = episodeCounts.reduce((sum, g) => sum + g._count.id, 0);

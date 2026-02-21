@@ -16,58 +16,67 @@ function genReferralCode(): string {
 
 /** Get Supabase auth user and our app User. Creates User if first sign-in. */
 export async function getCurrentUser() {
-  // Direct auth cookie: used by dev-login and Farcaster (bypasses Supabase)
-  const cookieStore = await cookies();
-  const directUserId = cookieStore.get("rp-auth-user-id")?.value;
-  if (directUserId) {
-    const user = await prisma.user.findUnique({
-      where: { id: directUserId },
-    });
-    if (user) return user;
-  }
-
-  let authUser = null;
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    authUser = data.user;
-  } catch {
-    // Supabase not configured or client error
-  }
+    // Direct auth cookie: used by dev-login and Farcaster (bypasses Supabase)
+    const cookieStore = await cookies();
+    const directUserId = cookieStore.get("rp-auth-user-id")?.value;
+    if (directUserId) {
+      const user = await prisma.user.findUnique({
+        where: { id: directUserId },
+      });
+      if (user) return user;
+    }
 
-  if (!authUser?.email) return null;
+    let authUser = null;
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      authUser = data.user;
+    } catch {
+      // Supabase not configured or client error
+    }
 
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { supabaseAuthId: authUser.id },
-        { email: authUser.email },
-      ],
-    },
-  });
+    if (!authUser?.email) return null;
 
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: authUser.email,
-        name: authUser.user_metadata?.name ?? authUser.email.split("@")[0],
-        image: authUser.user_metadata?.avatar_url,
-        supabaseAuthId: authUser.id,
-        emailVerified: new Date(),
-        referralCode: genReferralCode(),
-        hasOnboarded: true,
-        picksBalance: SIGNUP_BONUS,
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { supabaseAuthId: authUser.id },
+          { email: authUser.email },
+        ],
       },
     });
-    await creditSignupBonus(user.id);
-  } else if (!user.supabaseAuthId) {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { supabaseAuthId: authUser.id },
-    });
-  }
 
-  return user;
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: authUser.email,
+          name: authUser.user_metadata?.name ?? authUser.email.split("@")[0],
+          image: authUser.user_metadata?.avatar_url,
+          supabaseAuthId: authUser.id,
+          emailVerified: new Date(),
+          referralCode: genReferralCode(),
+          hasOnboarded: true,
+          picksBalance: SIGNUP_BONUS,
+        },
+      });
+      try {
+        await creditSignupBonus(user.id);
+      } catch {
+        // Bonus will be retried on next login
+      }
+    } else if (!user.supabaseAuthId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { supabaseAuthId: authUser.id },
+      });
+    }
+
+    return user;
+  } catch (err) {
+    console.error("[auth] getCurrentUser failed:", err);
+    return null;
+  }
 }
 
 /** Session shape compatible with existing code expecting NextAuth session */
