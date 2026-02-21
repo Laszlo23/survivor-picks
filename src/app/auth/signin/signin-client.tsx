@@ -20,6 +20,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { FadeIn, ScaleIn } from "@/components/motion";
+import { createClient } from "@/lib/supabase/client";
 
 export function SignInClient() {
   const [email, setEmail] = useState("");
@@ -63,31 +64,21 @@ export function SignInClient() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      const supabase = createClient();
+      const redirectTo = `${window.location.origin}/auth/callback`;
 
-      if (!res.ok) {
-        const serverMsg = data?.error;
-        if (res.status >= 500) {
-          setError(serverMsg || "Server error. Please try again later.");
-        } else if (res.status === 503) {
-          setError(serverMsg || "Auth is not configured. Please contact support.");
-        } else {
-          setError(serverMsg || "Something went wrong. Please try again.");
-        }
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: redirectTo },
+      });
+
+      if (otpError) {
+        setError(otpError.message || "Failed to send magic link.");
         setLoading(false);
         return;
       }
 
-      if (data?.success) {
-        setSent(true);
-      } else {
-        setError(data?.error || "Failed to send magic link.");
-      }
+      setSent(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       const isNetwork =

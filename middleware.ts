@@ -27,6 +27,11 @@ const CSRF_EXEMPT_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Let the auth callback page handle tokens without middleware interference
+  if (pathname.startsWith("/auth/callback")) {
+    return NextResponse.next();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
