@@ -85,7 +85,7 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
           >
             <motion.div
               initial={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export function WalletModal({ open, onClose }: WalletModalProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-md rounded-2xl border border-white/[0.1] bg-studio-dark shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md max-h-[85vh] rounded-t-2xl sm:rounded-2xl border border-white/[0.1] bg-studio-dark shadow-2xl overflow-y-auto"
             >
               <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-neon-cyan/10 to-transparent pointer-events-none" />
 
