@@ -25,7 +25,7 @@ export async function sendOtpEmail(to: string, otp: string, actionLink: string) 
         </div>
 
         <div style="background: #111118; border: 1px solid #222; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 20px;">
-          <p style="color: #aaa; font-size: 14px; margin: 0 0 12px;">Your sign-in code:</p>
+          <p style="color: #aaa; font-size: 14px; margin: 0 0 12px;">Your sign-in code</p>
           <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #22d3ee; font-family: monospace; padding: 12px 0;">
             ${otp}
           </div>

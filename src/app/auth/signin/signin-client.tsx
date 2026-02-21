@@ -111,7 +111,7 @@ export function SignInClient() {
     e.preventDefault();
     const code = otpCode.trim();
     if (!code || code.length < 6) {
-      setError("Please enter the 6-digit code from your email.");
+      setError("Please enter the code from your email.");
       return;
     }
 
@@ -218,7 +218,7 @@ export function SignInClient() {
                         <span className="font-semibold text-sm">Code sent!</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        We sent a 6-digit code to{" "}
+                        We sent a code to{" "}
                         <strong className="text-white">{email}</strong>
                       </p>
                     </div>
@@ -236,19 +236,19 @@ export function SignInClient() {
                           type="text"
                           inputMode="numeric"
                           autoComplete="one-time-code"
-                          maxLength={6}
+                          maxLength={8}
                           value={otpCode}
                           onChange={(e) =>
-                            setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                            setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 8))
                           }
-                          placeholder="Enter 6-digit code"
+                          placeholder="Enter code from email"
                           required
                           className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-3 pl-10 pr-4 text-center text-lg font-mono tracking-[0.3em] text-white placeholder:text-muted-foreground placeholder:tracking-normal placeholder:text-sm outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/30 transition-colors"
                         />
                       </div>
                       <button
                         type="submit"
-                        disabled={verifying || otpCode.length < 6}
+                        disabled={verifying || otpCode.length < 6 || otpCode.length > 8}
                         className="w-full rounded-lg bg-neon-cyan text-studio-black font-bold text-sm py-3 hover:bg-neon-cyan/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                       >
                         {verifying ? (
