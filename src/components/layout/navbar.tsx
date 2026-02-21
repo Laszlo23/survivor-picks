@@ -30,8 +30,10 @@ import {
   Brain,
   ArrowRight,
   HelpCircle,
+  Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { WalletModal } from "@/components/wallet/wallet-modal";
 
 /** Primary nav for normal users: Play, AI, Leaderboard, Badges, Help */
 const navItems = [
@@ -57,6 +59,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -98,9 +101,20 @@ export function Navbar() {
             <div className="px-4 py-6 space-y-1">
               {status === "authenticated" && session?.user && (
                 <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-sm font-bold ring-1 ring-neon-cyan/30">
-                    {session.user.name?.[0]?.toUpperCase() ||
-                      session.user.email?.[0]?.toUpperCase()}
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-sm font-bold ring-1 ring-neon-cyan/30 overflow-hidden">
+                    {session.user.image ? (
+                      <Image
+                        src={session.user.image}
+                        alt=""
+                        width={36}
+                        height={36}
+                        className="object-cover w-full h-full"
+                        unoptimized
+                      />
+                    ) : (
+                      session.user.name?.[0]?.toUpperCase() ||
+                      session.user.email?.[0]?.toUpperCase()
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
@@ -152,17 +166,29 @@ export function Navbar() {
               })}
 
               {status === "authenticated" && (
-                <Link
-                  href="/dashboard"
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
-                    pathname === "/dashboard"
-                      ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                  }`}
-                >
-                  <User className="h-4 w-4" />
-                  Dashboard
-                </Link>
+                <>
+                  <button
+                    onClick={() => {
+                      setWalletOpen(true);
+                      setMobileOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-white/[0.04] w-full"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Wallet
+                  </button>
+                  <Link
+                    href="/dashboard"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                      pathname === "/dashboard"
+                        ? "text-neon-cyan bg-neon-cyan/[0.08] border border-neon-cyan/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </>
               )}
 
               <div className="my-4 border-t border-white/[0.06]" />
@@ -298,7 +324,16 @@ export function Navbar() {
             )}
 
             {status === "authenticated" && session?.user && (
-              <DropdownMenu>
+              <>
+                <button
+                  onClick={() => setWalletOpen(true)}
+                  className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 text-neon-cyan text-xs font-bold hover:bg-neon-cyan/20 transition-colors"
+                  title="Wallet"
+                >
+                  <Wallet className="h-4 w-4" />
+                  Wallet
+                </button>
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild className="hidden md:flex">
                   <Button
                     variant="ghost"
@@ -306,8 +341,19 @@ export function Navbar() {
                     className="gap-2 text-muted-foreground relative group"
                     title={session.user.name || session.user.email || "Account"}
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30">
-                      <User className="h-3.5 w-3.5" />
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neon-cyan/20 text-neon-cyan text-xs font-bold ring-1 ring-neon-cyan/30 overflow-hidden">
+                      {session.user.image ? (
+                        <Image
+                          src={session.user.image}
+                          alt=""
+                          width={28}
+                          height={28}
+                          className="object-cover w-full h-full"
+                          unoptimized
+                        />
+                      ) : (
+                        <User className="h-3.5 w-3.5" />
+                      )}
                     </div>
                     <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[10px] bg-studio-dark border border-white/[0.08] text-white/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                       {session.user.name || "Account"}
@@ -342,6 +388,8 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <WalletModal open={walletOpen} onClose={() => setWalletOpen(false)} />
+              </>
             )}
 
             {status !== "loading" && (

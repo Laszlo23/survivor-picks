@@ -15,7 +15,7 @@ export function LandingEmailCapture() {
 
     setStatus("loading");
     try {
-      const res = await fetch("/api/newsletter/subscribe", {
+      const res = await fetch("/api/claim/picks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -23,11 +23,11 @@ export function LandingEmailCapture() {
       const data = await res.json();
       if (res.ok) {
         setStatus("success");
-        setMessage("You're in! Check your inbox for your welcome bonus.");
+        setMessage(data.message || "Check your inbox for the sign-in link. Your 33,333 $PICKS will be credited when you sign in.");
         setEmail("");
       } else {
         setStatus("error");
-        setMessage(data.error || "Something went wrong. Try again.");
+        setMessage(data.message || data.error || "Something went wrong. Try again.");
       }
     } catch {
       setStatus("error");

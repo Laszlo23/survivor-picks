@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const packageId = body.packageId as string;
+  const returnTo = typeof body.returnTo === "string" && body.returnTo.startsWith("/")
+    ? body.returnTo
+    : "/profile";
 
   const pkg = TOKEN_PACKAGES.find((p) => p.id === packageId);
   if (!pkg) {
@@ -44,8 +47,8 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${appUrl}/profile?purchase=success&picks=${pkg.picks}`,
-    cancel_url: `${appUrl}/profile?purchase=cancelled`,
+    success_url: `${appUrl}${returnTo}?purchase=success&picks=${pkg.picks}`,
+    cancel_url: `${appUrl}${returnTo}?purchase=cancelled`,
   });
 
   return Response.json({ url: checkoutSession.url });

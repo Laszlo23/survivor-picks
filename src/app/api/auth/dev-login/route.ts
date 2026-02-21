@@ -1,4 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { creditSignupBonus } from "@/lib/actions/token-balance";
+
+const SIGNUP_BONUS = BigInt(33_333);
+
+function genReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
 
 /**
  * DEV-ONLY: Instant login without email verification.
@@ -25,6 +37,9 @@ export async function POST(req: Request) {
       });
     }
 
+    const existing = await prisma.user.findUnique({ where: { email } });
+    const isNew = !existing;
+
     const user = await prisma.user.upsert({
       where: { email },
       update: { name: name || undefined },
@@ -33,8 +48,15 @@ export async function POST(req: Request) {
         name: name || email.split("@")[0],
         role: "USER",
         emailVerified: new Date(),
+        hasOnboarded: true,
+        referralCode: genReferralCode(),
+        picksBalance: SIGNUP_BONUS,
       },
     });
+
+    if (isNew) {
+      await creditSignupBonus(user.id);
+    }
 
     const maxAge = 30 * 24 * 60 * 60; // 30 days
     const cookie = `rp-auth-user-id=${user.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;

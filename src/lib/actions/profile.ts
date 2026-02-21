@@ -97,6 +97,37 @@ export async function getUserRank(seasonId: string) {
 }
 
 /**
+ * Update the current user's profile (name, avatar).
+ */
+export async function updateProfile(updates: { name?: string; image?: string }) {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const data: { name?: string; image?: string | null } = {};
+    if (typeof updates.name === "string") {
+      const trimmed = updates.name.trim();
+      if (trimmed.length > 0 && trimmed.length <= 50) data.name = trimmed;
+    }
+    if (typeof updates.image === "string") {
+      const url = updates.image.trim();
+      if (url.length === 0) data.image = null;
+      else if (url.startsWith("http") && url.length <= 500) data.image = url;
+    }
+
+    if (Object.keys(data).length === 0) throw new Error("No valid updates");
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data,
+    });
+    return { success: true };
+  } catch (err) {
+    throw err;
+  }
+}
+
+/**
  * Mark the current user as having completed onboarding.
  */
 export async function completeOnboarding() {

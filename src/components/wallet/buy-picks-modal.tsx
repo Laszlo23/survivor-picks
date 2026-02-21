@@ -27,10 +27,11 @@ export function BuyPicksModal({ open, onClose }: BuyPicksModalProps) {
   async function handlePurchase(packageId: string) {
     setLoading(packageId);
     try {
+      const returnTo = typeof window !== "undefined" ? window.location.pathname || "/profile" : "/profile";
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId }),
+        body: JSON.stringify({ packageId, returnTo }),
       });
       const data = await res.json();
       if (data.url) {

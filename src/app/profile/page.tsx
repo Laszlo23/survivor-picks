@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Profile | RealityPicks",
   description: "View your prediction stats, badges, NFT collection, and activity history.",
 };
-import { getUserProfile, getUserRecentPredictions, getUserRank } from "@/lib/actions/profile";
+import { getUserProfile, getUserRecentPredictions, getUserRank, updateProfile } from "@/lib/actions/profile";
 import { getActiveSeason } from "@/lib/actions/episodes";
 import { getReferralStats } from "@/lib/actions/referral";
 import { getSocialStats } from "@/lib/actions/social";
@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralCard } from "@/components/social/referral-card";
+import { ProfileEditCard } from "@/components/profile/profile-edit-card";
 import { PicksWalletCard } from "@/components/wallet/picks-wallet-card";
 import {
   User,
@@ -57,24 +58,16 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      {/* Profile Header */}
-      <div className="mb-8 flex items-center gap-3 sm:gap-4">
-        <div className="relative shrink-0">
-          <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary/20 text-primary text-xl sm:text-2xl font-bold relative z-10">
-            {profile.name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
-          </div>
-          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-primary via-blue-500 to-violet-500 opacity-50 blur-sm animate-gradient-x" style={{ backgroundSize: "200% 200%" }} />
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-display font-bold truncate">
-            {profile.name || "RealityPicks Player"}
-          </h1>
-          <p className="text-muted-foreground text-sm truncate">{profile.email}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Joined {new Date(profile.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-      </div>
+      {/* Profile Header with Edit */}
+      <ProfileEditCard
+        name={profile.name}
+        image={profile.image}
+        email={profile.email}
+        onUpdate={updateProfile}
+      />
+      <p className="text-xs text-muted-foreground -mt-6 mb-8">
+        Joined {new Date(profile.createdAt).toLocaleDateString()}
+      </p>
 
       {/* Stats Grid */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">

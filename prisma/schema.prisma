@@ -352,6 +352,15 @@ model NewsletterSubscription {
   createdAt DateTime @default(now())
 }
 
+// One-time 33,333 $PICKS claim per email (before signup)
+model EmailPicksClaim {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  claimedAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // ─── AI Agent Models ─────────────────────────────────────────────────
 
 model AgentLog {
