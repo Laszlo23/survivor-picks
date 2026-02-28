@@ -50,6 +50,8 @@ export const metadata: Metadata = {
   },
   // Farcaster Mini App embed — makes every page shareable in Farcaster feeds
   other: {
+    "talentapp:project_verification":
+      "8fc5c48c6adb3153ac96445dcccc3539fc3af7bcbdc9ee6b174510f47553f170e2a6080341c06052194ba909b3533921a724d73db8863b0c2b139b42e2c7b052",
     "fc:miniapp": JSON.stringify({
       version: "1",
       imageUrl: `${BASE_URL}/og-image.png`,
